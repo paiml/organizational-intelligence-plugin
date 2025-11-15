@@ -1,8 +1,10 @@
 // Organizational Intelligence Plugin - Library
 // Toyota Way: Start simple, evolve based on evidence
 
+pub mod analyzer;
 pub mod classifier;
 pub mod cli;
+pub mod git;
 pub mod github;
 pub mod report;
 

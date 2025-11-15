@@ -1,6 +1,7 @@
 // Report generation module
 // Toyota Way: Start simple, deliver value
 
+use crate::classifier::DefectCategory;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
@@ -18,12 +19,13 @@ pub struct AnalysisMetadata {
 }
 
 /// Defect pattern information
-/// Phase 1: Basic structure for future classifier
+/// Represents aggregated statistics for a defect category
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DefectPattern {
-    pub category: String,
+    pub category: DefectCategory,
     pub frequency: usize,
-    pub percentage: f64,
+    pub confidence: f32,
+    pub examples: Vec<String>,
 }
 
 /// Complete analysis report
@@ -194,14 +196,16 @@ mod tests {
 
         let patterns = vec![
             DefectPattern {
-                category: "Memory Safety".to_string(),
+                category: DefectCategory::MemorySafety,
                 frequency: 42,
-                percentage: 35.0,
+                confidence: 0.85,
+                examples: vec!["abc123: fix memory leak".to_string()],
             },
             DefectPattern {
-                category: "Concurrency".to_string(),
+                category: DefectCategory::ConcurrencyBugs,
                 frequency: 30,
-                percentage: 25.0,
+                confidence: 0.80,
+                examples: vec!["def456: fix race condition".to_string()],
             },
         ];
 
@@ -214,8 +218,8 @@ mod tests {
         let generator = ReportGenerator::new();
         let yaml = generator.to_yaml(&report).expect("Should serialize");
 
-        assert!(yaml.contains("Memory Safety"));
-        assert!(yaml.contains("Concurrency"));
+        assert!(yaml.contains("MemorySafety"));
+        assert!(yaml.contains("ConcurrencyBugs"));
         assert!(yaml.contains("frequency: 42"));
     }
 }
