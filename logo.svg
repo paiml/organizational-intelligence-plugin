@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4A90E2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#357ABD;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#50C878;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#28A745;stop-opacity:0.9" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="400" height="400" fill="url(#bgGradient)" rx="40"/>
+
+  <!-- Organization network icon (nodes and connections) -->
+  <!-- Top nodes -->
+  <circle cx="120" cy="100" r="20" fill="#FFF" opacity="0.3"/>
+  <circle cx="200" cy="80" r="20" fill="#FFF" opacity="0.4"/>
+  <circle cx="280" cy="100" r="20" fill="#FFF" opacity="0.3"/>
+
+  <!-- Middle nodes -->
+  <circle cx="140" cy="170" r="18" fill="#FFF" opacity="0.35"/>
+  <circle cx="260" cy="170" r="18" fill="#FFF" opacity="0.35"/>
+
+  <!-- Bottom nodes -->
+  <circle cx="120" cy="240" r="20" fill="#FFF" opacity="0.3"/>
+  <circle cx="200" cy="260" r="20" fill="#FFF" opacity="0.4"/>
+  <circle cx="280" cy="240" r="20" fill="#FFF" opacity="0.3"/>
+
+  <!-- Connection lines -->
+  <line x1="120" y1="100" x2="200" y2="80" stroke="#FFF" stroke-width="2" opacity="0.25"/>
+  <line x1="200" y1="80" x2="280" y2="100" stroke="#FFF" stroke-width="2" opacity="0.25"/>
+  <line x1="120" y1="100" x2="140" y2="170" stroke="#FFF" stroke-width="2" opacity="0.25"/>
+  <line x1="280" y1="100" x2="260" y2="170" stroke="#FFF" stroke-width="2" opacity="0.25"/>
+  <line x1="140" y1="170" x2="120" y2="240" stroke="#FFF" stroke-width="2" opacity="0.25"/>
+  <line x1="140" y1="170" x2="200" y2="260" stroke="#FFF" stroke-width="2" opacity="0.25"/>
+  <line x1="260" y1="170" x2="200" y2="260" stroke="#FFF" stroke-width="2" opacity="0.25"/>
+  <line x1="260" y1="170" x2="280" y2="240" stroke="#FFF" stroke-width="2" opacity="0.25"/>
+  <line x1="200" y1="80" x2="140" y2="170" stroke="#FFF" stroke-width="2" opacity="0.2"/>
+  <line x1="200" y1="80" x2="260" y2="170" stroke="#FFF" stroke-width="2" opacity="0.2"/>
+
+  <!-- Central intelligence icon (brain/chart hybrid) -->
+  <!-- Analytics chart bars -->
+  <g transform="translate(160, 150)">
+    <!-- Chart background -->
+    <rect x="0" y="0" width="80" height="60" fill="#FFF" opacity="0.15" rx="6"/>
+
+    <!-- Rising bars (showing improvement) -->
+    <rect x="8" y="40" width="12" height="15" fill="url(#chartGradient)" rx="2"/>
+    <rect x="26" y="30" width="12" height="25" fill="url(#chartGradient)" rx="2"/>
+    <rect x="44" y="20" width="12" height="35" fill="url(#chartGradient)" rx="2"/>
+    <rect x="62" y="10" width="12" height="45" fill="url(#chartGradient)" rx="2"/>
+
+    <!-- Trend line -->
+    <polyline points="14,47 32,37 50,27 68,17"
+              fill="none" stroke="#FFF" stroke-width="2" opacity="0.8"/>
+    <circle cx="14" cy="47" r="3" fill="#FFF"/>
+    <circle cx="32" cy="37" r="3" fill="#FFF"/>
+    <circle cx="50" cy="27" r="3" fill="#FFF"/>
+    <circle cx="68" cy="17" r="3" fill="#FFF"/>
+  </g>
+
+  <!-- Git/Version control icon (small) -->
+  <g transform="translate(90, 300)">
+    <circle cx="0" cy="0" r="8" fill="#FFF" opacity="0.6"/>
+    <circle cx="30" cy="0" r="8" fill="#FFF" opacity="0.6"/>
+    <circle cx="15" cy="20" r="8" fill="#FFF" opacity="0.6"/>
+    <line x1="8" y1="0" x2="22" y2="0" stroke="#FFF" stroke-width="2" opacity="0.4"/>
+    <line x1="7" y1="6" x2="13" y2="14" stroke="#FFF" stroke-width="2" opacity="0.4"/>
+    <line x1="23" y1="6" x2="17" y2="14" stroke="#FFF" stroke-width="2" opacity="0.4"/>
+  </g>
+
+  <!-- Code brackets icon (right side) -->
+  <g transform="translate(280, 305)" fill="#FFF" opacity="0.6">
+    <path d="M -8,-15 L -15,-8 L -15,8 L -8,15" stroke="#FFF" stroke-width="3" fill="none"/>
+    <path d="M 8,-15 L 15,-8 L 15,8 L 8,15" stroke="#FFF" stroke-width="3" fill="none"/>
+  </g>
+
+  <!-- Toyota Way inspired quality indicator -->
+  <g transform="translate(200, 330)">
+    <circle cx="0" cy="0" r="25" fill="#28A745" opacity="0.9"/>
+    <text x="0" y="8" font-family="Arial, sans-serif" font-size="24" font-weight="bold"
+          fill="#FFF" text-anchor="middle">A</text>
+    <text x="0" y="-15" font-family="Arial, sans-serif" font-size="10"
+          fill="#FFF" text-anchor="middle">96.4</text>
+  </g>
+
+  <!-- Title -->
+  <text x="200" y="370" font-family="Arial, sans-serif" font-size="20" font-weight="bold"
+        fill="#FFF" text-anchor="middle">OIP</text>
+</svg>

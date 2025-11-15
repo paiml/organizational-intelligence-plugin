@@ -1,9 +1,23 @@
-# Organizational Intelligence Plugin (OIP)
+<div align="center">
+  <img src="logo.png" alt="OIP Logo" width="128" height="128">
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org/)
+  # Organizational Intelligence Plugin (OIP)
 
-A plugin for [pmat](https://github.com/paiml/pmat) that analyzes GitHub organizations to detect defect patterns, measure code quality, and generate actionable intelligence for software development teams.
+  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+  [![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org/)
+  [![Grade: A](https://img.shields.io/badge/pmat_repo--score-A_(90%2F100)-success.svg)](https://github.com/paiml/pmat)
+  [![TDG Score](https://img.shields.io/badge/TDG-96.4%2F100_(A%2B)-brightgreen.svg)](https://github.com/paiml/pmat)
+
+  A plugin for [pmat](https://github.com/paiml/pmat) that analyzes GitHub organizations to detect defect patterns, measure code quality, and generate actionable intelligence for software development teams.
+
+  [Installation](#installation) •
+  [Quick Start](#usage) •
+  [Documentation](#development) •
+  [Contributing](#contributing)
+
+</div>
+
+---
 
 ## Overview
 

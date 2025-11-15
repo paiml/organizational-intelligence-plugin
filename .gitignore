@@ -21,6 +21,10 @@ target
 !.pre-commit-config.yaml
 !.pmat-gates.toml
 
+# Allow logo files
+!logo*.png
+!logo.svg
+
 # RustRover
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
