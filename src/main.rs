@@ -6,10 +6,10 @@ use chrono::{Duration, Utc};
 use clap::Parser;
 use organizational_intelligence_plugin::analyzer::OrgAnalyzer;
 use organizational_intelligence_plugin::github::GitHubMiner;
+use organizational_intelligence_plugin::pr_reviewer::PrReviewer;
 use organizational_intelligence_plugin::report::{
     AnalysisMetadata, AnalysisReport, ReportGenerator,
 };
-use organizational_intelligence_plugin::pr_reviewer::PrReviewer;
 use organizational_intelligence_plugin::summarizer::{ReportSummarizer, SummaryConfig};
 use organizational_intelligence_plugin::{Cli, Commands};
 use std::env;
@@ -68,7 +68,7 @@ async fn main() -> Result<()> {
             // Generate output based on format
             let output_content = match format.as_str() {
                 "json" => review.to_json()?,
-                "markdown" | _ => review.to_markdown(),
+                _ => review.to_markdown(), // Default to markdown
             };
 
             // Write to file or stdout
@@ -84,12 +84,18 @@ async fn main() -> Result<()> {
             println!("   Warnings: {}", review.warnings.len());
             println!("   Files analyzed: {}", review.files_analyzed.len());
             println!("   Baseline date: {}", review.baseline_date);
-            println!("   Repositories in baseline: {}", review.repositories_analyzed);
+            println!(
+                "   Repositories in baseline: {}",
+                review.repositories_analyzed
+            );
 
             if review.warnings.is_empty() {
                 println!("\n✅ No warnings - PR looks good based on historical patterns!");
             } else {
-                println!("\n⚠️  {} warning(s) generated - review carefully!", review.warnings.len());
+                println!(
+                    "\n⚠️  {} warning(s) generated - review carefully!",
+                    review.warnings.len()
+                );
             }
 
             println!("\n🎯 Phase 3 Complete!");
@@ -142,10 +148,7 @@ async fn main() -> Result<()> {
                         "   Repositories analyzed: {}",
                         summary.metadata.repositories_analyzed
                     );
-                    println!(
-                        "   Commits analyzed: {}",
-                        summary.metadata.commits_analyzed
-                    );
+                    println!("   Commits analyzed: {}", summary.metadata.commits_analyzed);
                     println!(
                         "   Top defect categories included: {}",
                         summary.organizational_insights.top_defect_categories.len()

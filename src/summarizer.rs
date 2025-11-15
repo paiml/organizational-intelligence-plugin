@@ -297,7 +297,10 @@ mod tests {
         let summary = ReportSummarizer::summarize(report_path, config).unwrap();
 
         // Should only have ConfigurationErrors (25) and SecurityVulnerabilities (15)
-        assert_eq!(summary.organizational_insights.top_defect_categories.len(), 2);
+        assert_eq!(
+            summary.organizational_insights.top_defect_categories.len(),
+            2
+        );
 
         let categories: Vec<String> = summary
             .organizational_insights
@@ -328,7 +331,10 @@ mod tests {
         };
         let summary = ReportSummarizer::summarize(report_path, config).unwrap();
 
-        assert_eq!(summary.organizational_insights.top_defect_categories.len(), 2);
+        assert_eq!(
+            summary.organizational_insights.top_defect_categories.len(),
+            2
+        );
 
         // Should be sorted by frequency
         assert_eq!(

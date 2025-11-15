@@ -18,6 +18,8 @@ target
 *.yaml
 !.github/**/*.yaml
 !.github/**/*.yml
+!.pre-commit-config.yaml
+!.pmat-gates.toml
 
 # RustRover
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can

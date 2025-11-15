@@ -1,0 +1,101 @@
+# PMAT Quality Gates Configuration
+# Organizational Intelligence Plugin follows Toyota Way principles
+# These gates ensure consistent quality across all contributions
+
+[quality_thresholds]
+# Technical Debt Gradient (TDG) - Minimum acceptable score
+# Current: 96.4/100 (A+)
+# Target: Maintain 85+ (A grade)
+tdg_minimum = 85.0
+
+# Test Coverage - Minimum line coverage percentage
+# Current: 58.79%
+# Target: 85%+ (aspirational)
+# Gate: Don't regress below current baseline
+coverage_minimum = 58.0
+
+# Cyclomatic Complexity - Maximum per function
+# Toyota Way: Keep functions simple and focused
+max_cyclomatic_complexity = 10
+
+# Function Length - Maximum lines per function
+# Toyota Way: Single Responsibility Principle
+max_function_length = 50
+
+# SATD (Self-Admitted Technical Debt) - Maximum instances
+# No TODO/FIXME/HACK in production code (tests are OK)
+max_satd_instances = 0
+
+[build]
+# Ensure all features build successfully
+all_features = true
+
+# Run clippy with strict warnings
+clippy_strict = true
+
+# Require fmt check to pass
+fmt_check = true
+
+[testing]
+# Run all tests (including ignored integration tests in CI)
+run_all_tests = false  # Integration tests require network
+
+# Fail on test warnings
+fail_on_warnings = true
+
+# Property-based testing iterations (when applicable)
+proptest_iterations = 100
+
+[ci]
+# Require CI to pass before merge
+require_ci_pass = true
+
+# Platforms to test on
+test_platforms = ["ubuntu-latest", "macos-latest", "windows-latest"]
+
+[documentation]
+# Require public APIs to have documentation
+require_docs = true
+
+# Require examples in public API docs
+require_examples = true
+
+[toyota_way]
+# Custom quality principles following Toyota Production System
+
+# Muda (Waste Elimination)
+# - No dead code
+# - No unused dependencies
+# - Automated processes over manual
+eliminate_waste = true
+
+# Muri (Overburden Prevention)
+# - Fast test suite (<5s for unit tests)
+# - Efficient algorithms
+# - Respect developer time
+prevent_overburden = true
+
+# Jidoka (Build Quality In)
+# - Tests before implementation (TDD)
+# - Validation at boundaries
+# - Clear error messages
+build_quality_in = true
+
+# Kaizen (Continuous Improvement)
+# - Track metrics over time
+# - Incremental improvements
+# - Regular retrospectives
+continuous_improvement = true
+
+[metrics_tracking]
+# Track these metrics over time for Kaizen
+track = [
+    "tdg_score",
+    "test_coverage",
+    "defect_density",
+    "build_time",
+    "test_time",
+]
+
+# Alert if metrics degrade
+alert_on_regression = true

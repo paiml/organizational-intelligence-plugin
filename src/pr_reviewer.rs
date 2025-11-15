@@ -70,7 +70,7 @@ impl PrReview {
                     for tip in &warning.prevention_tips {
                         output.push_str(&format!("- ✅ {}\n", tip));
                     }
-                    output.push_str("\n");
+                    output.push('\n');
                 }
 
                 output.push_str("---\n\n");
@@ -91,8 +91,7 @@ impl PrReview {
 
     /// Generate JSON report for programmatic consumption
     pub fn to_json(&self) -> Result<String> {
-        serde_json::to_string_pretty(self)
-            .context("Failed to serialize PR review to JSON")
+        serde_json::to_string_pretty(self).context("Failed to serialize PR review to JSON")
     }
 }
 
@@ -104,8 +103,8 @@ pub struct PrReviewer {
 impl PrReviewer {
     /// Load baseline summary from weekly analysis
     pub fn load_baseline<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let baseline = Summary::from_file(path.as_ref())
-            .context("Failed to load baseline summary")?;
+        let baseline =
+            Summary::from_file(path.as_ref()).context("Failed to load baseline summary")?;
         Ok(Self { baseline })
     }
 
@@ -233,14 +232,13 @@ fn should_warn(pattern: &crate::summarizer::DefectPatternSummary) -> bool {
     // 1. High frequency (10+ occurrences) AND low quality (TDG < 60)
     // OR
     // 2. Very high frequency (20+ occurrences) regardless of quality
-    (pattern.frequency >= 10 && pattern.avg_tdg_score < 60.0)
-        || pattern.frequency >= 20
+    (pattern.frequency >= 10 && pattern.avg_tdg_score < 60.0) || pattern.frequency >= 20
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::summarizer::{DefectPatternSummary, QualityThresholds, SummaryMetadata};
+    use crate::summarizer::{QualityThresholds, SummaryMetadata};
 
     fn create_test_summary() -> Summary {
         use crate::classifier::DefectCategory;
@@ -342,7 +340,8 @@ mod tests {
         let review = reviewer.review_pr(&["src/logic.rs".to_string()]);
 
         // Should not get LogicErrors warning (frequency too low)
-        let logic_warnings: Vec<_> = review.warnings
+        let logic_warnings: Vec<_> = review
+            .warnings
             .iter()
             .filter(|w| w.category == "LogicErrors")
             .collect();

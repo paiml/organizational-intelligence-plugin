@@ -1,0 +1,53 @@
+# Pre-commit hooks for Organizational Intelligence Plugin
+# Install: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Rust formatting
+  - repo: https://github.com/doublify/pre-commit-rust
+    rev: v1.0
+    hooks:
+      - id: fmt
+        name: cargo fmt
+        description: Format Rust code with rustfmt
+
+      - id: cargo-check
+        name: cargo check
+        description: Check that Rust code compiles
+
+      - id: clippy
+        name: cargo clippy
+        description: Lint Rust code with clippy
+        args: ['--all-targets', '--', '-D', 'warnings']
+
+  # General file hygiene
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim trailing whitespace
+
+      - id: end-of-file-fixer
+        name: Fix end of files
+
+      - id: check-yaml
+        name: Check YAML syntax
+        exclude: '.*\.yaml$'  # Exclude analysis outputs
+
+      - id: check-added-large-files
+        name: Prevent large files
+        args: ['--maxkb=1000']
+
+      - id: check-merge-conflict
+        name: Check for merge conflicts
+
+      - id: mixed-line-ending
+        name: Check line endings
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.38.0
+    hooks:
+      - id: markdownlint
+        name: Lint Markdown files
+        args: ['--fix']
