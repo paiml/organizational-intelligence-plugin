@@ -10,7 +10,9 @@
 use anyhow::Result;
 use chrono::Utc;
 use organizational_intelligence_plugin::github::GitHubMiner;
-use organizational_intelligence_plugin::report::{AnalysisMetadata, AnalysisReport, ReportGenerator};
+use organizational_intelligence_plugin::report::{
+    AnalysisMetadata, AnalysisReport, ReportGenerator,
+};
 use std::path::PathBuf;
 
 #[tokio::main]
@@ -67,7 +69,9 @@ async fn main() -> Result<()> {
 
     // Write to file
     let output_path = PathBuf::from("tokio-rs-analysis.yaml");
-    report_generator.write_to_file(&report, &output_path).await?;
+    report_generator
+        .write_to_file(&report, &output_path)
+        .await?;
 
     println!("✅ Report saved to: {}", output_path.display());
 
