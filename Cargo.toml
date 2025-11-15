@@ -39,7 +39,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Git integration
-git2 = "0.19"
+git2 = "0.20"
 
 # Temporary directories
 tempfile = "3.10"
