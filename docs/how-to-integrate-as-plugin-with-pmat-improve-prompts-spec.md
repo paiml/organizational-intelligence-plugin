@@ -1,19 +1,145 @@
-# How to Integrate Organizational Intelligence as a pmat Plugin
+# Organizational Intelligence Plugin: pmat Integration Design
+
+**Document Type**: Technical Design Specification
+**Status**: Phase 1 Complete, Phase 2-4 Proposed
+**Last Updated**: 2025-11-15
+**Target Audience**: Contributors, Integrators, Technical Planning
+
+---
+
+## ⚠️ Important: Current Implementation Status
+
+| Phase | Status | What Exists | What's Proposed |
+|-------|--------|-------------|-----------------|
+| **Phase 1** | ✅ **COMPLETE** | `oip analyze`, pmat TDG integration, YAML reports | - |
+| **Phase 2** | 🟡 **IN PROGRESS** | - | `oip summarize` (automated PII stripping) |
+| **Phase 3** | ⚪ **PROPOSED** | - | `oip review-pr` (fast PR reviews) |
+| **Phase 4** | ⚪ **PROPOSED** | - | AI prompt integration |
+
+**If you're looking for a user guide for existing features, see `README.md`.**
+
+This document describes the **vision and design** for integrating OIP with pmat and AI prompt engineering. It includes implemented features (Phase 1) and proposed enhancements (Phase 2-4) with estimated effort and implementation details.
+
+---
 
 ## Overview
 
-This guide shows how to integrate the Organizational Intelligence Plugin (OIP) with pmat and use its insights to generate better AI prompts, particularly for improving the paiml-mcp-agent-toolkit.
+**Vision**: Use historical defect patterns from organizational intelligence to generate context-aware AI prompts that prevent common mistakes.
 
-**Key Insight**: OIP analyzes your organization's defect patterns and code quality. These insights can be fed into AI prompt engineering to create context-aware, defect-preventing prompts.
+**Key Insight**: By analyzing years of commit history, we can identify recurring defect patterns and feed this knowledge into AI-assisted development, creating prompts that guide developers away from known pitfalls.
+
+**Current Reality**: Phase 1 provides the data foundation. Phases 2-4 (proposed below) will automate the transformation of this data into actionable AI prompts.
 
 ## Table of Contents
 
-1. [Integration Architecture](#integration-architecture)
-2. [Using OIP as a pmat Plugin](#using-oip-as-a-pmat-plugin)
-3. [Generating AI Prompts from Defect Patterns](#generating-ai-prompts-from-defect-patterns)
-4. [Real-World Example: paiml-mcp-agent-toolkit](#real-world-example-paiml-mcp-agent-toolkit)
-5. [Advanced Use Cases](#advanced-use-cases)
-6. [Prompt Templates](#prompt-templates)
+1. [What Exists Today (Phase 1)](#what-exists-today-phase-1)
+2. [Development Roadmap](#development-roadmap)
+3. [Integration Architecture](#integration-architecture)
+4. [Phase 2: Summarization (IN PROGRESS)](#phase-2-summarization-in-progress)
+5. [Phase 3: PR Review (PROPOSED)](#phase-3-pr-review-proposed)
+6. [Phase 4: AI Integration (PROPOSED)](#phase-4-ai-integration-proposed)
+7. [Implementation Guide](#implementation-guide)
+
+---
+
+## What Exists Today (Phase 1)
+
+✅ **IMPLEMENTED AND WORKING**
+
+### Current Capabilities
+
+```bash
+# What you can do RIGHT NOW:
+
+# 1. Analyze organization for defect patterns
+cargo run -- analyze --org YOUR_ORG --output report.yaml
+
+# 2. Get detailed YAML report with:
+#    - Defect patterns by category
+#    - TDG quality scores
+#    - Code churn metrics
+#    - Example commit messages (with PII)
+```
+
+### Current Output Format
+
+```yaml
+version: "1.0"
+metadata:
+  organization: paiml
+  analysis_date: "2025-11-15T12:00:00Z"
+  repositories_analyzed: 25
+  commits_analyzed: 2500
+defect_patterns:
+- category: ConfigurationErrors
+  frequency: 25
+  confidence: 0.78
+  quality_signals:
+    avg_tdg_score: 96.4      # ✅ Working
+    max_tdg_score: 98.0       # ✅ Working
+    avg_lines_changed: 45.2   # ✅ Working
+    avg_files_per_commit: 2.1 # ✅ Working
+  examples:                  # ⚠️ Contains PII (author, commit hash)
+  - commit_hash: "abc123"
+    message: "fix config bug"
+    author: "dev@company.com"
+```
+
+### Current Limitations (Addressed in Phase 2-4)
+
+❌ **Manual work required** to anonymize PII from reports
+❌ **No automated summarization** for AI prompt generation
+❌ **No PR review integration**
+❌ **No direct AI prompt generation**
+
+**Next**: These limitations are addressed in the proposed phases below.
+
+---
+
+## Development Roadmap
+
+### Phase-by-Phase Plan
+
+| Phase | Status | Effort | Features | Value Delivered |
+|-------|--------|--------|----------|-----------------|
+| **1: Core Analysis** | ✅ DONE | - | Defect detection, TDG integration, YAML reports | Organizational intelligence baseline |
+| **2: Summarization** | 🟡 IN PROGRESS | 2-4 hours | `oip summarize`, automated PII stripping, prompt-ready output | Eliminates manual YAML editing waste |
+| **3: PR Review** | ⚪ PROPOSED | 4-8 hours | `oip review-pr`, stateful baselines, <30s feedback | Fast, actionable PR reviews |
+| **4: AI Integration** | ⚪ PROPOSED | 8-16 hours | DefectAwarePromptGenerator, MCP integration | Context-aware AI prompts |
+
+**Total Estimated Effort**: 14-28 hours across all phases
+
+### Dependencies
+
+```
+Phase 1 (DONE)
+    ↓
+Phase 2 (IN PROGRESS) ← You are here
+    ↓
+Phase 3 (Requires Phase 2)
+    ↓
+Phase 4 (Requires Phases 2-3)
+```
+
+### Toyota Way Principles Applied
+
+1. **Phase 1**: Built foundation with pmat integration (Jidoka - build quality in)
+2. **Phase 2**: Eliminate manual waste in summarization (Muda reduction)
+3. **Phase 3**: Eliminate overburden in PR reviews (Muri reduction)
+4. **Phase 4**: Deliver customer value (context-aware prompts)
+
+### Critical Learning from Toyota Way Review
+
+**Original Problem**: Document promised features as if they existed, creating confusion.
+
+**Root Cause (Five Whys)**:
+1. Why confusion? → Manual steps hidden
+2. Why manual? → Summarization not automated
+3. Why not automated? → Not designed into tool
+4. Why not designed in? → Focused on data collection, not synthesis
+5. **Root**: "Intelligence" requires synthesis, not just collection
+
+**Solution**: Implement `oip summarize` (Phase 2) to automate the entire workflow.
 
 ---
 
@@ -60,7 +186,304 @@ This guide shows how to integrate the Organizational Intelligence Plugin (OIP) w
 
 ---
 
-## Using OIP as a pmat Plugin
+## Phase 2: Summarization (IN PROGRESS)
+
+**Status**: 🟡 **IN PROGRESS**
+**Effort**: 2-4 hours
+**Goal**: Eliminate manual waste in summarization workflow
+
+### The Problem (Identified via Toyota Way Review)
+
+**Current workflow (Phase 1)**:
+1. Run `oip analyze` → Get YAML with PII
+2. **MANUAL STEP**: Hand-edit YAML to remove PII and extract patterns
+3. Use edited summary in AI prompts
+
+**Waste (Muda)**: Manual editing is error-prone, inconsistent, prevents automation
+
+### The Solution: `oip summarize` Command
+
+**Proposed command**:
+```bash
+# Automated PII stripping and pattern extraction
+oip summarize --input org-report.yaml --output summary.yaml --strip-pii
+```
+
+**Implementation Design**:
+
+```rust
+// src/summarizer.rs (NEW MODULE)
+
+/// Configuration for summarization
+pub struct SummaryConfig {
+    pub strip_pii: bool,           // Remove author, commit hashes
+    pub top_n_categories: usize,   // Show only top N defects
+    pub min_frequency: usize,      // Filter low-frequency patterns
+    pub include_examples: bool,    // Include anonymized examples
+}
+
+/// Summarize organizational analysis for AI consumption
+pub struct ReportSummarizer;
+
+impl ReportSummarizer {
+    pub fn summarize(input: &Path, config: SummaryConfig) -> Result<Summary> {
+        // 1. Load full report
+        let report = OrganizationalReport::from_file(input)?;
+
+        // 2. Filter to top N categories by frequency
+        let top_patterns = report.defect_patterns
+            .into_iter()
+            .filter(|p| p.frequency >= config.min_frequency)
+            .sorted_by_key(|p| p.frequency)
+            .rev()
+            .take(config.top_n_categories)
+            .collect();
+
+        // 3. Strip PII if requested
+        let patterns = if config.strip_pii {
+            Self::strip_pii(top_patterns)
+        } else {
+            top_patterns
+        };
+
+        // 4. Generate summary
+        Ok(Summary {
+            organizational_insights: patterns,
+            code_quality_thresholds: QualityThresholds::default(),
+            metadata: SummaryMetadata::from_report(&report),
+        })
+    }
+
+    fn strip_pii(patterns: Vec<DefectPattern>) -> Vec<DefectPattern> {
+        patterns.into_iter().map(|mut p| {
+            // Remove examples entirely (contain PII)
+            p.examples.clear();
+            p
+        }).collect()
+    }
+}
+```
+
+**CLI Integration**:
+```rust
+// src/cli.rs (UPDATE)
+
+#[derive(Parser)]
+pub enum Commands {
+    Analyze { /* existing */ },
+
+    /// NEW: Summarize analysis report for AI consumption
+    Summarize {
+        /// Input YAML report from 'analyze' command
+        #[arg(short, long)]
+        input: PathBuf,
+
+        /// Output summary file
+        #[arg(short, long)]
+        output: PathBuf,
+
+        /// Strip PII (author, commit hashes)
+        #[arg(long, default_value = "true")]
+        strip_pii: bool,
+
+        /// Top N defect categories to include
+        #[arg(long, default_value = "10")]
+        top_n: usize,
+
+        /// Minimum frequency to include
+        #[arg(long, default_value = "5")]
+        min_frequency: usize,
+    },
+}
+```
+
+**Test Plan** (EXTREME TDD):
+1. Test PII stripping removes authors, commit hashes
+2. Test frequency filtering works correctly
+3. Test top-N selection
+4. Test output format is valid YAML
+5. Test roundtrip (analyze → summarize → load)
+
+**Expected Output**:
+```yaml
+# After: oip summarize --input full.yaml --output summary.yaml --strip-pii
+organizational_insights:
+  top_defect_categories:
+  - category: ConfigurationErrors
+    frequency: 25
+    avg_tdg_score: 45.2
+    common_patterns:          # Extracted from examples
+    - "Missing validation"
+    prevention_strategies:    # Generated from analysis
+    - "Explicit validation"
+  # NO commit hashes, NO author emails, NO PII
+```
+
+**Value Delivered**:
+- ✅ Eliminates manual editing waste
+- ✅ Consistent, reproducible summaries
+- ✅ Safe for sharing (no PII leakage)
+- ✅ Enables automation in CI/CD
+
+---
+
+## Phase 3: PR Review (PROPOSED)
+
+**Status**: ⚪ **PROPOSED**
+**Effort**: 4-8 hours
+**Dependencies**: Requires Phase 2
+**Goal**: Fast PR reviews (<30s) without re-analyzing entire org
+
+### The Problem (Identified via Toyota Way Review)
+
+**Naive approach**:
+```yaml
+# .github/workflows/review.yml
+- name: Analyze org on every PR  # ❌ 10+ minutes!
+  run: oip analyze --org myorg
+```
+
+**Overburden (Muri)**:
+- Developer opens 1-file PR
+- CI re-analyzes 50 repos with 10,000 commits
+- Waits 10+ minutes
+- After 1 week: "I disabled the bot"
+
+### The Solution: Stateful Baselines
+
+**Proposed Architecture**:
+
+```bash
+# One-time: Establish baseline (expensive, run weekly)
+oip analyze --org myorg --output baseline.yaml
+oip summarize --input baseline.yaml --output baseline-summary.yaml
+
+# On every PR: Fast review (cheap, <30s)
+oip review-pr \
+  --baseline baseline-summary.yaml \
+  --files-changed src/config.rs,src/auth.rs \
+  --output pr-review.md
+```
+
+**Implementation Design**:
+
+```rust
+// src/pr_reviewer.rs (NEW MODULE)
+
+pub struct PrReviewer {
+    baseline: Summary,  // Pre-computed org patterns
+}
+
+impl PrReviewer {
+    pub fn load_baseline(path: &Path) -> Result<Self> {
+        let baseline = Summary::from_file(path)?;
+        Ok(Self { baseline })
+    }
+
+    pub fn review_pr(&self, files_changed: &[String]) -> PrReview {
+        let mut warnings = Vec::new();
+
+        for file in files_changed {
+            // Check file extension against defect patterns
+            if file.ends_with(".yaml") || file.ends_with(".toml") {
+                if let Some(pattern) = self.baseline.find_category("ConfigurationErrors") {
+                    if pattern.frequency > 10 && pattern.avg_tdg_score < 60.0 {
+                        warnings.push(Warning {
+                            file: file.clone(),
+                            category: "ConfigurationErrors",
+                            message: format!(
+                                "This org has {} config errors (TDG: {:.1}). Ensure validation!",
+                                pattern.frequency, pattern.avg_tdg_score
+                            ),
+                            prevention_tips: pattern.prevention_strategies.clone(),
+                        });
+                    }
+                }
+            }
+
+            // Similar checks for other file types...
+        }
+
+        PrReview { warnings }
+    }
+}
+```
+
+**CLI Integration**:
+```rust
+/// NEW: Review PR with organizational context
+ReviewPr {
+    /// Baseline summary from weekly analysis
+    #[arg(short, long)]
+    baseline: PathBuf,
+
+    /// Files changed in PR (comma-separated)
+    #[arg(short, long)]
+    files_changed: String,
+
+    /// Output format: markdown, json, github-comment
+    #[arg(short, long, default_value = "markdown")]
+    format: String,
+
+    /// Output file (or stdout if not specified)
+    #[arg(short, long)]
+    output: Option<PathBuf>,
+}
+```
+
+**Expected Output** (markdown format):
+```markdown
+# PR Review: Organizational Intelligence
+
+## ⚠️ Warnings Based on Historical Patterns
+
+### src/config.rs
+**Category**: ConfigurationErrors (25 occurrences, TDG: 45.2)
+
+**Common Issues in This Org**:
+- Missing validation for required fields
+- Type coercion without error handling
+
+**Prevention Strategies**:
+✅ Explicit validation with descriptive errors
+✅ Schema validation before parsing
+✅ Document all defaults in docstrings
+
+**Quality Gates**:
+```bash
+pmat analyze tdg --path src/config.rs --threshold 85
+cargo test --all-features
+```
+
+---
+
+**Analysis Date**: 2025-11-08 (baseline is 7 days old)
+**Repositories Analyzed**: 25
+**Recommendation**: Review carefully - config errors are this org's top defect!
+```
+
+**Performance**:
+- Baseline load: <100ms
+- File analysis: <50ms per file
+- Total: <30s for typical PR
+
+**Value Delivered**:
+- ✅ Fast feedback (<30s vs 10+ minutes)
+- ✅ Actionable warnings (not generic)
+- ✅ Respects developer time (no overburden)
+
+---
+
+## Phase 4: AI Integration (PROPOSED)
+
+**Status**: ⚪ **PROPOSED**
+**Effort**: 8-16 hours
+**Dependencies**: Requires Phases 2-3
+**Goal**: Generate context-aware AI prompts automatically
+
+### Using OIP as a pmat Plugin
+
+**Status**: ⚪ **PROPOSED** (integration not yet implemented)
 
 ### Step 1: Install Both Tools
 
@@ -121,6 +544,8 @@ pmat analyze comprehensive --org paiml --with-plugins organizational-intelligenc
 ---
 
 ## Generating AI Prompts from Defect Patterns
+
+**Status**: ⚪ **PROPOSED** (requires Phase 2 implementation)
 
 ### The Problem: Generic AI Prompts Miss Context
 
@@ -191,6 +616,8 @@ See [Real-World Example](#real-world-example-paiml-mcp-agent-toolkit) below.
 ---
 
 ## Real-World Example: paiml-mcp-agent-toolkit
+
+**Status**: ⚪ **PROPOSED** (illustrative example of Phase 4)
 
 ### Scenario: Improving AI Code Generation Prompts
 
@@ -607,7 +1034,11 @@ impl McpServer {
 
 ## Advanced Use Cases
 
+**Status**: ⚪ **ALL PROPOSED** (require Phases 2-4)
+
 ### Use Case 1: Automated Code Review Comments
+
+**Dependencies**: Phase 2 (summarize), Phase 3 (review-pr)
 
 **Integration**: GitHub Actions + OIP + AI
 
@@ -653,6 +1084,7 @@ jobs:
 
 ### Use Case 2: Developer Onboarding
 
+**Dependencies**: Phase 2 (summarize)
 **Goal**: New developers learn from historical mistakes
 
 ```bash
@@ -686,6 +1118,7 @@ EOF
 
 ### Use Case 3: Sprint Planning Intelligence
 
+**Dependencies**: Phase 1 (analyze) - ✅ **WORKS TODAY**
 **Goal**: Prioritize technical debt with data
 
 ```bash
@@ -711,6 +1144,8 @@ cat sprint-priorities.yaml
 ---
 
 ## Prompt Templates
+
+**Status**: ⚪ **PROPOSED** (require Phase 2 for data, Phase 4 for automation)
 
 ### Template 1: Feature Development
 
@@ -833,29 +1268,34 @@ We've seen this {{frequency}} times. Common causes:
 
 ## Implementation Checklist
 
-### Phase 1: Basic Integration (1-2 hours)
-- [ ] Install OIP in your workspace
-- [ ] Run analysis on your organization
-- [ ] Extract key defect patterns (no PII)
-- [ ] Create summary YAML for paiml-mcp-agent-toolkit
+**Note**: This checklist reflects the proposed roadmap. Phase 1 is complete; Phases 2-4 are proposed.
 
-### Phase 2: Prompt Enhancement (2-3 hours)
-- [ ] Implement DefectAwarePromptGenerator
-- [ ] Create prompt templates
+### Phase 1: Basic Integration ✅ **COMPLETE**
+- [x] Install OIP in your workspace
+- [x] Run analysis on your organization
+- [ ] Extract key defect patterns (no PII) - **MANUAL** (Phase 2 will automate)
+- [ ] Create summary YAML for paiml-mcp-agent-toolkit - **MANUAL** (Phase 2 will automate)
+
+### Phase 2: Summarization 🟡 **IN PROGRESS** (2-4 hours)
+- [ ] Implement `oip summarize` command
+- [ ] Add PII stripping logic
+- [ ] Add frequency filtering
+- [ ] Write comprehensive tests (EXTREME TDD)
+- [ ] Validate YAML output format
+
+### Phase 3: PR Review ⚪ **PROPOSED** (4-8 hours)
+- [ ] Implement `oip review-pr` command
+- [ ] Add baseline loading logic
+- [ ] Add file-based pattern matching
+- [ ] Generate markdown reports
+- [ ] Test with real PR scenarios
+
+### Phase 4: AI Integration ⚪ **PROPOSED** (8-16 hours)
+- [ ] Implement DefectAwarePromptGenerator in paiml-mcp-agent-toolkit
+- [ ] Create prompt templates for various scenarios
 - [ ] Integrate with MCP server
-- [ ] Test with sample tasks
-
-### Phase 3: Automation (2-4 hours)
-- [ ] Set up weekly defect analysis
-- [ ] Create GitHub Actions workflow
-- [ ] Implement automatic prompt updates
-- [ ] Add metrics tracking
-
-### Phase 4: Advanced Features (4-8 hours)
-- [ ] Code review automation
-- [ ] Developer onboarding guide generation
-- [ ] Sprint planning intelligence
-- [ ] Trend analysis dashboard
+- [ ] Add GitHub Actions code review automation
+- [ ] Test effectiveness with real code generation tasks
 
 ---
 
@@ -938,6 +1378,8 @@ export PATH=$PATH:~/.cargo/bin
 
 ## Future Enhancements
 
+**Note**: These are exploratory ideas beyond the 4-phase roadmap.
+
 ### Planned Features
 
 1. **Real-time Integration**
@@ -960,25 +1402,64 @@ export PATH=$PATH:~/.cargo/bin
 
 ## Summary
 
-**Key Takeaways:**
+### What You Can Do Today (Phase 1)
 
-1. **OIP provides organizational intelligence** that makes AI prompts context-aware
-2. **Integration is straightforward**: Run analysis → Extract patterns → Enhance prompts
-3. **Benefits are measurable**: Track defect reduction, TDG improvement, velocity
-4. **Privacy is preserved**: Use generic patterns, no PII
-5. **Continuous improvement**: Weekly analysis keeps prompts relevant
-
-**Start Here:**
+✅ **IMPLEMENTED**:
 ```bash
-# 1. Analyze your org
-cargo run -- analyze --org YOUR_ORG --output analysis.yaml
+# Analyze your organization
+cargo run -- analyze --org YOUR_ORG --output report.yaml
 
-# 2. Extract top 3 defect categories
-yq '.defect_patterns | sort_by(.frequency) | reverse | .[0:3]' analysis.yaml
-
-# 3. Add to your AI prompts
-# "Avoid these patterns: [paste here]"
+# Review the YAML report
+# Contains: defect patterns, TDG scores, churn metrics, examples (with PII)
 ```
+
+**Limitations**:
+- Manual PII removal required before sharing
+- No automated summarization
+- No PR review integration
+- No AI prompt generation
+
+### What's Coming (Phases 2-4)
+
+🟡 **Phase 2 (IN PROGRESS)**: `oip summarize` - Automated PII stripping (2-4 hours)
+⚪ **Phase 3 (PROPOSED)**: `oip review-pr` - Fast PR reviews <30s (4-8 hours)
+⚪ **Phase 4 (PROPOSED)**: AI integration with paiml-mcp-agent-toolkit (8-16 hours)
+
+### Key Takeaways
+
+1. **Phase 1 is production-ready**: Use `oip analyze` today for organizational intelligence
+2. **Phases 2-4 eliminate waste**: Automation removes manual steps (Toyota Way)
+3. **Privacy-first design**: PII stripping is a first-class feature in Phase 2
+4. **Fast feedback**: Phase 3 enables <30s PR reviews via stateful baselines
+5. **Context-aware AI**: Phase 4 generates prompts that prevent historical mistakes
+
+### Start Here (Today)
+
+```bash
+# 1. Clone and build
+git clone https://github.com/paiml/organizational-intelligence-plugin
+cd organizational-intelligence-plugin
+cargo build --release
+
+# 2. Analyze your organization
+export GITHUB_TOKEN=your_token
+cargo run -- analyze --org YOUR_ORG --output report.yaml
+
+# 3. Review defect patterns
+cat report.yaml | yq '.defect_patterns | sort_by(.frequency) | reverse | .[0:5]'
+
+# 4. Manually extract patterns (until Phase 2 is done)
+# Create a summary YAML with PII removed for use in AI prompts
+```
+
+### Contributing to Phase 2
+
+This is a **design specification** that guides implementation. If you want to help implement `oip summarize`:
+
+1. See Phase 2 section above for detailed implementation design
+2. Follow EXTREME TDD methodology (RED-GREEN-REFACTOR)
+3. Ensure all quality gates pass: `make lint`, `make test-fast`, `make coverage`
+4. Submit PR with tests achieving 85%+ coverage
 
 **Questions?** Open an issue at: https://github.com/paiml/organizational-intelligence-plugin
 
