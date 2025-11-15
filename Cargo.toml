@@ -41,8 +41,10 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # Git integration
 git2 = "0.19"
 
-[dev-dependencies]
+# Temporary directories
 tempfile = "3.10"
+
+[dev-dependencies]
 
 [profile.release]
 opt-level = 3

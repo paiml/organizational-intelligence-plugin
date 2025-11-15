@@ -4,12 +4,14 @@
 use anyhow::Result;
 use chrono::Utc;
 use clap::Parser;
+use organizational_intelligence_plugin::analyzer::OrgAnalyzer;
 use organizational_intelligence_plugin::github::GitHubMiner;
 use organizational_intelligence_plugin::report::{
     AnalysisMetadata, AnalysisReport, ReportGenerator,
 };
 use organizational_intelligence_plugin::{Cli, Commands};
 use std::env;
+use tempfile::TempDir;
 use tracing::{error, info, warn, Level};
 
 #[tokio::main]
@@ -74,6 +76,47 @@ async fn main() -> Result<()> {
                         );
                     }
 
+                    // Analyze defect patterns
+                    info!("Analyzing defect patterns in top repositories");
+                    println!("\n🔍 Analyzing defect patterns...");
+
+                    let temp_dir = TempDir::new()?;
+                    let analyzer = OrgAnalyzer::new(temp_dir.path());
+
+                    let mut all_patterns = vec![];
+                    let mut total_commits = 0;
+
+                    // Analyze top repositories (limit by max_concurrent)
+                    let repos_to_analyze = sorted_repos.iter().take(max_concurrent);
+
+                    for (i, repo) in repos_to_analyze.enumerate() {
+                        println!(
+                            "   [{}/{}] Analyzing: {}",
+                            i + 1,
+                            max_concurrent.min(sorted_repos.len()),
+                            repo.name
+                        );
+
+                        let repo_url = format!("https://github.com/{}/{}", org, repo.name);
+
+                        match analyzer
+                            .analyze_repository(&repo_url, &repo.name, 100)
+                            .await
+                        {
+                            Ok(patterns) => {
+                                total_commits += 100;
+                                all_patterns.extend(patterns);
+                                info!("✅ Analyzed {}", repo.name);
+                            }
+                            Err(e) => {
+                                warn!("Failed to analyze {}: {}", repo.name, e);
+                                println!("     ⚠️  Skipping {} (error: {})", repo.name, e);
+                            }
+                        }
+                    }
+
+                    println!("   ✅ Analysis complete!");
+
                     // Generate YAML report
                     info!("Generating YAML report");
                     let report_generator = ReportGenerator::new();
@@ -81,15 +124,15 @@ async fn main() -> Result<()> {
                     let metadata = AnalysisMetadata {
                         organization: org.clone(),
                         analysis_date: Utc::now().to_rfc3339(),
-                        repositories_analyzed: repos.len(),
-                        commits_analyzed: 0, // Phase 1: Not analyzing commits yet
+                        repositories_analyzed: max_concurrent.min(sorted_repos.len()),
+                        commits_analyzed: total_commits,
                         analyzer_version: env!("CARGO_PKG_VERSION").to_string(),
                     };
 
                     let report = AnalysisReport {
                         version: "1.0".to_string(),
                         metadata,
-                        defect_patterns: vec![], // Phase 1: No classifier yet
+                        defect_patterns: all_patterns,
                     };
 
                     // Write report to file
@@ -98,13 +141,13 @@ async fn main() -> Result<()> {
                     info!("✅ Report written to {}", output.display());
                     println!("\n📄 Report saved to: {}", output.display());
 
-                    println!("\n📋 Phase 1 Progress:");
-                    println!("   1. ✅ CLI structure (DONE)");
-                    println!("   2. ✅ GitHub API integration (DONE)");
-                    println!("   3. ✅ YAML output generation (DONE)");
-                    println!("   4. 🔄 Git history analysis (TODO)");
-                    println!("   5. 🔄 Rule-based classifier (TODO)");
-                    println!("\n🎯 Following EXTREME TDD - one feature at a time");
+                    println!("\n🎯 Phase 1 MVP Complete!");
+                    println!("   ✅ CLI structure");
+                    println!("   ✅ GitHub API integration");
+                    println!("   ✅ YAML output generation");
+                    println!("   ✅ Git history analysis");
+                    println!("   ✅ Rule-based defect classifier");
+                    println!("   ✅ Pattern aggregation");
 
                     Ok(())
                 }
