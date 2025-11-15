@@ -1,0 +1,56 @@
+# PMAT Quality Configuration for Organizational Intelligence Plugin
+# Philosophy: Guidelines with team discretion, not rigid enforcement
+
+[general]
+project_name = "organizational-intelligence-plugin"
+philosophy = "Guidelines with team discretion, not rigid enforcement"
+enforcement_level = "warn"  # warn, not error - team discusses issues
+
+[complexity]
+# Signals for review discussion, not hard failures
+cyclomatic_threshold = 15
+cognitive_threshold = 20
+max_nesting_depth = 5
+max_function_lines = 100
+enforcement = "warn"  # Team reviews high complexity, doesn't auto-fail
+
+[coverage]
+# Target as goal and discussion trigger
+target_coverage = 85.0
+fail_under = 70.0  # Only fail if dramatic drop (Kaizen: prevent regression)
+enforce_on_new_code = true
+exclude_patterns = ["*/tests/*", "*/examples/*", "*/benches/*"]
+
+# Critical modules must maintain high coverage
+[coverage.critical_modules]
+classifier = 90.0  # When implemented
+storage = 85.0     # When implemented
+github_miner = 80.0 # When implemented
+
+[satd]
+# Allow TODOs with ticket references (Respect for People)
+enabled = true
+zero_tolerance = false
+patterns = ["TODO", "FIXME", "HACK", "XXX", "BUG"]
+allow_with_ticket = true  # "TODO(#123): ..." is acceptable
+max_age_days = 30  # Flag TODOs older than 30 days for review
+
+[mutation_testing]
+# Focus on critical paths (will be configured in Phase 2)
+critical_modules = []  # TBD when modules are implemented
+target_survival_rate = 0.05  # 95% mutation kill rate
+budget_minutes = 5
+
+[dependencies]
+check_outdated = true
+check_vulnerabilities = true
+max_dependency_depth = 5
+
+[documentation]
+require_public_api_docs = true
+require_examples = true
+
+[performance]
+max_compilation_time_seconds = 300  # 5 min
+max_test_time_seconds = 300  # 5 min (test-all target)
+max_test_fast_seconds = 30  # 30s for pre-commit
