@@ -8,13 +8,19 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use tracing::{debug, info};
 
-/// Information about a single commit
+/// Information about a single commit with quality metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommitInfo {
     pub hash: String,
     pub message: String,
     pub author: String,
     pub timestamp: i64,
+    /// Number of files changed in this commit
+    pub files_changed: usize,
+    /// Lines added
+    pub lines_added: usize,
+    /// Lines removed
+    pub lines_removed: usize,
 }
 
 /// Git repository analyzer
@@ -140,11 +146,27 @@ impl GitAnalyzer {
             let author = commit.author().email().unwrap_or("unknown").to_string();
             let timestamp = commit.time().seconds();
 
+            // Get diff stats
+            let (files_changed, lines_added, lines_removed) = if commit.parent_count() > 0 {
+                let parent = commit.parent(0)?;
+                let diff =
+                    repo.diff_tree_to_tree(Some(&parent.tree()?), Some(&commit.tree()?), None)?;
+                let stats = diff.stats()?;
+                (stats.files_changed(), stats.insertions(), stats.deletions())
+            } else {
+                // Initial commit - count all files as changed
+                let tree = commit.tree()?;
+                (tree.len(), 0, 0)
+            };
+
             commits.push(CommitInfo {
                 hash,
                 message,
                 author,
                 timestamp,
+                files_changed,
+                lines_added,
+                lines_removed,
             });
         }
 
@@ -171,12 +193,18 @@ mod tests {
             message: "fix: null pointer dereference".to_string(),
             author: "test@example.com".to_string(),
             timestamp: 1234567890,
+            files_changed: 3,
+            lines_added: 15,
+            lines_removed: 8,
         };
 
         assert_eq!(commit.hash, "abc123");
         assert_eq!(commit.message, "fix: null pointer dereference");
         assert_eq!(commit.author, "test@example.com");
         assert_eq!(commit.timestamp, 1234567890);
+        assert_eq!(commit.files_changed, 3);
+        assert_eq!(commit.lines_added, 15);
+        assert_eq!(commit.lines_removed, 8);
     }
 
     #[test]

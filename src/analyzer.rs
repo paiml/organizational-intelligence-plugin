@@ -4,7 +4,7 @@
 
 use crate::classifier::{Classification, DefectCategory, RuleBasedClassifier};
 use crate::git::{CommitInfo, GitAnalyzer};
-use crate::report::DefectPattern;
+use crate::report::{DefectInstance, DefectPattern, QualitySignals};
 use anyhow::Result;
 use std::collections::HashMap;
 use std::path::Path;
@@ -119,13 +119,17 @@ impl OrgAnalyzer {
     }
 }
 
-/// Internal stats tracking for each defect category
+/// Internal stats tracking for each defect category with quality signals
 #[derive(Debug)]
 struct CategoryStats {
     category: DefectCategory,
     count: usize,
     total_confidence: f32,
-    examples: Vec<String>,
+    instances: Vec<DefectInstance>,
+    // Quality signal aggregators
+    total_files_changed: usize,
+    total_lines_added: usize,
+    total_lines_removed: usize,
 }
 
 impl CategoryStats {
@@ -134,7 +138,10 @@ impl CategoryStats {
             category,
             count: 0,
             total_confidence: 0.0,
-            examples: Vec::new(),
+            instances: Vec::new(),
+            total_files_changed: 0,
+            total_lines_added: 0,
+            total_lines_removed: 0,
         }
     }
 
@@ -142,15 +149,22 @@ impl CategoryStats {
         self.count += 1;
         self.total_confidence += classification.confidence;
 
+        // Aggregate quality signals
+        self.total_files_changed += commit.files_changed;
+        self.total_lines_added += commit.lines_added;
+        self.total_lines_removed += commit.lines_removed;
+
         // Keep up to 3 examples
-        if self.examples.len() < 3 {
-            let hash_short = if commit.hash.len() >= 8 {
-                &commit.hash[..8]
-            } else {
-                &commit.hash
-            };
-            let example = format!("{}: {}", hash_short, commit.message);
-            self.examples.push(example);
+        if self.instances.len() < 3 {
+            self.instances.push(DefectInstance {
+                commit_hash: commit.hash[..8.min(commit.hash.len())].to_string(),
+                message: commit.message.clone(),
+                author: commit.author.clone(),
+                timestamp: commit.timestamp,
+                files_affected: commit.files_changed,
+                lines_added: commit.lines_added,
+                lines_removed: commit.lines_removed,
+            });
         }
     }
 
@@ -161,11 +175,28 @@ impl CategoryStats {
             0.0
         };
 
+        // Calculate quality signals
+        let quality_signals = if self.count > 0 {
+            QualitySignals {
+                avg_tdg_score: None, // Will be enhanced in Phase 1.5.2
+                max_tdg_score: None,
+                avg_complexity: None,
+                avg_test_coverage: None,
+                satd_instances: 0, // Will be enhanced in Phase 1.5.2
+                avg_lines_changed: (self.total_lines_added + self.total_lines_removed) as f32
+                    / self.count as f32,
+                avg_files_per_commit: self.total_files_changed as f32 / self.count as f32,
+            }
+        } else {
+            QualitySignals::default()
+        };
+
         DefectPattern {
             category: self.category,
             frequency: self.count,
             confidence: avg_confidence,
-            examples: self.examples,
+            quality_signals,
+            examples: self.instances,
         }
     }
 }
@@ -203,12 +234,18 @@ mod tests {
                 message: "docs: update README".to_string(),
                 author: "test@example.com".to_string(),
                 timestamp: 1234567890,
+                files_changed: 1,
+                lines_added: 5,
+                lines_removed: 2,
             },
             CommitInfo {
                 hash: "def456".to_string(),
                 message: "chore: bump version".to_string(),
                 author: "test@example.com".to_string(),
                 timestamp: 1234567891,
+                files_changed: 1,
+                lines_added: 1,
+                lines_removed: 1,
             },
         ];
 
@@ -227,18 +264,27 @@ mod tests {
                 message: "fix: use-after-free in buffer".to_string(),
                 author: "test@example.com".to_string(),
                 timestamp: 1234567890,
+                files_changed: 2,
+                lines_added: 45,
+                lines_removed: 12,
             },
             CommitInfo {
                 hash: "def456".to_string(),
                 message: "fix: another memory leak".to_string(),
                 author: "test@example.com".to_string(),
                 timestamp: 1234567891,
+                files_changed: 1,
+                lines_added: 8,
+                lines_removed: 3,
             },
             CommitInfo {
                 hash: "ghi789".to_string(),
                 message: "security: prevent SQL injection".to_string(),
                 author: "test@example.com".to_string(),
                 timestamp: 1234567892,
+                files_changed: 3,
+                lines_added: 67,
+                lines_removed: 23,
             },
         ];
 
@@ -267,6 +313,9 @@ mod tests {
             message: "fix: memory leak".to_string(),
             author: "test@example.com".to_string(),
             timestamp: 1234567890,
+            files_changed: 2,
+            lines_added: 15,
+            lines_removed: 5,
         };
 
         let classification1 = Classification {
@@ -280,11 +329,14 @@ mod tests {
 
         assert_eq!(stats.count, 1);
         assert_eq!(stats.total_confidence, 0.8);
-        assert_eq!(stats.examples.len(), 1);
+        assert_eq!(stats.instances.len(), 1);
 
         let pattern = stats.into_defect_pattern();
         assert_eq!(pattern.frequency, 1);
         assert_eq!(pattern.confidence, 0.8);
+        // Verify quality signals are calculated
+        assert_eq!(pattern.quality_signals.avg_lines_changed, 20.0); // 15 + 5
+        assert_eq!(pattern.quality_signals.avg_files_per_commit, 2.0);
     }
 
     #[test]
@@ -297,6 +349,9 @@ mod tests {
                 message: "fix: memory leak".to_string(),
                 author: "test@example.com".to_string(),
                 timestamp: 1234567890 + i as i64,
+                files_changed: 1,
+                lines_added: 10,
+                lines_removed: 5,
             };
 
             let classification = Classification {
@@ -310,7 +365,7 @@ mod tests {
         }
 
         assert_eq!(stats.count, 5);
-        assert_eq!(stats.examples.len(), 3); // Limited to 3
+        assert_eq!(stats.instances.len(), 3); // Limited to 3
     }
 
     // Integration test requiring network access

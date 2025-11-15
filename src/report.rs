@@ -18,6 +18,54 @@ pub struct AnalysisMetadata {
     pub analyzer_version: String,
 }
 
+/// Quality signals aggregated for a defect category
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QualitySignals {
+    /// Average TDG score across all instances
+    pub avg_tdg_score: Option<f32>,
+    /// Maximum TDG score seen
+    pub max_tdg_score: Option<f32>,
+    /// Average cyclomatic complexity
+    pub avg_complexity: Option<f32>,
+    /// Average test coverage (0.0 to 1.0)
+    pub avg_test_coverage: Option<f32>,
+    /// Number of SATD (TODO/FIXME/HACK) markers found
+    pub satd_instances: usize,
+    /// Average lines changed per commit
+    pub avg_lines_changed: f32,
+    /// Number of files changed per commit on average
+    pub avg_files_per_commit: f32,
+}
+
+impl Default for QualitySignals {
+    fn default() -> Self {
+        Self {
+            avg_tdg_score: None,
+            max_tdg_score: None,
+            avg_complexity: None,
+            avg_test_coverage: None,
+            satd_instances: 0,
+            avg_lines_changed: 0.0,
+            avg_files_per_commit: 0.0,
+        }
+    }
+}
+
+/// Enhanced defect instance with quality metrics
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DefectInstance {
+    pub commit_hash: String,
+    pub message: String,
+    pub author: String,
+    pub timestamp: i64,
+    /// Number of files affected
+    pub files_affected: usize,
+    /// Lines added in this commit
+    pub lines_added: usize,
+    /// Lines removed in this commit
+    pub lines_removed: usize,
+}
+
 /// Defect pattern information
 /// Represents aggregated statistics for a defect category
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -25,7 +73,10 @@ pub struct DefectPattern {
     pub category: DefectCategory,
     pub frequency: usize,
     pub confidence: f32,
-    pub examples: Vec<String>,
+    /// Quality signals for this defect category
+    pub quality_signals: QualitySignals,
+    /// Enhanced examples with metrics
+    pub examples: Vec<DefectInstance>,
 }
 
 /// Complete analysis report
@@ -199,13 +250,39 @@ mod tests {
                 category: DefectCategory::MemorySafety,
                 frequency: 42,
                 confidence: 0.85,
-                examples: vec!["abc123: fix memory leak".to_string()],
+                quality_signals: QualitySignals {
+                    avg_lines_changed: 45.2,
+                    avg_files_per_commit: 2.1,
+                    ..Default::default()
+                },
+                examples: vec![DefectInstance {
+                    commit_hash: "abc123".to_string(),
+                    message: "fix memory leak".to_string(),
+                    author: "test@example.com".to_string(),
+                    timestamp: 1234567890,
+                    files_affected: 2,
+                    lines_added: 30,
+                    lines_removed: 15,
+                }],
             },
             DefectPattern {
                 category: DefectCategory::ConcurrencyBugs,
                 frequency: 30,
                 confidence: 0.80,
-                examples: vec!["def456: fix race condition".to_string()],
+                quality_signals: QualitySignals {
+                    avg_lines_changed: 67.3,
+                    avg_files_per_commit: 3.5,
+                    ..Default::default()
+                },
+                examples: vec![DefectInstance {
+                    commit_hash: "def456".to_string(),
+                    message: "fix race condition".to_string(),
+                    author: "test@example.com".to_string(),
+                    timestamp: 1234567891,
+                    files_affected: 4,
+                    lines_added: 50,
+                    lines_removed: 17,
+                }],
             },
         ];
 

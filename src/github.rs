@@ -2,6 +2,7 @@
 // Toyota Way: Start simple, validate with real usage
 
 use anyhow::{anyhow, Result};
+use chrono::{DateTime, Utc};
 use octocrab::Octocrab;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
@@ -15,6 +16,7 @@ pub struct RepoInfo {
     pub language: Option<String>,
     pub stars: u32,
     pub default_branch: String,
+    pub updated_at: DateTime<Utc>,
 }
 
 /// GitHub organization miner
@@ -108,6 +110,7 @@ impl GitHubMiner {
                 language: repo.language.and_then(|v| v.as_str().map(String::from)),
                 stars: repo.stargazers_count.unwrap_or(0),
                 default_branch: repo.default_branch.unwrap_or_else(|| "main".to_string()),
+                updated_at: repo.updated_at.unwrap_or_else(Utc::now),
             })
             .collect();
 
@@ -118,6 +121,21 @@ impl GitHubMiner {
         );
 
         Ok(repo_infos)
+    }
+
+    /// Filter repositories by last update date
+    ///
+    /// # Arguments
+    /// * `repos` - List of repositories to filter
+    /// * `since` - Only include repos updated since this date
+    ///
+    /// # Returns
+    /// Filtered list of repositories
+    pub fn filter_by_date(repos: Vec<RepoInfo>, since: DateTime<Utc>) -> Vec<RepoInfo> {
+        repos
+            .into_iter()
+            .filter(|repo| repo.updated_at >= since)
+            .collect()
     }
 }
 

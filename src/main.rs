@@ -2,7 +2,7 @@
 // Toyota Way: Start simple, deliver value incrementally
 
 use anyhow::Result;
-use chrono::Utc;
+use chrono::{Duration, Utc};
 use clap::Parser;
 use organizational_intelligence_plugin::analyzer::OrgAnalyzer;
 use organizational_intelligence_plugin::github::GitHubMiner;
@@ -55,17 +55,22 @@ async fn main() -> Result<()> {
             // Fetch organization repositories
             info!("Fetching repositories for organization: {}", org);
             match miner.fetch_organization_repos(&org).await {
-                Ok(repos) => {
-                    info!("✅ Successfully fetched {} repositories", repos.len());
+                Ok(all_repos) => {
+                    info!("✅ Successfully fetched {} repositories", all_repos.len());
+
+                    // Filter repos updated in last 2 years
+                    let two_years_ago = Utc::now() - Duration::days(730);
+                    let repos = GitHubMiner::filter_by_date(all_repos.clone(), two_years_ago);
 
                     println!("\n📊 Organization Analysis: {}", org);
-                    println!("   Repositories found: {}", repos.len());
+                    println!("   Total repositories: {}", all_repos.len());
+                    println!("   Repositories updated in last 2 years: {}", repos.len());
 
                     // Display top 5 repositories by stars
                     let mut sorted_repos = repos.clone();
                     sorted_repos.sort_by(|a, b| b.stars.cmp(&a.stars));
 
-                    println!("\n⭐ Top repositories by stars:");
+                    println!("\n⭐ Top repositories by stars (last 2 years):");
                     for (i, repo) in sorted_repos.iter().take(5).enumerate() {
                         println!(
                             "   {}. {} ({} ⭐) - {}",
@@ -76,25 +81,28 @@ async fn main() -> Result<()> {
                         );
                     }
 
-                    // Analyze defect patterns
-                    info!("Analyzing defect patterns in top repositories");
-                    println!("\n🔍 Analyzing defect patterns...");
+                    // Analyze ALL repos from last 2 years
+                    info!(
+                        "Analyzing defect patterns in ALL {} repositories",
+                        repos.len()
+                    );
+                    println!("\n🔍 Analyzing defect patterns in ALL repos from last 2 years...");
 
                     let temp_dir = TempDir::new()?;
                     let analyzer = OrgAnalyzer::new(temp_dir.path());
 
                     let mut all_patterns = vec![];
                     let mut total_commits = 0;
+                    let mut repos_analyzed = 0;
 
-                    // Analyze top repositories (limit by max_concurrent)
-                    let repos_to_analyze = sorted_repos.iter().take(max_concurrent);
-
-                    for (i, repo) in repos_to_analyze.enumerate() {
+                    // Analyze ALL repositories (not limited by max_concurrent anymore)
+                    for (i, repo) in sorted_repos.iter().enumerate() {
                         println!(
-                            "   [{}/{}] Analyzing: {}",
+                            "   [{}/{}] Analyzing: {} (updated: {})",
                             i + 1,
-                            max_concurrent.min(sorted_repos.len()),
-                            repo.name
+                            sorted_repos.len(),
+                            repo.name,
+                            repo.updated_at.format("%Y-%m-%d")
                         );
 
                         let repo_url = format!("https://github.com/{}/{}", org, repo.name);
@@ -106,6 +114,7 @@ async fn main() -> Result<()> {
                             Ok(patterns) => {
                                 total_commits += 100;
                                 all_patterns.extend(patterns);
+                                repos_analyzed += 1;
                                 info!("✅ Analyzed {}", repo.name);
                             }
                             Err(e) => {
@@ -124,7 +133,7 @@ async fn main() -> Result<()> {
                     let metadata = AnalysisMetadata {
                         organization: org.clone(),
                         analysis_date: Utc::now().to_rfc3339(),
-                        repositories_analyzed: max_concurrent.min(sorted_repos.len()),
+                        repositories_analyzed: repos_analyzed,
                         commits_analyzed: total_commits,
                         analyzer_version: env!("CARGO_PKG_VERSION").to_string(),
                     };

@@ -78,7 +78,8 @@ async fn main() -> Result<()> {
                 pattern.confidence * 100.0
             );
             if !pattern.examples.is_empty() {
-                println!("     Example: {}", pattern.examples[0]);
+                let example = &pattern.examples[0];
+                println!("     Example: {}: {}", example.commit_hash, example.message);
             }
         }
         println!();
