@@ -6,6 +6,7 @@ pub mod classifier;
 pub mod cli;
 pub mod git;
 pub mod github;
+pub mod pmat;
 pub mod report;
 
 // Re-export main types for convenience

@@ -4,10 +4,11 @@
 
 use crate::classifier::{Classification, DefectCategory, RuleBasedClassifier};
 use crate::git::{CommitInfo, GitAnalyzer};
+use crate::pmat::{PmatIntegration, TdgAnalysis};
 use crate::report::{DefectInstance, DefectPattern, QualitySignals};
 use anyhow::Result;
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use tracing::{debug, info};
 
 /// Integrated organizational defect analyzer
@@ -15,6 +16,7 @@ use tracing::{debug, info};
 pub struct OrgAnalyzer {
     git_analyzer: GitAnalyzer,
     classifier: RuleBasedClassifier,
+    cache_dir: PathBuf,
 }
 
 impl OrgAnalyzer {
@@ -31,9 +33,11 @@ impl OrgAnalyzer {
     /// let analyzer = OrgAnalyzer::new(PathBuf::from("/tmp/repos"));
     /// ```
     pub fn new<P: AsRef<Path>>(cache_dir: P) -> Self {
+        let cache_dir = cache_dir.as_ref().to_path_buf();
         Self {
-            git_analyzer: GitAnalyzer::new(cache_dir),
+            git_analyzer: GitAnalyzer::new(&cache_dir),
             classifier: RuleBasedClassifier::new(),
+            cache_dir,
         }
     }
 
@@ -80,7 +84,19 @@ impl OrgAnalyzer {
         debug!("Retrieved {} commits from {}", commits.len(), repo_name);
 
         // Classify commits and aggregate patterns
-        let patterns = self.aggregate_defect_patterns(&commits);
+        let mut patterns = self.aggregate_defect_patterns(&commits);
+
+        // Optionally enrich with TDG analysis (if pmat available)
+        let repo_path = self.cache_dir.join(repo_name);
+        if let Ok(tdg_analysis) = PmatIntegration::analyze_tdg(&repo_path) {
+            debug!(
+                "TDG analysis: avg={:.1}, max={:.1}",
+                tdg_analysis.average_score, tdg_analysis.max_score
+            );
+            self.enrich_with_tdg(&mut patterns, &tdg_analysis);
+        } else {
+            debug!("TDG analysis unavailable (pmat not installed or failed)");
+        }
 
         info!(
             "Found {} defect categories in {}",
@@ -116,6 +132,19 @@ impl OrgAnalyzer {
             .into_values()
             .map(|stats| stats.into_defect_pattern())
             .collect()
+    }
+
+    /// Enrich defect patterns with TDG quality signals
+    ///
+    /// # Arguments
+    /// * `patterns` - Defect patterns to enrich
+    /// * `tdg_analysis` - TDG analysis results
+    fn enrich_with_tdg(&self, patterns: &mut [DefectPattern], tdg_analysis: &TdgAnalysis) {
+        for pattern in patterns.iter_mut() {
+            // Update quality signals with TDG data
+            pattern.quality_signals.avg_tdg_score = Some(tdg_analysis.average_score);
+            pattern.quality_signals.max_tdg_score = Some(tdg_analysis.max_score);
+        }
     }
 }
 
@@ -366,6 +395,38 @@ mod tests {
 
         assert_eq!(stats.count, 5);
         assert_eq!(stats.instances.len(), 3); // Limited to 3
+    }
+
+    #[test]
+    fn test_enrich_with_tdg() {
+        use crate::pmat::TdgAnalysis;
+        use std::collections::HashMap;
+
+        let temp_dir = TempDir::new().unwrap();
+        let analyzer = OrgAnalyzer::new(temp_dir.path());
+
+        // Create mock defect pattern
+        let mut patterns = vec![DefectPattern {
+            category: DefectCategory::MemorySafety,
+            frequency: 5,
+            confidence: 0.85,
+            quality_signals: QualitySignals::default(),
+            examples: vec![],
+        }];
+
+        // Create mock TDG analysis
+        let tdg_analysis = TdgAnalysis {
+            file_scores: HashMap::new(),
+            average_score: 92.5,
+            max_score: 98.0,
+        };
+
+        // Enrich patterns
+        analyzer.enrich_with_tdg(&mut patterns, &tdg_analysis);
+
+        // Verify TDG scores were populated
+        assert_eq!(patterns[0].quality_signals.avg_tdg_score, Some(92.5));
+        assert_eq!(patterns[0].quality_signals.max_tdg_score, Some(98.0));
     }
 
     // Integration test requiring network access
