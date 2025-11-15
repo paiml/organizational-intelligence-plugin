@@ -91,13 +91,20 @@ impl PmatIntegration {
     /// Parse pmat TDG JSON output
     fn parse_tdg_output(json_output: &str) -> Result<TdgAnalysis> {
         // pmat outputs JSON with file scores
-        // Expected format: {"files": [{"path": "src/main.rs", "score": 95.0, "grade": "A+"}]}
+        // Actual format: {"files": [{"file_path": "src/main.rs", "total": 95.0, "grade": "APLus"}]}
+
+        #[derive(Deserialize)]
+        struct PmatFile {
+            file_path: String,
+            total: f32,
+            #[allow(dead_code)]
+            #[serde(default)]
+            grade: String,
+        }
 
         #[derive(Deserialize)]
         struct PmatOutput {
-            files: Vec<FileTdgScore>,
-            #[serde(default)]
-            average_score: Option<f32>,
+            files: Vec<PmatFile>,
         }
 
         let parsed: PmatOutput = serde_json::from_str(json_output)
@@ -108,17 +115,15 @@ impl PmatIntegration {
         let mut max_score = 0.0_f32;
 
         for file in &parsed.files {
-            file_scores.insert(file.path.clone(), file.score);
-            total_score += file.score;
-            max_score = max_score.max(file.score);
+            file_scores.insert(file.file_path.clone(), file.total);
+            total_score += file.total;
+            max_score = max_score.max(file.total);
         }
 
         let average_score = if parsed.files.is_empty() {
             0.0
         } else {
-            parsed
-                .average_score
-                .unwrap_or(total_score / parsed.files.len() as f32)
+            total_score / parsed.files.len() as f32
         };
 
         Ok(TdgAnalysis {
@@ -150,10 +155,9 @@ mod tests {
     fn test_parse_tdg_output() {
         let json = r#"{
             "files": [
-                {"path": "src/main.rs", "score": 95.0, "grade": "A+"},
-                {"path": "src/lib.rs", "score": 88.0, "grade": "A"}
-            ],
-            "average_score": 91.5
+                {"file_path": "src/main.rs", "total": 95.0, "grade": "APLus"},
+                {"file_path": "src/lib.rs", "total": 88.0, "grade": "A"}
+            ]
         }"#;
 
         let result = PmatIntegration::parse_tdg_output(json).unwrap();
