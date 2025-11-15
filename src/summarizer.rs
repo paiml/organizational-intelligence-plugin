@@ -69,10 +69,46 @@ pub struct Summary {
     pub metadata: SummaryMetadata,
 }
 
+impl Summary {
+    /// Find a defect category by name
+    pub fn find_category(&self, category_name: &str) -> Option<DefectPatternSummary> {
+        self.organizational_insights
+            .top_defect_categories
+            .iter()
+            .find(|p| p.category.to_string() == category_name)
+            .map(|p| DefectPatternSummary {
+                category: p.category.to_string(),
+                frequency: p.frequency,
+                confidence: p.confidence,
+                avg_tdg_score: p.quality_signals.avg_tdg_score.unwrap_or(0.0),
+                common_patterns: Vec::new(), // Not stored in summary
+                prevention_strategies: Vec::new(), // Not stored in summary
+            })
+    }
+
+    /// Load summary from file
+    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
+        let content = std::fs::read_to_string(path)?;
+        let summary: Summary = serde_yaml::from_str(&content)?;
+        Ok(summary)
+    }
+}
+
 /// Top-level container for defect patterns
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OrganizationalInsights {
     pub top_defect_categories: Vec<DefectPattern>,
+}
+
+/// Simplified defect pattern for PR review (without examples)
+#[derive(Debug, Clone, PartialEq)]
+pub struct DefectPatternSummary {
+    pub category: String,
+    pub frequency: usize,
+    pub confidence: f32,
+    pub avg_tdg_score: f32,
+    pub common_patterns: Vec<String>,
+    pub prevention_strategies: Vec<String>,
 }
 
 /// Summarize organizational analysis reports
@@ -177,7 +213,7 @@ mod tests {
                     examples: vec![DefectInstance {
                         commit_hash: "abc123".to_string(),
                         message: "fix config bug".to_string(),
-                        author: "john.doe@company.com".to_string(),
+                        author: "test@example.com".to_string(),
                         timestamp: 1731662400,
                         files_affected: 3,
                         lines_added: 50,

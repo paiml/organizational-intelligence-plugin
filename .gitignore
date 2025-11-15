@@ -13,6 +13,12 @@ target
 # Contains mutation testing data
 **/mutants.out*/
 
+# Analysis outputs (may contain PII - commit hashes, author info)
+# Always use 'oip summarize --strip-pii' before sharing
+*.yaml
+!.github/**/*.yaml
+!.github/**/*.yml
+
 # RustRover
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
