@@ -7,6 +7,7 @@ pub mod cli;
 pub mod git;
 pub mod github;
 pub mod pmat;
+pub mod pr_reviewer;
 pub mod report;
 pub mod summarizer;
 

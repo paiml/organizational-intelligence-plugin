@@ -64,6 +64,25 @@ pub enum Commands {
         #[arg(long, default_value = "false")]
         include_examples: bool,
     },
+
+    /// Review PR with organizational context (Phase 3)
+    ReviewPr {
+        /// Baseline summary from weekly analysis
+        #[arg(long, short, required = true)]
+        baseline: PathBuf,
+
+        /// Files changed in PR (comma-separated)
+        #[arg(long, short, required = true)]
+        files: String,
+
+        /// Output format: markdown, json
+        #[arg(long, default_value = "markdown")]
+        format: String,
+
+        /// Output file (stdout if not specified)
+        #[arg(long, short)]
+        output: Option<PathBuf>,
+    },
 }
 
 #[cfg(test)]

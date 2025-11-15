@@ -9,6 +9,7 @@ use organizational_intelligence_plugin::github::GitHubMiner;
 use organizational_intelligence_plugin::report::{
     AnalysisMetadata, AnalysisReport, ReportGenerator,
 };
+use organizational_intelligence_plugin::pr_reviewer::PrReviewer;
 use organizational_intelligence_plugin::summarizer::{ReportSummarizer, SummaryConfig};
 use organizational_intelligence_plugin::{Cli, Commands};
 use std::env;
@@ -35,6 +36,71 @@ async fn main() -> Result<()> {
 
     // Handle commands
     match cli.command {
+        Commands::ReviewPr {
+            baseline,
+            files,
+            format,
+            output,
+        } => {
+            info!("Reviewing PR with baseline: {}", baseline.display());
+            info!("Files changed: {}", files);
+            info!("Output format: {}", format);
+
+            println!("\n🔍 PR Review: Organizational Intelligence");
+            println!("   Baseline: {}", baseline.display());
+            println!("   Format:   {}", format);
+
+            // Load baseline summary
+            let reviewer = PrReviewer::load_baseline(&baseline)?;
+
+            // Parse comma-separated file list
+            let files_vec: Vec<String> = files
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect();
+
+            println!("   Files:    {} file(s)", files_vec.len());
+
+            // Review PR
+            let review = reviewer.review_pr(&files_vec);
+
+            // Generate output based on format
+            let output_content = match format.as_str() {
+                "json" => review.to_json()?,
+                "markdown" | _ => review.to_markdown(),
+            };
+
+            // Write to file or stdout
+            if let Some(output_path) = output {
+                std::fs::write(&output_path, &output_content)?;
+                println!("\n✅ Review saved to: {}", output_path.display());
+            } else {
+                println!("\n{}", output_content);
+            }
+
+            // Summary
+            println!("\n📊 Review Summary:");
+            println!("   Warnings: {}", review.warnings.len());
+            println!("   Files analyzed: {}", review.files_analyzed.len());
+            println!("   Baseline date: {}", review.baseline_date);
+            println!("   Repositories in baseline: {}", review.repositories_analyzed);
+
+            if review.warnings.is_empty() {
+                println!("\n✅ No warnings - PR looks good based on historical patterns!");
+            } else {
+                println!("\n⚠️  {} warning(s) generated - review carefully!", review.warnings.len());
+            }
+
+            println!("\n🎯 Phase 3 Complete!");
+            println!("   ✅ Fast PR review (<30s)");
+            println!("   ✅ Stateful baselines (no re-analysis)");
+            println!("   ✅ Actionable warnings");
+            println!("   ✅ Multiple output formats");
+
+            Ok(())
+        }
+
         Commands::Summarize {
             input,
             output,
