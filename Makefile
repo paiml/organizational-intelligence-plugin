@@ -1,7 +1,7 @@
 # Organizational Intelligence Plugin - Makefile
 # Toyota Way: Fast feedback loops, outcome-focused quality
 
-.PHONY: help pre-commit ci-validate test-fast test-all lint-fast lint-full build run clean
+.PHONY: help pre-commit ci-validate test-fast test-all lint lint-fast lint-full build run clean
 .PHONY: coverage coverage-summary coverage-open coverage-ci coverage-clean coverage-report
 
 # Default target
@@ -21,6 +21,7 @@ help:
 	@echo "  make coverage-clean   - Clean coverage artifacts"
 	@echo ""
 	@echo "Quality & Linting:"
+	@echo "  make lint             - Quick lint check (alias for lint-fast)"
 	@echo "  make lint-fast        - Quick lint check"
 	@echo "  make lint-full        - Full lint with all features"
 	@echo "  make ci-validate      - Full CI validation pipeline"
@@ -45,6 +46,9 @@ ci-validate: lint-full test-all coverage-ci
 fmt-check:
 	@echo "🎨 Checking code formatting..."
 	@cargo fmt --check
+
+# Lint alias (points to lint-fast by default)
+lint: lint-fast
 
 # Quick lint (faster for pre-commit)
 lint-fast:
