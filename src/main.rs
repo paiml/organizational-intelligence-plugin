@@ -2,8 +2,12 @@
 // Toyota Way: Start simple, deliver value incrementally
 
 use anyhow::Result;
+use chrono::Utc;
 use clap::Parser;
 use organizational_intelligence_plugin::github::GitHubMiner;
+use organizational_intelligence_plugin::report::{
+    AnalysisMetadata, AnalysisReport, ReportGenerator,
+};
 use organizational_intelligence_plugin::{Cli, Commands};
 use std::env;
 use tracing::{error, info, warn, Level};
@@ -70,11 +74,36 @@ async fn main() -> Result<()> {
                         );
                     }
 
-                    println!("\n📋 Next steps:");
-                    println!("   1. ✅ GitHub API integration (DONE)");
-                    println!("   2. 🔄 Git history analysis (TODO)");
-                    println!("   3. 🔄 Rule-based classifier (TODO)");
-                    println!("   4. 🔄 YAML output generation (TODO)");
+                    // Generate YAML report
+                    info!("Generating YAML report");
+                    let report_generator = ReportGenerator::new();
+
+                    let metadata = AnalysisMetadata {
+                        organization: org.clone(),
+                        analysis_date: Utc::now().to_rfc3339(),
+                        repositories_analyzed: repos.len(),
+                        commits_analyzed: 0, // Phase 1: Not analyzing commits yet
+                        analyzer_version: env!("CARGO_PKG_VERSION").to_string(),
+                    };
+
+                    let report = AnalysisReport {
+                        version: "1.0".to_string(),
+                        metadata,
+                        defect_patterns: vec![], // Phase 1: No classifier yet
+                    };
+
+                    // Write report to file
+                    report_generator.write_to_file(&report, &output).await?;
+
+                    info!("✅ Report written to {}", output.display());
+                    println!("\n📄 Report saved to: {}", output.display());
+
+                    println!("\n📋 Phase 1 Progress:");
+                    println!("   1. ✅ CLI structure (DONE)");
+                    println!("   2. ✅ GitHub API integration (DONE)");
+                    println!("   3. ✅ YAML output generation (DONE)");
+                    println!("   4. 🔄 Git history analysis (TODO)");
+                    println!("   5. 🔄 Rule-based classifier (TODO)");
                     println!("\n🎯 Following EXTREME TDD - one feature at a time");
 
                     Ok(())
