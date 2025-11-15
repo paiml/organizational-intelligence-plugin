@@ -3,6 +3,7 @@
 // Toyota Way: Start simple, collect data for Phase 2 ML
 
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use tracing::debug;
 
 /// Defect categories based on research literature
@@ -35,6 +36,24 @@ impl DefectCategory {
             Self::SecurityVulnerabilities => "Security Vulnerabilities",
             Self::PerformanceIssues => "Performance Issues",
             Self::IntegrationFailures => "Integration Failures",
+        }
+    }
+}
+
+impl fmt::Display for DefectCategory {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // Use the enum variant name for serialization compatibility
+        match self {
+            Self::MemorySafety => write!(f, "MemorySafety"),
+            Self::ConcurrencyBugs => write!(f, "ConcurrencyBugs"),
+            Self::LogicErrors => write!(f, "LogicErrors"),
+            Self::ApiMisuse => write!(f, "ApiMisuse"),
+            Self::ResourceLeaks => write!(f, "ResourceLeaks"),
+            Self::TypeErrors => write!(f, "TypeErrors"),
+            Self::ConfigurationErrors => write!(f, "ConfigurationErrors"),
+            Self::SecurityVulnerabilities => write!(f, "SecurityVulnerabilities"),
+            Self::PerformanceIssues => write!(f, "PerformanceIssues"),
+            Self::IntegrationFailures => write!(f, "IntegrationFailures"),
         }
     }
 }

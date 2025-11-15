@@ -37,6 +37,33 @@ pub enum Commands {
         #[arg(long, default_value = "10")]
         max_concurrent: usize,
     },
+
+    /// Summarize analysis report for AI consumption (Phase 2)
+    Summarize {
+        /// Input YAML report from 'analyze' command
+        #[arg(long, short, required = true)]
+        input: PathBuf,
+
+        /// Output summary file
+        #[arg(long, short, required = true)]
+        output: PathBuf,
+
+        /// Strip PII (author names, commit hashes, email addresses)
+        #[arg(long, default_value = "true")]
+        strip_pii: bool,
+
+        /// Top N defect categories to include
+        #[arg(long, default_value = "10")]
+        top_n: usize,
+
+        /// Minimum frequency to include
+        #[arg(long, default_value = "5")]
+        min_frequency: usize,
+
+        /// Include anonymized examples (with PII redacted if strip-pii is true)
+        #[arg(long, default_value = "false")]
+        include_examples: bool,
+    },
 }
 
 #[cfg(test)]

@@ -37,6 +37,7 @@ fn test_cli_analyze_command_with_org() {
         Commands::Analyze { org, .. } => {
             assert_eq!(org, "rust-lang");
         }
+        _ => panic!("Expected Analyze command"),
     }
 }
 
@@ -61,6 +62,7 @@ fn test_cli_analyze_command_with_output() {
             assert_eq!(org, "test-org");
             assert_eq!(output.to_str().unwrap(), "custom.yaml");
         }
+        _ => panic!("Expected Analyze command"),
     }
 }
 
@@ -74,4 +76,83 @@ fn test_cli_global_verbose_flag() {
 
     let cli = result.unwrap();
     assert!(cli.verbose, "Verbose flag should be set");
+}
+
+#[test]
+fn test_cli_summarize_command_requires_input_and_output() {
+    // Test that summarize command requires both input and output
+    let args = vec!["oip", "summarize"];
+    let result = Cli::try_parse_from(args);
+
+    assert!(
+        result.is_err(),
+        "Summarize command should require --input and --output"
+    );
+}
+
+#[test]
+fn test_cli_summarize_command_with_required_args() {
+    // Test successful parsing of summarize command
+    let args = vec![
+        "oip",
+        "summarize",
+        "--input",
+        "report.yaml",
+        "--output",
+        "summary.yaml",
+    ];
+    let result = Cli::try_parse_from(args);
+
+    assert!(result.is_ok(), "Should parse valid summarize command");
+
+    let cli = result.unwrap();
+    match cli.command {
+        Commands::Summarize { input, output, .. } => {
+            assert_eq!(input.to_str().unwrap(), "report.yaml");
+            assert_eq!(output.to_str().unwrap(), "summary.yaml");
+        }
+        _ => panic!("Expected Summarize command"),
+    }
+}
+
+#[test]
+fn test_cli_summarize_command_with_all_options() {
+    // Test all summarize command options
+    let args = vec![
+        "oip",
+        "summarize",
+        "--input",
+        "input.yaml",
+        "--output",
+        "output.yaml",
+        "--strip-pii",
+        "--top-n",
+        "5",
+        "--min-frequency",
+        "3",
+        "--include-examples",
+    ];
+    let result = Cli::try_parse_from(args);
+
+    assert!(result.is_ok());
+
+    let cli = result.unwrap();
+    match cli.command {
+        Commands::Summarize {
+            input,
+            output,
+            strip_pii,
+            top_n,
+            min_frequency,
+            include_examples,
+        } => {
+            assert_eq!(input.to_str().unwrap(), "input.yaml");
+            assert_eq!(output.to_str().unwrap(), "output.yaml");
+            assert!(strip_pii, "strip-pii should be true");
+            assert_eq!(top_n, 5);
+            assert_eq!(min_frequency, 3);
+            assert!(include_examples, "include-examples should be true");
+        }
+        _ => panic!("Expected Summarize command"),
+    }
 }

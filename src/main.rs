@@ -9,6 +9,7 @@ use organizational_intelligence_plugin::github::GitHubMiner;
 use organizational_intelligence_plugin::report::{
     AnalysisMetadata, AnalysisReport, ReportGenerator,
 };
+use organizational_intelligence_plugin::summarizer::{ReportSummarizer, SummaryConfig};
 use organizational_intelligence_plugin::{Cli, Commands};
 use std::env;
 use tempfile::TempDir;
@@ -34,6 +35,79 @@ async fn main() -> Result<()> {
 
     // Handle commands
     match cli.command {
+        Commands::Summarize {
+            input,
+            output,
+            strip_pii,
+            top_n,
+            min_frequency,
+            include_examples,
+        } => {
+            info!("Summarizing report: {}", input.display());
+            info!("Output file: {}", output.display());
+            info!("Strip PII: {}", strip_pii);
+            info!("Top N categories: {}", top_n);
+            info!("Min frequency: {}", min_frequency);
+            info!("Include examples: {}", include_examples);
+
+            println!("\n📊 Summarizing Analysis Report");
+            println!("   Input:  {}", input.display());
+            println!("   Output: {}", output.display());
+
+            // Create summarization config
+            let config = SummaryConfig {
+                strip_pii,
+                top_n_categories: top_n,
+                min_frequency,
+                include_examples,
+            };
+
+            // Summarize report
+            match ReportSummarizer::summarize(&input, config) {
+                Ok(summary) => {
+                    // Save summary to file
+                    ReportSummarizer::save_to_file(&summary, &output)?;
+
+                    info!("✅ Summary written to {}", output.display());
+                    println!("\n✅ Summary saved to: {}", output.display());
+
+                    println!("\n📈 Summary Statistics:");
+                    println!(
+                        "   Repositories analyzed: {}",
+                        summary.metadata.repositories_analyzed
+                    );
+                    println!(
+                        "   Commits analyzed: {}",
+                        summary.metadata.commits_analyzed
+                    );
+                    println!(
+                        "   Top defect categories included: {}",
+                        summary.organizational_insights.top_defect_categories.len()
+                    );
+
+                    if strip_pii {
+                        println!("\n🔒 PII Stripping:");
+                        println!("   ✅ Author names: REDACTED");
+                        println!("   ✅ Commit hashes: REDACTED");
+                        println!("   ✅ Safe for sharing");
+                    }
+
+                    println!("\n🎯 Phase 2 Complete!");
+                    println!("   ✅ Automated PII stripping");
+                    println!("   ✅ Frequency filtering");
+                    println!("   ✅ Top-N selection");
+                    println!("   ✅ Ready for AI consumption");
+
+                    Ok(())
+                }
+                Err(e) => {
+                    error!("Failed to summarize report: {}", e);
+                    eprintln!("❌ Error: {}", e);
+                    Err(e)
+                }
+            }
+        }
+
         Commands::Analyze {
             org,
             output,
