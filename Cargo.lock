@@ -140,9 +140,16 @@ dependencies = [
 
 [[package]]
 name = "aprender"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57b644b2f4083f3a8435308def0b240fa9175e477cc3fc96e7770f78e3f4398f"
+version = "0.7.1"
+dependencies = [
+ "bincode",
+ "nalgebra",
+ "rand",
+ "rayon",
+ "serde",
+ "serde_json",
+ "trueno",
+]
 
 [[package]]
 name = "aprender"
@@ -2099,7 +2106,7 @@ name = "organizational-intelligence-plugin"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "aprender 0.1.0",
+ "aprender 0.7.1",
  "async-trait",
  "bytemuck",
  "chrono",
@@ -3235,7 +3242,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f1642b622921111445f537a56696112f967dffad18a27e8f027071a9c24efd4"
 dependencies = [
  "anyhow",
- "aprender 0.7.1",
+ "aprender 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "arrow",
  "parquet",
  "thiserror 1.0.69",
