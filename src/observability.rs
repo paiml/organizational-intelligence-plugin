@@ -409,4 +409,165 @@ mod tests {
         assert_eq!(metrics.features_extracted, 225); // 0+5+10+...+45
         assert_eq!(metrics.total_duration_ms, 450); // 0+10+20+...+90
     }
+
+    #[test]
+    fn test_metrics_default_trait() {
+        let metrics = Metrics::default();
+        assert_eq!(metrics.analyses_count, 0);
+        assert_eq!(metrics.features_extracted, 0);
+        assert_eq!(metrics.correlations_computed, 0);
+        assert_eq!(metrics.predictions_made, 0);
+        assert_eq!(metrics.errors_count, 0);
+        assert_eq!(metrics.total_duration_ms, 0);
+    }
+
+    #[test]
+    fn test_timer_with_string_operation() {
+        let timer = Timer::new(String::from("string_op"));
+        assert_eq!(timer.operation, "string_op");
+    }
+
+    #[test]
+    fn test_timer_elapsed_immediately() {
+        let timer = Timer::new("instant");
+        let elapsed = timer.elapsed_ms();
+        // Just verify it returns without panic (elapsed is always >= 0 for u64)
+        assert!(elapsed < 1000); // Should be < 1 second
+    }
+
+    #[test]
+    fn test_analysis_span_with_string() {
+        let span = AnalysisSpan::new(String::from("owner/repo"), String::from("op"));
+        assert_eq!(span.repo, "owner/repo");
+        assert_eq!(span.operation, "op");
+    }
+
+    #[test]
+    fn test_metrics_multiple_errors() {
+        let mut metrics = Metrics::new();
+        for _ in 0..5 {
+            metrics.record_error();
+        }
+        assert_eq!(metrics.errors_count, 5);
+    }
+
+    #[test]
+    fn test_metrics_multiple_predictions() {
+        let mut metrics = Metrics::new();
+        for _ in 0..10 {
+            metrics.record_prediction();
+        }
+        assert_eq!(metrics.predictions_made, 10);
+    }
+
+    #[test]
+    fn test_metrics_multiple_correlations() {
+        let mut metrics = Metrics::new();
+        for _ in 0..3 {
+            metrics.record_correlation();
+        }
+        assert_eq!(metrics.correlations_computed, 3);
+    }
+
+    #[test]
+    fn test_metrics_zero_duration() {
+        let mut metrics = Metrics::new();
+        metrics.record_analysis(0);
+        assert_eq!(metrics.analyses_count, 1);
+        assert_eq!(metrics.total_duration_ms, 0);
+    }
+
+    #[test]
+    fn test_metrics_large_duration() {
+        let mut metrics = Metrics::new();
+        metrics.record_analysis(1_000_000);
+        assert_eq!(metrics.total_duration_ms, 1_000_000);
+    }
+
+    #[test]
+    fn test_metrics_summary_contains_all_fields() {
+        let mut metrics = Metrics::new();
+        metrics.record_analysis(100);
+        metrics.record_features(50);
+        metrics.record_correlation();
+        metrics.record_prediction();
+        metrics.record_error();
+
+        let summary = metrics.summary();
+        assert!(summary.contains("analyses="));
+        assert!(summary.contains("features="));
+        assert!(summary.contains("correlations="));
+        assert!(summary.contains("predictions="));
+        assert!(summary.contains("errors="));
+        assert!(summary.contains("total_time="));
+    }
+
+    #[test]
+    fn test_timer_microsecond_precision() {
+        let timer = Timer::new("precision_test");
+        std::thread::sleep(std::time::Duration::from_micros(500));
+        let us = timer.elapsed_us();
+        let ms = timer.elapsed_ms();
+
+        // Microseconds should be at least 500
+        assert!(us >= 500);
+        // Microseconds should be at least milliseconds * 1000 (rough conversion)
+        assert!(us >= ms * 1000);
+    }
+
+    #[test]
+    fn test_analysis_span_debug() {
+        let span = AnalysisSpan::new("test/repo", "operation");
+        let debug_str = format!("{:?}", span);
+        assert!(debug_str.contains("AnalysisSpan"));
+    }
+
+    #[test]
+    fn test_metrics_debug() {
+        let metrics = Metrics::new();
+        let debug_str = format!("{:?}", metrics);
+        assert!(debug_str.contains("Metrics"));
+    }
+
+    #[test]
+    fn test_logops_all_operations_no_panic() {
+        // Ensure all LogOps methods work without panicking
+        LogOps::analysis_start("repo", 100);
+        LogOps::analysis_complete("repo", 10, 1000);
+        LogOps::features_extracted(50);
+        LogOps::correlation_start(100, "cpu");
+        LogOps::correlation_complete(0.5, 1000);
+        LogOps::training_start("model", 100);
+        LogOps::training_complete("model", 0.9);
+        LogOps::prediction("model", 1);
+        LogOps::clustering_start(3, 100);
+        LogOps::clustering_complete(3, 50.0);
+        LogOps::storage_op("load", 50);
+        LogOps::gpu_op("compute", "gpu");
+
+        let err = std::io::Error::other("test");
+        LogOps::error_with_context(&err, "test context");
+        LogOps::warning("test warning", "test");
+        LogOps::performance("op", 100, Some(10.0));
+        LogOps::performance("op", 100, None);
+    }
+
+    #[test]
+    fn test_metrics_accumulation() {
+        let mut metrics = Metrics::new();
+
+        // Record multiple analyses with different durations
+        metrics.record_analysis(100);
+        metrics.record_analysis(200);
+        metrics.record_analysis(300);
+
+        assert_eq!(metrics.analyses_count, 3);
+        assert_eq!(metrics.total_duration_ms, 600);
+
+        // Record multiple features
+        metrics.record_features(10);
+        metrics.record_features(20);
+
+        assert_eq!(metrics.features_extracted, 30);
+    }
 }
