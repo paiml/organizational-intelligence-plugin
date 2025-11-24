@@ -633,4 +633,207 @@ mod tests {
         // Well-separated clusters should have positive silhouette
         assert!(score > 0.0);
     }
+
+    #[test]
+    fn test_predictor_with_params() {
+        let predictor = DefectPredictor::with_params(50, 5);
+        assert_eq!(predictor.params(), (50, 5));
+        assert!(!predictor.is_trained());
+    }
+
+    #[test]
+    fn test_predictor_train_empty_error() {
+        let mut predictor = DefectPredictor::new();
+        let result = predictor.train(&[]);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Cannot train on empty dataset"));
+    }
+
+    #[test]
+    fn test_predictor_predict_not_trained_error() {
+        let predictor = DefectPredictor::new();
+        let result = predictor.predict(&make_feature(0, 1));
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Model not trained"));
+    }
+
+    #[test]
+    fn test_predictor_proba_not_trained_error() {
+        let predictor = DefectPredictor::new();
+        let result = predictor.predict_proba(&make_feature(0, 1));
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Model not trained"));
+    }
+
+    #[test]
+    fn test_predictor_default() {
+        let predictor = DefectPredictor::default();
+        assert_eq!(predictor.params(), (100, 10));
+        assert!(!predictor.is_trained());
+    }
+
+    #[test]
+    fn test_clusterer_fit_empty_error() {
+        let mut clusterer = PatternClusterer::new();
+        let result = clusterer.fit(&[]);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Cannot cluster empty dataset"));
+    }
+
+    #[test]
+    fn test_clusterer_fit_too_few_samples_error() {
+        let mut clusterer = PatternClusterer::with_k(5);
+        let features = vec![make_feature(0, 1), make_feature(0, 2)];
+        let result = clusterer.fit(&features);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Need at least 5 samples"));
+    }
+
+    #[test]
+    fn test_clusterer_predict_not_fitted_error() {
+        let clusterer = PatternClusterer::new();
+        let result = clusterer.predict(&make_feature(0, 1));
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Clusterer not fitted"));
+    }
+
+    #[test]
+    fn test_clusterer_predict_batch_not_fitted_error() {
+        let clusterer = PatternClusterer::new();
+        let result = clusterer.predict_batch(&[make_feature(0, 1)]);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Clusterer not fitted"));
+    }
+
+    #[test]
+    fn test_clusterer_inertia_not_fitted_error() {
+        let clusterer = PatternClusterer::new();
+        let result = clusterer.inertia(&[make_feature(0, 1)]);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Clusterer not fitted"));
+    }
+
+    #[test]
+    fn test_clusterer_default() {
+        let clusterer = PatternClusterer::default();
+        assert_eq!(clusterer.k, 5);
+        assert!(!clusterer.trained);
+    }
+
+    #[test]
+    fn test_accuracy_empty_arrays() {
+        let acc = ModelMetrics::accuracy(&[], &[]);
+        assert_eq!(acc, 0.0);
+    }
+
+    #[test]
+    fn test_accuracy_mismatched_lengths() {
+        let predictions = vec![0, 0, 1];
+        let labels = vec![0, 0];
+        let acc = ModelMetrics::accuracy(&predictions, &labels);
+        assert_eq!(acc, 0.0);
+    }
+
+    #[test]
+    fn test_precision_no_predicted_positives() {
+        let predictions = vec![0, 0, 0, 0];
+        let labels = vec![1, 1, 0, 0];
+        let precision = ModelMetrics::precision(&predictions, &labels, 1);
+        assert_eq!(precision, 0.0);
+    }
+
+    #[test]
+    fn test_recall_no_actual_positives() {
+        let predictions = vec![1, 1, 0, 0];
+        let labels = vec![0, 0, 0, 0];
+        let recall = ModelMetrics::recall(&predictions, &labels, 1);
+        assert_eq!(recall, 0.0);
+    }
+
+    #[test]
+    fn test_f1_zero_precision_and_recall() {
+        let predictions = vec![0, 0, 0, 0];
+        let labels = vec![1, 1, 0, 0];
+        let f1 = ModelMetrics::f1_score(&predictions, &labels, 1);
+        assert_eq!(f1, 0.0);
+    }
+
+    #[test]
+    fn test_silhouette_empty_features() {
+        let score = ModelMetrics::silhouette_score(&[], &[], 2);
+        assert_eq!(score, 0.0);
+    }
+
+    #[test]
+    fn test_silhouette_mismatched_lengths() {
+        let features = vec![make_feature(0, 1), make_feature(0, 2)];
+        let assignments = vec![0];
+        let score = ModelMetrics::silhouette_score(&features, &assignments, 2);
+        assert_eq!(score, 0.0);
+    }
+
+    #[test]
+    fn test_clusterer_predict_single_item() {
+        let mut clusterer = PatternClusterer::with_k(2);
+        let features = vec![
+            make_feature(0, 1),
+            make_feature(0, 2),
+            make_feature(1, 100),
+            make_feature(1, 101),
+        ];
+
+        clusterer.fit(&features).unwrap();
+
+        let test_feature = make_feature(0, 1);
+        let cluster = clusterer.predict(&test_feature).unwrap();
+        assert!(cluster < 2);
+    }
+
+    #[test]
+    fn test_predictor_with_small_training_set() {
+        let mut predictor = DefectPredictor::new();
+        let features = vec![make_feature(0, 1), make_feature(1, 10)];
+
+        predictor.train(&features).unwrap();
+
+        // k is clamped to min(5, training_data.len()) = 2
+        let pred = predictor.predict(&make_feature(0, 2)).unwrap();
+        assert!(pred < 10);
+    }
+
+    #[test]
+    fn test_predictor_proba_sums_to_one() {
+        let mut predictor = DefectPredictor::new();
+        let features = vec![make_feature(0, 1), make_feature(1, 10), make_feature(2, 20)];
+
+        predictor.train(&features).unwrap();
+
+        let probs = predictor.predict_proba(&make_feature(0, 1)).unwrap();
+        let sum: f32 = probs.iter().sum();
+        assert!((sum - 1.0).abs() < 0.01);
+    }
 }

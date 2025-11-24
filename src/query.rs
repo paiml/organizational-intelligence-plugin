@@ -105,4 +105,74 @@ mod tests {
         let q = parser.parse("hello world").unwrap();
         assert!(matches!(q.query_type, QueryType::Unknown(_)));
     }
+
+    #[test]
+    fn test_parser_default() {
+        let parser = QueryParser;
+        let q = parser.parse("show me most common defect").unwrap();
+        assert_eq!(q.query_type, QueryType::MostCommonDefect);
+    }
+
+    #[test]
+    fn test_query_original_preserved() {
+        let parser = QueryParser::new();
+        let input = "Count Defects BY Category";
+        let q = parser.parse(input).unwrap();
+        assert_eq!(q.original, input);
+        assert_eq!(q.query_type, QueryType::CountByCategory);
+    }
+
+    #[test]
+    fn test_count_with_category_keyword() {
+        let parser = QueryParser::new();
+        let q = parser.parse("count by category").unwrap();
+        assert_eq!(q.query_type, QueryType::CountByCategory);
+    }
+
+    #[test]
+    fn test_count_with_defect_keyword() {
+        let parser = QueryParser::new();
+        let q = parser.parse("count defect types").unwrap();
+        assert_eq!(q.query_type, QueryType::CountByCategory);
+    }
+
+    #[test]
+    fn test_case_insensitive_parsing() {
+        let parser = QueryParser::new();
+
+        let q1 = parser.parse("SHOW ALL DEFECTS").unwrap();
+        assert_eq!(q1.query_type, QueryType::ListAll);
+
+        let q2 = parser.parse("Most Common Defect").unwrap();
+        assert_eq!(q2.query_type, QueryType::MostCommonDefect);
+    }
+
+    #[test]
+    fn test_unknown_with_original_string() {
+        let parser = QueryParser::new();
+        let q = parser.parse("random query").unwrap();
+
+        if let QueryType::Unknown(original) = q.query_type {
+            assert_eq!(original, "random query");
+        } else {
+            panic!("Expected Unknown query type");
+        }
+    }
+
+    #[test]
+    fn test_query_type_clone() {
+        let qt1 = QueryType::MostCommonDefect;
+        let qt2 = qt1.clone();
+        assert_eq!(qt1, qt2);
+    }
+
+    #[test]
+    fn test_query_struct_clone() {
+        let q1 = Query {
+            query_type: QueryType::ListAll,
+            original: "test".to_string(),
+        };
+        let q2 = q1.clone();
+        assert_eq!(q2.original, "test");
+    }
 }

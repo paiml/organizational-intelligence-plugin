@@ -390,4 +390,168 @@ mod tests {
         assert_eq!(loaded_summary.metadata.repositories_analyzed, 10);
         assert_eq!(loaded_summary.metadata.commits_analyzed, 1000);
     }
+
+    #[test]
+    fn test_summary_config_default() {
+        let config = SummaryConfig::default();
+        assert!(config.strip_pii);
+        assert_eq!(config.top_n_categories, 10);
+        assert_eq!(config.min_frequency, 5);
+        assert!(!config.include_examples);
+    }
+
+    #[test]
+    fn test_quality_thresholds_default() {
+        let thresholds = QualityThresholds::default();
+        assert_eq!(thresholds.tdg_minimum, 85.0);
+        assert_eq!(thresholds.test_coverage_minimum, 0.85);
+        assert_eq!(thresholds.max_function_length, 50);
+        assert_eq!(thresholds.max_cyclomatic_complexity, 10);
+    }
+
+    #[test]
+    fn test_summary_find_category() {
+        let report = create_test_report();
+        let temp_file = NamedTempFile::new().unwrap();
+        let report_path = temp_file.path();
+
+        let yaml = serde_yaml::to_string(&report).unwrap();
+        std::fs::write(report_path, yaml).unwrap();
+
+        let config = SummaryConfig::default();
+        let summary = ReportSummarizer::summarize(report_path, config).unwrap();
+
+        // Find existing category
+        let found = summary.find_category("ConfigurationErrors");
+        assert!(found.is_some());
+        let category = found.unwrap();
+        assert_eq!(category.category, "ConfigurationErrors");
+        assert_eq!(category.frequency, 25);
+        assert_eq!(category.avg_tdg_score, 45.2);
+
+        // Find non-existent category
+        assert!(summary.find_category("NonExistent").is_none());
+    }
+
+    #[test]
+    fn test_summary_from_file() {
+        let report = create_test_report();
+        let report_file = NamedTempFile::new().unwrap();
+        let summary_file = NamedTempFile::new().unwrap();
+
+        // Create and save summary
+        let yaml = serde_yaml::to_string(&report).unwrap();
+        std::fs::write(report_file.path(), yaml).unwrap();
+
+        let config = SummaryConfig::default();
+        let summary = ReportSummarizer::summarize(report_file.path(), config).unwrap();
+        ReportSummarizer::save_to_file(&summary, summary_file.path()).unwrap();
+
+        // Load using Summary::from_file
+        let loaded = Summary::from_file(summary_file.path()).unwrap();
+        assert_eq!(loaded.metadata.repositories_analyzed, 10);
+        assert_eq!(loaded.metadata.commits_analyzed, 1000);
+    }
+
+    #[test]
+    fn test_include_examples_config() {
+        let report = create_test_report();
+        let temp_file = NamedTempFile::new().unwrap();
+        let report_path = temp_file.path();
+
+        let yaml = serde_yaml::to_string(&report).unwrap();
+        std::fs::write(report_path, yaml).unwrap();
+
+        // Summarize with examples included
+        let config = SummaryConfig {
+            include_examples: true,
+            strip_pii: false,
+            ..Default::default()
+        };
+        let summary = ReportSummarizer::summarize(report_path, config).unwrap();
+
+        // ConfigurationErrors has 1 example
+        let config_pattern = summary
+            .organizational_insights
+            .top_defect_categories
+            .iter()
+            .find(|p| p.category.to_string() == "ConfigurationErrors")
+            .unwrap();
+
+        assert_eq!(config_pattern.examples.len(), 1);
+        assert_eq!(config_pattern.examples[0].commit_hash, "abc123");
+        assert_eq!(config_pattern.examples[0].author, "test@example.com");
+    }
+
+    #[test]
+    fn test_defect_pattern_summary_equality() {
+        let summary1 = DefectPatternSummary {
+            category: "MemorySafety".to_string(),
+            frequency: 10,
+            confidence: 0.85,
+            avg_tdg_score: 70.0,
+            common_patterns: vec!["use-after-free".to_string()],
+            prevention_strategies: vec!["Use smart pointers".to_string()],
+        };
+
+        let summary2 = summary1.clone();
+        assert_eq!(summary1, summary2);
+    }
+
+    #[test]
+    fn test_summary_metadata_serialization() {
+        let metadata = SummaryMetadata {
+            analysis_date: "2025-11-24".to_string(),
+            repositories_analyzed: 5,
+            commits_analyzed: 500,
+        };
+
+        let yaml = serde_yaml::to_string(&metadata).unwrap();
+        let deserialized: SummaryMetadata = serde_yaml::from_str(&yaml).unwrap();
+
+        assert_eq!(deserialized.analysis_date, "2025-11-24");
+        assert_eq!(deserialized.repositories_analyzed, 5);
+        assert_eq!(deserialized.commits_analyzed, 500);
+    }
+
+    #[test]
+    fn test_organizational_insights_serialization() {
+        let insights = OrganizationalInsights {
+            top_defect_categories: vec![],
+        };
+
+        let yaml = serde_yaml::to_string(&insights).unwrap();
+        let deserialized: OrganizationalInsights = serde_yaml::from_str(&yaml).unwrap();
+
+        assert!(deserialized.top_defect_categories.is_empty());
+    }
+
+    #[test]
+    fn test_no_pii_stripping_when_disabled() {
+        let report = create_test_report();
+        let temp_file = NamedTempFile::new().unwrap();
+        let report_path = temp_file.path();
+
+        let yaml = serde_yaml::to_string(&report).unwrap();
+        std::fs::write(report_path, yaml).unwrap();
+
+        // Summarize without PII stripping
+        let config = SummaryConfig {
+            strip_pii: false,
+            include_examples: true,
+            ..Default::default()
+        };
+        let summary = ReportSummarizer::summarize(report_path, config).unwrap();
+
+        // Verify PII is NOT stripped
+        let config_pattern = summary
+            .organizational_insights
+            .top_defect_categories
+            .iter()
+            .find(|p| p.category.to_string() == "ConfigurationErrors")
+            .unwrap();
+
+        assert_eq!(config_pattern.examples[0].commit_hash, "abc123");
+        assert_eq!(config_pattern.examples[0].author, "test@example.com");
+    }
 }

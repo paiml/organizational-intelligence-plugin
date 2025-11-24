@@ -380,4 +380,193 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn test_defect_category_as_str() {
+        assert_eq!(DefectCategory::MemorySafety.as_str(), "Memory Safety");
+        assert_eq!(DefectCategory::ConcurrencyBugs.as_str(), "Concurrency Bugs");
+        assert_eq!(DefectCategory::LogicErrors.as_str(), "Logic Errors");
+        assert_eq!(DefectCategory::ApiMisuse.as_str(), "API Misuse");
+        assert_eq!(DefectCategory::ResourceLeaks.as_str(), "Resource Leaks");
+        assert_eq!(DefectCategory::TypeErrors.as_str(), "Type Errors");
+        assert_eq!(
+            DefectCategory::ConfigurationErrors.as_str(),
+            "Configuration Errors"
+        );
+        assert_eq!(
+            DefectCategory::SecurityVulnerabilities.as_str(),
+            "Security Vulnerabilities"
+        );
+        assert_eq!(
+            DefectCategory::PerformanceIssues.as_str(),
+            "Performance Issues"
+        );
+        assert_eq!(
+            DefectCategory::IntegrationFailures.as_str(),
+            "Integration Failures"
+        );
+    }
+
+    #[test]
+    fn test_defect_category_display() {
+        assert_eq!(format!("{}", DefectCategory::MemorySafety), "MemorySafety");
+        assert_eq!(
+            format!("{}", DefectCategory::ConcurrencyBugs),
+            "ConcurrencyBugs"
+        );
+        assert_eq!(format!("{}", DefectCategory::LogicErrors), "LogicErrors");
+        assert_eq!(format!("{}", DefectCategory::ApiMisuse), "ApiMisuse");
+        assert_eq!(
+            format!("{}", DefectCategory::ResourceLeaks),
+            "ResourceLeaks"
+        );
+        assert_eq!(format!("{}", DefectCategory::TypeErrors), "TypeErrors");
+        assert_eq!(
+            format!("{}", DefectCategory::ConfigurationErrors),
+            "ConfigurationErrors"
+        );
+        assert_eq!(
+            format!("{}", DefectCategory::SecurityVulnerabilities),
+            "SecurityVulnerabilities"
+        );
+        assert_eq!(
+            format!("{}", DefectCategory::PerformanceIssues),
+            "PerformanceIssues"
+        );
+        assert_eq!(
+            format!("{}", DefectCategory::IntegrationFailures),
+            "IntegrationFailures"
+        );
+    }
+
+    #[test]
+    fn test_default_constructor() {
+        let classifier = RuleBasedClassifier::default();
+        assert_eq!(classifier.rules.len(), 10);
+    }
+
+    #[test]
+    fn test_empty_message() {
+        let classifier = RuleBasedClassifier::new();
+        let result = classifier.classify_from_message("");
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_case_insensitive_matching() {
+        let classifier = RuleBasedClassifier::new();
+
+        let result = classifier.classify_from_message("Fix: NULL POINTER dereference");
+        assert!(result.is_some());
+        assert_eq!(result.unwrap().category, DefectCategory::MemorySafety);
+    }
+
+    #[test]
+    fn test_multiple_patterns_boost_confidence() {
+        let classifier = RuleBasedClassifier::new();
+
+        // Message with multiple memory safety patterns
+        let result = classifier
+            .classify_from_message("fix: null pointer and buffer overflow")
+            .unwrap();
+
+        assert_eq!(result.category, DefectCategory::MemorySafety);
+        // Base confidence 0.85 + 0.05 boost for 2nd pattern = 0.90
+        assert!(result.confidence >= 0.85);
+        assert_eq!(result.matched_patterns.len(), 2);
+    }
+
+    #[test]
+    fn test_confidence_capped_at_95_percent() {
+        let classifier = RuleBasedClassifier::new();
+
+        // Message with many security patterns to exceed 0.95 cap
+        let result = classifier
+            .classify_from_message(
+                "security vulnerability exploit with sql injection and xss and cve-2024-1234",
+            )
+            .unwrap();
+
+        assert_eq!(result.category, DefectCategory::SecurityVulnerabilities);
+        assert!(result.confidence <= 0.95);
+    }
+
+    #[test]
+    fn test_highest_confidence_wins() {
+        let classifier = RuleBasedClassifier::new();
+
+        // "security" has higher confidence (0.90) than "performance" (0.65)
+        let result = classifier
+            .classify_from_message("fix security and performance issues")
+            .unwrap();
+
+        assert_eq!(result.category, DefectCategory::SecurityVulnerabilities);
+    }
+
+    #[test]
+    fn test_all_categories_classifiable() {
+        let classifier = RuleBasedClassifier::new();
+
+        let test_cases = vec![
+            ("null pointer bug", DefectCategory::MemorySafety),
+            ("race condition fix", DefectCategory::ConcurrencyBugs),
+            ("off by one error", DefectCategory::LogicErrors),
+            ("api misuse fix", DefectCategory::ApiMisuse),
+            ("resource leak fix", DefectCategory::ResourceLeaks),
+            ("type error fix", DefectCategory::TypeErrors),
+            ("configuration bug", DefectCategory::ConfigurationErrors),
+            ("security fix", DefectCategory::SecurityVulnerabilities),
+            ("performance fix", DefectCategory::PerformanceIssues),
+            ("integration failure", DefectCategory::IntegrationFailures),
+        ];
+
+        for (message, expected_category) in test_cases {
+            let result = classifier.classify_from_message(message);
+            assert!(result.is_some(), "Should classify: {}", message);
+            assert_eq!(
+                result.unwrap().category,
+                expected_category,
+                "Failed for: {}",
+                message
+            );
+        }
+    }
+
+    #[test]
+    fn test_classification_struct_fields() {
+        let classifier = RuleBasedClassifier::new();
+        let result = classifier
+            .classify_from_message("fix: deadlock in mutex")
+            .unwrap();
+
+        assert_eq!(result.category, DefectCategory::ConcurrencyBugs);
+        assert!(result.confidence > 0.0 && result.confidence <= 1.0);
+        assert!(!result.explanation.is_empty());
+        assert!(!result.matched_patterns.is_empty());
+    }
+
+    #[test]
+    fn test_explanation_format() {
+        let classifier = RuleBasedClassifier::new();
+        let result = classifier
+            .classify_from_message("fix: sql injection vulnerability")
+            .unwrap();
+
+        assert!(result.explanation.contains("Security Vulnerabilities"));
+        assert!(result.explanation.contains("sql injection"));
+        assert!(result.explanation.contains("Confidence:"));
+        assert!(result.explanation.contains("%"));
+    }
+
+    #[test]
+    fn test_matched_patterns_populated() {
+        let classifier = RuleBasedClassifier::new();
+        let result = classifier
+            .classify_from_message("fix: double free and memory leak")
+            .unwrap();
+
+        assert_eq!(result.matched_patterns.len(), 2);
+        assert!(result.matched_patterns.contains(&"double free".to_string()));
+        assert!(result.matched_patterns.contains(&"memory leak".to_string()));
+    }
 }
