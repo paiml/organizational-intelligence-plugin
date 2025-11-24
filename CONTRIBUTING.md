@@ -179,7 +179,6 @@ We especially value contributions that:
 ## Getting Help
 
 - 📖 Read the [README](README.md)
-- 💬 Ask in [GitHub Discussions](https://github.com/paiml/organizational-intelligence-plugin/discussions)
 - 🐛 Report bugs via [GitHub Issues](https://github.com/paiml/organizational-intelligence-plugin/issues)
 
 ## Recognition

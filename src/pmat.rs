@@ -399,10 +399,7 @@ mod tests {
             max_score: 0.0,
         };
 
-        assert_eq!(
-            PmatIntegration::get_file_score(&analysis, "any.rs"),
-            None
-        );
+        assert_eq!(PmatIntegration::get_file_score(&analysis, "any.rs"), None);
     }
 
     #[test]
