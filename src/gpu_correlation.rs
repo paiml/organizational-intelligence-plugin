@@ -321,6 +321,25 @@ impl GpuCorrelationEngine {
 #[cfg(feature = "gpu")]
 mod tests {
     use super::*;
+    use crate::correlation::pearson_correlation;
+    use trueno::Vector;
+
+    /// Tolerance for GPU/CPU equivalence (1e-4 as per PHASE2-002)
+    const TOLERANCE: f32 = 1e-4;
+
+    /// Helper: assert GPU and CPU results are equivalent within tolerance
+    fn assert_gpu_cpu_equivalent(gpu_result: f32, cpu_result: f32, test_name: &str) {
+        let diff = (gpu_result - cpu_result).abs();
+        assert!(
+            diff < TOLERANCE,
+            "{}: GPU ({}) and CPU ({}) differ by {} (tolerance: {})",
+            test_name,
+            gpu_result,
+            cpu_result,
+            diff,
+            TOLERANCE
+        );
+    }
 
     #[tokio::test]
     #[ignore] // Requires GPU hardware
@@ -345,6 +364,116 @@ mod tests {
 
         let r = engine.correlate(&a, &b).await.unwrap();
         // Should be close to 1.0 (perfect correlation)
-        assert!((r - 1.0).abs() < 1e-4 || r == 0.0); // 0.0 is placeholder
+        assert!((r - 1.0).abs() < TOLERANCE);
+    }
+
+    // ===== PHASE2-002: GPU/CPU Equivalence Tests =====
+
+    #[tokio::test]
+    #[ignore] // Requires GPU hardware
+    async fn test_gpu_cpu_equivalence_perfect_positive() {
+        let engine = match GpuCorrelationEngine::new().await {
+            Ok(e) => e,
+            Err(_) => return, // Skip if no GPU
+        };
+
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![2.0, 4.0, 6.0, 8.0, 10.0];
+
+        // GPU computation
+        let gpu_result = engine.correlate(&a, &b).await.unwrap();
+
+        // CPU (SIMD) computation
+        let vec_a = Vector::from_slice(&a);
+        let vec_b = Vector::from_slice(&b);
+        let cpu_result = pearson_correlation(&vec_a, &vec_b).unwrap();
+
+        assert_gpu_cpu_equivalent(gpu_result, cpu_result, "perfect_positive_correlation");
+    }
+
+    #[tokio::test]
+    #[ignore] // Requires GPU hardware
+    async fn test_gpu_cpu_equivalence_perfect_negative() {
+        let engine = match GpuCorrelationEngine::new().await {
+            Ok(e) => e,
+            Err(_) => return,
+        };
+
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![5.0, 4.0, 3.0, 2.0, 1.0];
+
+        let gpu_result = engine.correlate(&a, &b).await.unwrap();
+
+        let vec_a = Vector::from_slice(&a);
+        let vec_b = Vector::from_slice(&b);
+        let cpu_result = pearson_correlation(&vec_a, &vec_b).unwrap();
+
+        assert_gpu_cpu_equivalent(gpu_result, cpu_result, "perfect_negative_correlation");
+    }
+
+    #[tokio::test]
+    #[ignore] // Requires GPU hardware
+    async fn test_gpu_cpu_equivalence_zero_correlation() {
+        let engine = match GpuCorrelationEngine::new().await {
+            Ok(e) => e,
+            Err(_) => return,
+        };
+
+        let a = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let b = vec![3.0, 1.0, 4.0, 2.0, 5.0]; // Shuffled, near-zero correlation
+
+        let gpu_result = engine.correlate(&a, &b).await.unwrap();
+
+        let vec_a = Vector::from_slice(&a);
+        let vec_b = Vector::from_slice(&b);
+        let cpu_result = pearson_correlation(&vec_a, &vec_b).unwrap();
+
+        assert_gpu_cpu_equivalent(gpu_result, cpu_result, "zero_correlation");
+    }
+
+    #[tokio::test]
+    #[ignore] // Requires GPU hardware
+    async fn test_gpu_cpu_equivalence_large_vectors() {
+        let engine = match GpuCorrelationEngine::new().await {
+            Ok(e) => e,
+            Err(_) => return,
+        };
+
+        // Large vectors (1000 elements)
+        let a: Vec<f32> = (0..1000).map(|i| i as f32).collect();
+        let b: Vec<f32> = (0..1000).map(|i| (i as f32) * 2.0 + 1.0).collect();
+
+        let gpu_result = engine.correlate(&a, &b).await.unwrap();
+
+        let vec_a = Vector::from_slice(&a);
+        let vec_b = Vector::from_slice(&b);
+        let cpu_result = pearson_correlation(&vec_a, &vec_b).unwrap();
+
+        assert_gpu_cpu_equivalent(gpu_result, cpu_result, "large_vectors_1000");
+    }
+
+    #[tokio::test]
+    #[ignore] // Requires GPU hardware
+    async fn test_gpu_cpu_equivalence_random_data() {
+        let engine = match GpuCorrelationEngine::new().await {
+            Ok(e) => e,
+            Err(_) => return,
+        };
+
+        // Pseudo-random data (deterministic)
+        let a: Vec<f32> = (0..100)
+            .map(|i| ((i * 17 + 42) % 97) as f32 / 97.0)
+            .collect();
+        let b: Vec<f32> = (0..100)
+            .map(|i| ((i * 23 + 13) % 97) as f32 / 97.0)
+            .collect();
+
+        let gpu_result = engine.correlate(&a, &b).await.unwrap();
+
+        let vec_a = Vector::from_slice(&a);
+        let vec_b = Vector::from_slice(&b);
+        let cpu_result = pearson_correlation(&vec_a, &vec_b).unwrap();
+
+        assert_gpu_cpu_equivalent(gpu_result, cpu_result, "random_data");
     }
 }
