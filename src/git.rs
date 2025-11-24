@@ -175,6 +175,86 @@ impl GitAnalyzer {
     }
 }
 
+/// Analyze commits from an existing Git repository path
+///
+/// Unlike GitAnalyzer which requires cloning repos to a cache directory,
+/// this function works with any existing Git repository.
+///
+/// # Arguments
+/// * `repo_path` - Path to existing Git repository
+/// * `limit` - Maximum number of commits to analyze
+///
+/// # Returns
+/// * `Ok(Vec<CommitInfo>)` with commit information
+/// * `Err` if repository not found or analysis fails
+///
+/// # Examples
+/// ```no_run
+/// use organizational_intelligence_plugin::git::analyze_repository_at_path;
+/// use std::path::PathBuf;
+///
+/// let commits = analyze_repository_at_path(PathBuf::from("/path/to/repo"), 100).unwrap();
+/// ```
+pub fn analyze_repository_at_path<P: AsRef<Path>>(
+    repo_path: P,
+    limit: usize,
+) -> Result<Vec<CommitInfo>> {
+    let repo_path = repo_path.as_ref();
+
+    if !repo_path.exists() {
+        return Err(anyhow!("Repository path does not exist: {:?}", repo_path));
+    }
+
+    debug!("Opening repository at {:?}", repo_path);
+    let repo = Repository::open(repo_path)
+        .map_err(|e| anyhow!("Failed to open repository at {:?}: {}", repo_path, e))?;
+
+    let mut revwalk = repo.revwalk()?;
+    revwalk.push_head()?;
+
+    let mut commits = Vec::new();
+
+    for (i, oid) in revwalk.enumerate() {
+        if i >= limit {
+            break;
+        }
+
+        let oid = oid?;
+        let commit = repo.find_commit(oid)?;
+
+        let hash = commit.id().to_string();
+        let message = commit.message().unwrap_or("").to_string();
+        let author = commit.author().email().unwrap_or("unknown").to_string();
+        let timestamp = commit.time().seconds();
+
+        // Get diff stats
+        let (files_changed, lines_added, lines_removed) = if commit.parent_count() > 0 {
+            let parent = commit.parent(0)?;
+            let diff =
+                repo.diff_tree_to_tree(Some(&parent.tree()?), Some(&commit.tree()?), None)?;
+            let stats = diff.stats()?;
+            (stats.files_changed(), stats.insertions(), stats.deletions())
+        } else {
+            // Initial commit - count all files as changed
+            let tree = commit.tree()?;
+            (tree.len(), 0, 0)
+        };
+
+        commits.push(CommitInfo {
+            hash,
+            message,
+            author,
+            timestamp,
+            files_changed,
+            lines_added,
+            lines_removed,
+        });
+    }
+
+    debug!("Analyzed {} commits", commits.len());
+    Ok(commits)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

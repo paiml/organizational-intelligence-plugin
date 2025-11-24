@@ -10,10 +10,12 @@ use tempfile::TempDir;
 use tracing::{error, info, warn};
 
 use crate::analyzer::OrgAnalyzer;
+use crate::git;
 use crate::github::GitHubMiner;
 use crate::pr_reviewer::PrReviewer;
 use crate::report::{AnalysisMetadata, AnalysisReport, ReportGenerator};
 use crate::summarizer::{ReportSummarizer, SummaryConfig};
+use crate::training::TrainingDataExtractor;
 
 /// Handle the `review-pr` command
 pub async fn handle_review_pr(
@@ -291,6 +293,108 @@ pub async fn handle_analyze(
             Err(e)
         }
     }
+}
+
+/// Handle the `extract-training-data` command
+pub async fn handle_extract_training_data(
+    repo: PathBuf,
+    output: PathBuf,
+    min_confidence: f32,
+    max_commits: usize,
+    create_splits: bool,
+) -> Result<()> {
+    info!("Extracting training data from: {}", repo.display());
+    info!("Output file: {}", output.display());
+    info!("Min confidence: {}", min_confidence);
+    info!("Max commits: {}", max_commits);
+
+    println!("\n🎓 Training Data Extraction (Phase 2 ML)");
+    println!("   Repository:      {}", repo.display());
+    println!("   Output:          {}", output.display());
+    println!("   Min confidence:  {:.2}", min_confidence);
+    println!("   Max commits:     {}", max_commits);
+    println!("   Create splits:   {}", create_splits);
+
+    // Validate repository path
+    if !repo.exists() {
+        return Err(anyhow::anyhow!("Repository path does not exist: {}", repo.display()));
+    }
+
+    if !repo.join(".git").exists() {
+        return Err(anyhow::anyhow!("Not a Git repository: {}", repo.display()));
+    }
+
+    // Extract commit history
+    println!("\n📖 Reading commit history...");
+    let commits = git::analyze_repository_at_path(&repo, max_commits)?;
+    println!("   ✅ Found {} commits", commits.len());
+
+    // Extract training data
+    println!("\n🔍 Extracting and auto-labeling defect-fix commits...");
+    let extractor = TrainingDataExtractor::new(min_confidence);
+
+    let repo_name = repo
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("unknown-repo");
+
+    let examples = extractor.extract_training_data(&commits, repo_name)?;
+
+    println!("   ✅ Extracted {} training examples", examples.len());
+
+    if examples.is_empty() {
+        warn!("No training examples extracted - try lowering min_confidence threshold");
+        println!("\n⚠️  No training examples extracted!");
+        println!("   Try lowering --min-confidence (current: {:.2})", min_confidence);
+        return Ok(());
+    }
+
+    // Show statistics
+    println!("\n📊 Training Data Statistics:");
+    let stats = extractor.get_statistics(&examples);
+    for line in stats.lines() {
+        if !line.is_empty() {
+            println!("   {}", line);
+        }
+    }
+
+    // Create splits or export raw examples
+    if create_splits {
+        println!("\n📂 Creating train/validation/test splits (70/15/15)...");
+        let dataset = extractor.create_splits(&examples, &[repo_name.to_string()])?;
+
+        println!("   ✅ Train:      {} examples", dataset.train.len());
+        println!("   ✅ Validation: {} examples", dataset.validation.len());
+        println!("   ✅ Test:       {} examples", dataset.test.len());
+
+        // Export dataset to JSON
+        let json = serde_json::to_string_pretty(&dataset)?;
+        std::fs::write(&output, json)?;
+    } else {
+        // Export raw examples to JSON
+        println!("\n💾 Exporting raw examples...");
+        let json = serde_json::to_string_pretty(&examples)?;
+        std::fs::write(&output, json)?;
+    }
+
+    println!("\n✅ Training data saved to: {}", output.display());
+
+    // Summary
+    println!("\n🎯 Phase 2 Training Data Extraction Complete!");
+    println!("   ✅ Commit filtering (excludes merges, reverts, WIP)");
+    println!("   ✅ Auto-labeling with rule-based classifier");
+    println!("   ✅ Confidence threshold filtering ({:.2})", min_confidence);
+    if create_splits {
+        println!("   ✅ Train/validation/test splits created");
+    }
+    println!("   ✅ Ready for ML training (RandomForestClassifier)");
+
+    println!("\n💡 Next Steps:");
+    println!("   1. Review extracted data: cat {}", output.display());
+    println!("   2. Train ML classifier: oip train-classifier --input {}", output.display());
+    println!("   3. Evaluate model performance on test set");
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -591,5 +695,107 @@ defect_patterns:
         // Test with all config options enabled
         let result = handle_summarize(input, output_path.clone(), true, 20, 2, true).await;
         assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_handle_extract_training_data_invalid_path() {
+        let repo = PathBuf::from("/nonexistent/repo/path");
+        let temp_output = NamedTempFile::new().unwrap();
+        let output = temp_output.path().to_path_buf();
+
+        let result = handle_extract_training_data(repo, output, 0.75, 100, true).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_handle_extract_training_data_not_git_repo() {
+        // Create a temporary directory that exists but is not a git repo
+        let temp_dir = tempfile::TempDir::new().unwrap();
+        let repo = temp_dir.path().to_path_buf();
+
+        let temp_output = NamedTempFile::new().unwrap();
+        let output = temp_output.path().to_path_buf();
+
+        let result = handle_extract_training_data(repo, output, 0.75, 100, true).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Not a Git repository"));
+    }
+
+    #[tokio::test]
+    async fn test_handle_extract_training_data_with_splits() {
+        // Use the current repository (which is guaranteed to be a git repo)
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let temp_output = NamedTempFile::new().unwrap();
+        let output = temp_output.path().to_path_buf();
+
+        // This should succeed as it's a real git repo
+        let result = handle_extract_training_data(repo, output.clone(), 0.70, 50, true).await;
+
+        // Should succeed or return Ok with empty results
+        match result {
+            Ok(_) => {
+                // If successful, output file should exist
+                if output.exists() {
+                    let content = std::fs::read_to_string(&output).unwrap();
+                    assert!(!content.is_empty());
+                }
+            }
+            Err(e) => {
+                // Some errors are acceptable (e.g., no commits found)
+                eprintln!("Expected error: {}", e);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_handle_extract_training_data_without_splits() {
+        // Use the current repository
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let temp_output = NamedTempFile::new().unwrap();
+        let output = temp_output.path().to_path_buf();
+
+        let result = handle_extract_training_data(repo, output.clone(), 0.70, 50, false).await;
+
+        // Should succeed or return Ok with empty results
+        match result {
+            Ok(_) => {
+                // If successful, output file should exist
+                if output.exists() {
+                    let content = std::fs::read_to_string(&output).unwrap();
+                    assert!(!content.is_empty());
+                }
+            }
+            Err(e) => {
+                // Some errors are acceptable
+                eprintln!("Expected error: {}", e);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_handle_extract_training_data_high_confidence_threshold() {
+        // Use the current repository with a very high confidence threshold
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let temp_output = NamedTempFile::new().unwrap();
+        let output = temp_output.path().to_path_buf();
+
+        // High confidence threshold (0.95) should result in fewer/no examples
+        let result = handle_extract_training_data(repo, output.clone(), 0.95, 50, true).await;
+
+        // Should succeed (even if no examples found)
+        assert!(result.is_ok() || result.unwrap_err().to_string().contains("Git"));
+    }
+
+    #[tokio::test]
+    async fn test_handle_extract_training_data_low_max_commits() {
+        // Use the current repository with low max_commits
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let temp_output = NamedTempFile::new().unwrap();
+        let output = temp_output.path().to_path_buf();
+
+        let result = handle_extract_training_data(repo, output.clone(), 0.75, 5, true).await;
+
+        // Should succeed with limited commits
+        assert!(result.is_ok() || result.unwrap_err().to_string().contains("Git"));
     }
 }

@@ -83,6 +83,29 @@ pub enum Commands {
         #[arg(long, short)]
         output: Option<PathBuf>,
     },
+
+    /// Extract training data from Git repository (Phase 2 ML)
+    ExtractTrainingData {
+        /// Path to Git repository
+        #[arg(long, short, required = true)]
+        repo: PathBuf,
+
+        /// Output JSON file
+        #[arg(long, short, default_value = "training-data.json")]
+        output: PathBuf,
+
+        /// Minimum confidence threshold (0.0-1.0)
+        #[arg(long, default_value = "0.75")]
+        min_confidence: f32,
+
+        /// Maximum commits to analyze
+        #[arg(long, default_value = "1000")]
+        max_commits: usize,
+
+        /// Create train/validation/test splits
+        #[arg(long, default_value = "true")]
+        create_splits: bool,
+    },
 }
 
 #[cfg(test)]

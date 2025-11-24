@@ -70,5 +70,22 @@ async fn main() -> Result<()> {
             )
             .await
         }
+
+        Commands::ExtractTrainingData {
+            repo,
+            output,
+            min_confidence,
+            max_commits,
+            create_splits,
+        } => {
+            cli_handlers::handle_extract_training_data(
+                repo,
+                output,
+                min_confidence,
+                max_commits,
+                create_splits,
+            )
+            .await
+        }
     }
 }
