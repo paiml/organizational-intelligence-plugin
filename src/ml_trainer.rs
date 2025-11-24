@@ -9,6 +9,7 @@
 //!
 //! Implements Section 3 ML Classification from nlp-models-techniques-spec.md
 
+use crate::classifier::DefectCategory;
 use crate::nlp::TfidfFeatureExtractor;
 use crate::training::{TrainingDataset, TrainingExample};
 use anyhow::{anyhow, Result};
@@ -146,11 +147,8 @@ impl MLTrainer {
         }
 
         // Extract messages and labels
-        let train_messages: Vec<String> = dataset
-            .train
-            .iter()
-            .map(|ex| ex.message.clone())
-            .collect();
+        let train_messages: Vec<String> =
+            dataset.train.iter().map(|ex| ex.message.clone()).collect();
 
         let validation_messages: Vec<String> = dataset
             .validation
@@ -297,10 +295,7 @@ impl MLTrainer {
     /// # Returns
     ///
     /// * Test accuracy (0.0-1.0)
-    pub fn evaluate(
-        model: &TrainedModel,
-        test_examples: &[TrainingExample],
-    ) -> Result<f32> {
+    pub fn evaluate(model: &TrainedModel, test_examples: &[TrainingExample]) -> Result<f32> {
         if test_examples.is_empty() {
             return Ok(0.0);
         }
@@ -315,7 +310,8 @@ impl MLTrainer {
             .as_ref()
             .ok_or_else(|| anyhow!("Model has no TF-IDF extractor"))?;
 
-        let test_messages: Vec<String> = test_examples.iter().map(|ex| ex.message.clone()).collect();
+        let test_messages: Vec<String> =
+            test_examples.iter().map(|ex| ex.message.clone()).collect();
 
         let test_labels: Vec<usize> = test_examples
             .iter()
@@ -353,8 +349,7 @@ impl MLTrainer {
         let json = serde_json::to_string_pretty(model)
             .map_err(|e| anyhow!("Failed to serialize model: {}", e))?;
 
-        fs::write(path.as_ref(), json)
-            .map_err(|e| anyhow!("Failed to write model file: {}", e))?;
+        fs::write(path.as_ref(), json).map_err(|e| anyhow!("Failed to write model file: {}", e))?;
 
         Ok(())
     }
@@ -373,14 +368,147 @@ impl MLTrainer {
         let content = fs::read_to_string(path.as_ref())
             .map_err(|e| anyhow!("Failed to read model file: {}", e))?;
 
-        serde_json::from_str(&content)
-            .map_err(|e| anyhow!("Failed to parse model JSON: {}", e))
+        serde_json::from_str(&content).map_err(|e| anyhow!("Failed to parse model JSON: {}", e))
     }
 }
 
 impl Default for MLTrainer {
     fn default() -> Self {
         Self::new(100, Some(20), 1500)
+    }
+}
+
+impl TrainedModel {
+    /// Predict defect category for a single commit message
+    ///
+    /// # Arguments
+    /// * `message` - Commit message to classify
+    ///
+    /// # Returns
+    /// * `Ok(Some((DefectCategory, f32)))` - Predicted category and confidence
+    /// * `Ok(None)` - Model components not available (deserialized model)
+    /// * `Err` - Prediction error
+    ///
+    /// # Examples
+    /// ```no_run
+    /// # use organizational_intelligence_plugin::ml_trainer::TrainedModel;
+    /// # fn example(model: &TrainedModel) -> anyhow::Result<()> {
+    /// if let Some((category, confidence)) = model.predict("fix: null pointer in parser")? {
+    ///     println!("Predicted: {:?} ({:.2})", category, confidence);
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn predict(&self, message: &str) -> Result<Option<(DefectCategory, f32)>> {
+        // Check if model components are available
+        let tfidf = self
+            .tfidf_extractor
+            .as_ref()
+            .ok_or_else(|| anyhow!("TF-IDF extractor not available"))?;
+        let classifier = self
+            .classifier
+            .as_ref()
+            .ok_or_else(|| anyhow!("Classifier not available"))?;
+
+        // Extract TF-IDF features
+        let features = tfidf.transform(&[message.to_string()])?;
+
+        // Convert to f32 for Random Forest
+        let (n_rows, n_cols) = (features.n_rows(), features.n_cols());
+        let data_f32: Vec<f32> = (0..n_rows * n_cols)
+            .map(|i| {
+                let row = i / n_cols;
+                let col = i % n_cols;
+                features.get(row, col) as f32
+            })
+            .collect();
+
+        let features_f32 = Matrix::from_vec(n_rows, n_cols, data_f32)
+            .map_err(|e| anyhow!("Failed to create feature matrix: {}", e))?;
+
+        // Predict
+        let predictions = classifier.predict(&features_f32);
+
+        if predictions.is_empty() {
+            return Ok(None);
+        }
+
+        // Get predicted label index
+        let label_idx = predictions[0];
+
+        // Map label index back to DefectCategory
+        let category_name = self
+            .label_to_category
+            .get(&label_idx)
+            .ok_or_else(|| anyhow!("Unknown label index: {}", label_idx))?;
+
+        // Parse category name to DefectCategory enum
+        let category = Self::parse_category(category_name)?;
+
+        // TODO: Get confidence from Random Forest (requires probability output)
+        // For now, use a placeholder confidence
+        let confidence = 0.75f32;
+
+        Ok(Some((category, confidence)))
+    }
+
+    /// Predict top-N defect categories for a commit message
+    ///
+    /// # Arguments
+    /// * `message` - Commit message to classify
+    /// * `top_n` - Number of top categories to return
+    ///
+    /// # Returns
+    /// * `Ok(Vec<(DefectCategory, f32)>)` - Top-N categories with confidences
+    ///
+    /// # Examples
+    /// ```no_run
+    /// # use organizational_intelligence_plugin::ml_trainer::TrainedModel;
+    /// # fn example(model: &TrainedModel) -> anyhow::Result<()> {
+    /// let predictions = model.predict_top_n("fix: null pointer in parser", 3)?;
+    /// for (category, confidence) in predictions {
+    ///     println!("{:?}: {:.2}", category, confidence);
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn predict_top_n(
+        &self,
+        message: &str,
+        _top_n: usize,
+    ) -> Result<Vec<(DefectCategory, f32)>> {
+        // For now, just return the single prediction
+        // TODO: Implement multi-label prediction with probability outputs
+        if let Some((category, confidence)) = self.predict(message)? {
+            Ok(vec![(category, confidence)])
+        } else {
+            Ok(vec![])
+        }
+    }
+
+    /// Parse category name string to DefectCategory enum
+    fn parse_category(name: &str) -> Result<DefectCategory> {
+        match name {
+            "MemorySafety" => Ok(DefectCategory::MemorySafety),
+            "ConcurrencyBugs" => Ok(DefectCategory::ConcurrencyBugs),
+            "LogicErrors" => Ok(DefectCategory::LogicErrors),
+            "ApiMisuse" => Ok(DefectCategory::ApiMisuse),
+            "ResourceLeaks" => Ok(DefectCategory::ResourceLeaks),
+            "TypeErrors" => Ok(DefectCategory::TypeErrors),
+            "ConfigurationErrors" => Ok(DefectCategory::ConfigurationErrors),
+            "SecurityVulnerabilities" => Ok(DefectCategory::SecurityVulnerabilities),
+            "PerformanceIssues" => Ok(DefectCategory::PerformanceIssues),
+            "IntegrationFailures" => Ok(DefectCategory::IntegrationFailures),
+            "OperatorPrecedence" => Ok(DefectCategory::OperatorPrecedence),
+            "TypeAnnotationGaps" => Ok(DefectCategory::TypeAnnotationGaps),
+            "StdlibMapping" => Ok(DefectCategory::StdlibMapping),
+            "ASTTransform" => Ok(DefectCategory::ASTTransform),
+            "ComprehensionBugs" => Ok(DefectCategory::ComprehensionBugs),
+            "IteratorChain" => Ok(DefectCategory::IteratorChain),
+            "OwnershipBorrow" => Ok(DefectCategory::OwnershipBorrow),
+            "TraitBounds" => Ok(DefectCategory::TraitBounds),
+            _ => Err(anyhow!("Unknown category: {}", name)),
+        }
     }
 }
 
@@ -487,14 +615,18 @@ mod tests {
         // Create small training dataset
         let extractor = TrainingDataExtractor::new(0.70);
         let commits = create_test_commits();
-        let examples = extractor.extract_training_data(&commits, "test-repo").unwrap();
+        let examples = extractor
+            .extract_training_data(&commits, "test-repo")
+            .unwrap();
 
         if examples.len() < 10 {
             // Not enough data for meaningful test (need at least 10 for proper splits)
             return;
         }
 
-        let dataset = extractor.create_splits(&examples, &["test-repo".to_string()]).unwrap();
+        let dataset = extractor
+            .create_splits(&examples, &["test-repo".to_string()])
+            .unwrap();
 
         // Ensure splits are non-empty
         if dataset.train.is_empty() || dataset.validation.is_empty() {

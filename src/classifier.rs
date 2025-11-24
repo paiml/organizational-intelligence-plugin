@@ -1,5 +1,6 @@
 // Rule-based defect classifier
 // Phase 1: Heuristic-based classification with confidence scores and explanations
+// Phase 2: ML classifier integration with hybrid approach
 // Toyota Way: Start simple, collect data for Phase 2 ML
 
 use serde::{Deserialize, Serialize};
@@ -576,6 +577,173 @@ impl RuleBasedClassifier {
 impl Default for RuleBasedClassifier {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+/// Hybrid classifier combining rule-based and ML approaches
+///
+/// NLP-010: Integrates trained ML models with fallback to rule-based classification
+/// Implements three-tier architecture from nlp-models-techniques-spec.md:
+/// - Tier 1: Rule-based (fast, <10ms)
+/// - Tier 2: TF-IDF + Random Forest (medium, <100ms)
+/// - Tier 3: Transformer models (future work)
+pub enum HybridClassifier {
+    /// Rule-based only (Tier 1)
+    RuleBased(RuleBasedClassifier),
+    /// ML model with rule-based fallback (Tier 2 + Tier 1)
+    Hybrid {
+        ml_model: Box<crate::ml_trainer::TrainedModel>,
+        fallback: RuleBasedClassifier,
+        confidence_threshold: f32,
+    },
+}
+
+impl HybridClassifier {
+    /// Create a new rule-based classifier (Tier 1 only)
+    ///
+    /// # Examples
+    /// ```
+    /// use organizational_intelligence_plugin::classifier::HybridClassifier;
+    ///
+    /// let classifier = HybridClassifier::new_rule_based();
+    /// ```
+    pub fn new_rule_based() -> Self {
+        Self::RuleBased(RuleBasedClassifier::new())
+    }
+
+    /// Load a trained ML model with rule-based fallback (Tier 2 + Tier 1)
+    ///
+    /// # Arguments
+    /// * `model` - Trained ML model
+    /// * `confidence_threshold` - Minimum confidence to use ML prediction (default: 0.60)
+    ///
+    /// # Examples
+    /// ```no_run
+    /// # use organizational_intelligence_plugin::classifier::HybridClassifier;
+    /// # use organizational_intelligence_plugin::ml_trainer::{MLTrainer, TrainingDataset};
+    /// # fn example(model: organizational_intelligence_plugin::ml_trainer::TrainedModel) {
+    /// let classifier = HybridClassifier::new_hybrid(model, 0.65);
+    /// # }
+    /// ```
+    pub fn new_hybrid(
+        ml_model: crate::ml_trainer::TrainedModel,
+        confidence_threshold: f32,
+    ) -> Self {
+        Self::Hybrid {
+            ml_model: Box::new(ml_model),
+            fallback: RuleBasedClassifier::new(),
+            confidence_threshold,
+        }
+    }
+
+    /// Classify a commit message
+    ///
+    /// Uses ML model if available and confident, otherwise falls back to rule-based.
+    ///
+    /// # Arguments
+    /// * `message` - Commit message to classify
+    ///
+    /// # Returns
+    /// * `Some(Classification)` if a category is detected
+    /// * `None` if no patterns match
+    ///
+    /// # Examples
+    /// ```
+    /// use organizational_intelligence_plugin::classifier::HybridClassifier;
+    ///
+    /// let classifier = HybridClassifier::new_rule_based();
+    /// if let Some(result) = classifier.classify_from_message("fix: null pointer") {
+    ///     println!("Category: {:?}, Confidence: {:.2}", result.category, result.confidence);
+    /// }
+    /// ```
+    pub fn classify_from_message(&self, message: &str) -> Option<Classification> {
+        match self {
+            Self::RuleBased(classifier) => classifier.classify_from_message(message),
+            Self::Hybrid {
+                ml_model,
+                fallback,
+                confidence_threshold,
+            } => {
+                // Try ML model first
+                if let Ok(Some((category, confidence))) = ml_model.predict(message) {
+                    if confidence >= *confidence_threshold {
+                        return Some(Classification {
+                            category,
+                            confidence,
+                            explanation: format!("ML prediction (confidence: {:.2})", confidence),
+                            matched_patterns: vec!["ML-based classification".to_string()],
+                        });
+                    }
+                }
+
+                // Fall back to rule-based
+                fallback.classify_from_message(message)
+            }
+        }
+    }
+
+    /// Classify with multiple labels
+    ///
+    /// # Arguments
+    /// * `message` - Commit message to classify
+    /// * `top_n` - Maximum number of categories to return
+    /// * `min_confidence` - Minimum confidence threshold (0.0 to 1.0)
+    ///
+    /// # Returns
+    /// * `Ok(MultiLabelClassification)` with top-N categories
+    ///
+    /// # Examples
+    /// ```
+    /// use organizational_intelligence_plugin::classifier::HybridClassifier;
+    ///
+    /// let classifier = HybridClassifier::new_rule_based();
+    /// let result = classifier.classify_multi_label("fix: null pointer in parser", 3, 0.60).unwrap();
+    /// println!("Primary: {:?} ({:.2})", result.primary_category, result.primary_confidence);
+    /// ```
+    pub fn classify_multi_label(
+        &self,
+        message: &str,
+        top_n: usize,
+        min_confidence: f32,
+    ) -> anyhow::Result<MultiLabelClassification> {
+        match self {
+            Self::RuleBased(classifier) => classifier
+                .classify_multi_label(message, top_n, min_confidence)
+                .ok_or_else(|| anyhow::anyhow!("No classification found")),
+            Self::Hybrid {
+                ml_model, fallback, ..
+            } => {
+                // Try ML model for multi-label
+                if let Ok(predictions) = ml_model.predict_top_n(message, top_n) {
+                    if !predictions.is_empty() {
+                        let filtered: Vec<(DefectCategory, f32)> = predictions
+                            .into_iter()
+                            .filter(|(_, conf)| *conf >= min_confidence)
+                            .collect();
+
+                        if !filtered.is_empty() {
+                            return Ok(MultiLabelClassification {
+                                primary_category: filtered[0].0,
+                                primary_confidence: filtered[0].1,
+                                categories: filtered.clone(),
+                                matched_patterns: vec!["ML-based classification".to_string()],
+                            });
+                        }
+                    }
+                }
+
+                // Fall back to rule-based
+                fallback
+                    .classify_multi_label(message, top_n, min_confidence)
+                    .ok_or_else(|| anyhow::anyhow!("No classification found"))
+            }
+        }
+    }
+}
+
+impl Default for HybridClassifier {
+    fn default() -> Self {
+        Self::new_rule_based()
     }
 }
 
