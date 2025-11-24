@@ -3,18 +3,32 @@
 ## Current Sprint: v0.2.0 GPU Correlation Analysis Phase 1
 - **Duration**: 2025-11-24 to 2025-12-01
 - **Priority**: P0
+
+### Tasks
+| ID | Description | Status | Complexity | Priority |
+|----|-------------|--------|------------|----------|
+
+### Definition of Done
+- [ ] All tasks completed
+- [ ] Quality gates passed
+- [ ] Documentation updated
+- [ ] Tests passing
+- [ ] Changelog updated
+
+## Next Sprint: v0.3.0 GPU Acceleration & Advanced ML (Phase 2)
+- **Duration**: 2025-11-24 to 2025-12-08
+- **Priority**: P0
 - **Quality Gates**: Complexity ≤ 20, SATD = 0, Coverage ≥ 80%
 
 ### Tasks
 | ID | Description | Status | Complexity | Priority |
 |----|-------------|--------|------------|----------|
-| TASK-001 | Implement feature extraction from OIP defect data | TODO | 8 | P0 |
-| TASK-002 | Add correlation matrix computation for defect categories | TODO | 5 | P0 |
-| TASK-003 | Implement query command with natural language parsing | TODO | 13 | P1 |
-| TASK-004 | Add trueno-db storage integration | TODO | 8 | P0 |
-| TASK-005 | Create analyze command (GitHub → features → storage) | TODO | 15 | P0 |
-| TASK-006 | Add benchmark suite (correlation, clustering) | TODO | 5 | P1 |
-| TASK-007 | Documentation: API reference and examples | TODO | 3 | P2 |
+| PHASE2-001 | Implement GPU correlation matrix computation | TODO | 20 | P0 |
+| PHASE2-002 | Add GPU/CPU equivalence tests (tolerance 1e-4) | TODO | 8 | P0 |
+| PHASE2-003 | Implement sliding window correlation (concept drift) | TODO | 15 | P0 |
+| PHASE2-004 | Add class imbalance handling (SMOTE, Focal Loss) | TODO | 13 | P1 |
+| PHASE2-005 | Integrate aprender ML models (RF, K-means) | TODO | 18 | P1 |
+| PHASE2-006 | Performance validation (20x speedup target) | TODO | 5 | P1 |
 
 ### Definition of Done
 - [ ] All tasks completed
