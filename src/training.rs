@@ -313,7 +313,7 @@ impl TrainingDataExtractor {
 
         let avg_confidence = confidence_sum / examples.len() as f32;
 
-        let mut stats = format!("Training Data Statistics:\n");
+        let mut stats = "Training Data Statistics:\n".to_string();
         stats.push_str(&format!("  Total examples: {}\n", examples.len()));
         stats.push_str(&format!("  Avg confidence: {:.2}\n", avg_confidence));
         stats.push_str(&format!(

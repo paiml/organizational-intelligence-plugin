@@ -319,6 +319,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_load_missing_file() {
         // Clean up any env vars from other tests
         std::env::remove_var("OIP_MAX_COMMITS");
@@ -330,6 +331,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_load_no_path_no_defaults() {
         // Clean up any env vars from other tests
         std::env::remove_var("OIP_MAX_COMMITS");
@@ -341,6 +343,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_env_overrides_max_commits() {
         // Clean up first to ensure clean state
         std::env::remove_var("OIP_MAX_COMMITS");
@@ -353,6 +356,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_env_overrides_workers() {
         std::env::remove_var("OIP_WORKERS");
         std::env::set_var("OIP_WORKERS", "8");
@@ -363,6 +367,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_env_overrides_cache_dir() {
         std::env::remove_var("OIP_CACHE_DIR");
         std::env::set_var("OIP_CACHE_DIR", "/tmp/custom-cache");
@@ -373,6 +378,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_env_overrides_k_clusters() {
         std::env::remove_var("OIP_K_CLUSTERS");
         std::env::set_var("OIP_K_CLUSTERS", "10");
@@ -383,6 +389,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_env_overrides_backend() {
         std::env::remove_var("OIP_BACKEND");
         std::env::set_var("OIP_BACKEND", "simd");
@@ -393,6 +400,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_env_overrides_gpu_enabled_true() {
         std::env::remove_var("OIP_GPU_ENABLED");
         std::env::set_var("OIP_GPU_ENABLED", "true");
@@ -403,6 +411,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_env_overrides_gpu_enabled_1() {
         std::env::remove_var("OIP_GPU_ENABLED");
         std::env::set_var("OIP_GPU_ENABLED", "1");
@@ -413,6 +422,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_env_overrides_gpu_enabled_false() {
         // Clean up first to avoid interference from parallel tests
         std::env::remove_var("OIP_GPU_ENABLED");
@@ -426,6 +436,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_env_overrides_log_level() {
         std::env::remove_var("OIP_LOG_LEVEL");
         std::env::set_var("OIP_LOG_LEVEL", "debug");
@@ -436,6 +447,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_env_overrides_log_json() {
         std::env::remove_var("OIP_LOG_JSON");
         std::env::set_var("OIP_LOG_JSON", "1");
@@ -537,6 +549,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_invalid_env_value_ignored() {
         // Clean up any env vars from other tests
         std::env::remove_var("OIP_GPU_ENABLED");

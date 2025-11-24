@@ -318,7 +318,10 @@ pub async fn handle_extract_training_data(
 
     // Validate repository path
     if !repo.exists() {
-        return Err(anyhow::anyhow!("Repository path does not exist: {}", repo.display()));
+        return Err(anyhow::anyhow!(
+            "Repository path does not exist: {}",
+            repo.display()
+        ));
     }
 
     if !repo.join(".git").exists() {
@@ -346,7 +349,10 @@ pub async fn handle_extract_training_data(
     if examples.is_empty() {
         warn!("No training examples extracted - try lowering min_confidence threshold");
         println!("\n⚠️  No training examples extracted!");
-        println!("   Try lowering --min-confidence (current: {:.2})", min_confidence);
+        println!(
+            "   Try lowering --min-confidence (current: {:.2})",
+            min_confidence
+        );
         return Ok(());
     }
 
@@ -384,7 +390,10 @@ pub async fn handle_extract_training_data(
     println!("\n🎯 Phase 2 Training Data Extraction Complete!");
     println!("   ✅ Commit filtering (excludes merges, reverts, WIP)");
     println!("   ✅ Auto-labeling with rule-based classifier");
-    println!("   ✅ Confidence threshold filtering ({:.2})", min_confidence);
+    println!(
+        "   ✅ Confidence threshold filtering ({:.2})",
+        min_confidence
+    );
     if create_splits {
         println!("   ✅ Train/validation/test splits created");
     }
@@ -392,7 +401,10 @@ pub async fn handle_extract_training_data(
 
     println!("\n💡 Next Steps:");
     println!("   1. Review extracted data: cat {}", output.display());
-    println!("   2. Train ML classifier: oip train-classifier --input {}", output.display());
+    println!(
+        "   2. Train ML classifier: oip train-classifier --input {}",
+        output.display()
+    );
     println!("   3. Evaluate model performance on test set");
 
     Ok(())
@@ -410,8 +422,10 @@ pub async fn handle_train_classifier(
     if let Some(ref output_path) = output {
         info!("Output model file: {}", output_path.display());
     }
-    info!("Hyperparameters: n_estimators={}, max_depth={}, max_features={}",
-          n_estimators, max_depth, max_features);
+    info!(
+        "Hyperparameters: n_estimators={}, max_depth={}, max_features={}",
+        n_estimators, max_depth, max_features
+    );
 
     println!("\n🤖 ML Classifier Training (Phase 2)");
     println!("   Input:         {}", input.display());
@@ -424,13 +438,19 @@ pub async fn handle_train_classifier(
 
     // Validate input file
     if !input.exists() {
-        return Err(anyhow::anyhow!("Input file does not exist: {}", input.display()));
+        return Err(anyhow::anyhow!(
+            "Input file does not exist: {}",
+            input.display()
+        ));
     }
 
     // Load training dataset
     println!("\n📂 Loading training dataset...");
     let dataset = MLTrainer::load_dataset(&input)?;
-    println!("   ✅ Loaded {} total examples", dataset.metadata.total_examples);
+    println!(
+        "   ✅ Loaded {} total examples",
+        dataset.metadata.total_examples
+    );
     println!("      Train:      {} examples", dataset.train.len());
     println!("      Validation: {} examples", dataset.validation.len());
     println!("      Test:       {} examples", dataset.test.len());
@@ -456,8 +476,14 @@ pub async fn handle_train_classifier(
 
     // Show accuracy metrics
     println!("\n📈 Model Performance:");
-    println!("   Training accuracy:   {:.2}%", model.metadata.train_accuracy * 100.0);
-    println!("   Validation accuracy: {:.2}%", model.metadata.validation_accuracy * 100.0);
+    println!(
+        "   Training accuracy:   {:.2}%",
+        model.metadata.train_accuracy * 100.0
+    );
+    println!(
+        "   Validation accuracy: {:.2}%",
+        model.metadata.validation_accuracy * 100.0
+    );
 
     // Evaluate on test set
     if !dataset.test.is_empty() {
@@ -469,7 +495,10 @@ pub async fn handle_train_classifier(
         if test_accuracy >= 0.80 {
             println!("\n✅ Model meets ≥80% accuracy target!");
         } else {
-            println!("\n⚠️  Model accuracy {:.2}% below 80% target", test_accuracy * 100.0);
+            println!(
+                "\n⚠️  Model accuracy {:.2}% below 80% target",
+                test_accuracy * 100.0
+            );
             println!("   Consider:");
             println!("   - Collecting more training data");
             println!("   - Increasing n_estimators (current: {})", n_estimators);
@@ -490,14 +519,20 @@ pub async fn handle_train_classifier(
     // Summary
     println!("\n🎯 Phase 2 ML Training Complete!");
     println!("   ✅ Random Forest with {} trees trained", n_estimators);
-    println!("   ✅ TF-IDF features: {} dimensions", model.metadata.n_features);
+    println!(
+        "   ✅ TF-IDF features: {} dimensions",
+        model.metadata.n_features
+    );
     println!("   ✅ Defect categories: {}", model.metadata.n_classes);
     println!("   ✅ Training examples: {}", model.metadata.n_train);
 
     let improvement = (model.metadata.validation_accuracy / 0.308) * 100.0 - 100.0;
     println!("\n📊 Performance vs Baseline:");
     println!("   Baseline (rule-based):  30.8%");
-    println!("   ML Model (validation):  {:.2}%", model.metadata.validation_accuracy * 100.0);
+    println!(
+        "   ML Model (validation):  {:.2}%",
+        model.metadata.validation_accuracy * 100.0
+    );
     if improvement > 0.0 {
         println!("   Improvement:            +{:.1}%", improvement);
     }
@@ -831,7 +866,10 @@ defect_patterns:
 
         let result = handle_extract_training_data(repo, output, 0.75, 100, true).await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Not a Git repository"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Not a Git repository"));
     }
 
     #[tokio::test]
@@ -946,15 +984,16 @@ defect_patterns:
         }
 
         let temp_output = NamedTempFile::new().unwrap();
-        let output = Some(temp_output.path().to_path_buf());
+        let output_path = temp_output.path().to_path_buf();
+        let output = Some(output_path.clone());
 
-        let result = handle_train_classifier(input, output.clone(), 10, 5, 100).await;
+        let result = handle_train_classifier(input, output, 10, 5, 100).await;
 
         // Should succeed or fail with reasonable error
         match result {
             Ok(_) => {
                 // If successful, output file should exist
-                assert!(output.unwrap().exists());
+                assert!(output_path.exists());
             }
             Err(e) => {
                 // Acceptable errors: not enough data, etc.

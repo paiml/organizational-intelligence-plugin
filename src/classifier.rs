@@ -1024,7 +1024,7 @@ mod tests {
             .classify_multi_label("fix: null pointer in ast transform", 3, 0.60)
             .unwrap();
 
-        assert!(result.categories.len() >= 1);
+        assert!(!result.categories.is_empty());
         assert!(result.categories.len() <= 3);
         assert_eq!(result.primary_category, result.categories[0].0);
         assert_eq!(result.primary_confidence, result.categories[0].1);
