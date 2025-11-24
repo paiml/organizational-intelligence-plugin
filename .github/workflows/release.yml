@@ -4,38 +4,181 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., v0.1.0)'
+        required: true
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.tag }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$PREVIOUS_TAG" ]; then
+            CHANGELOG=$(git log --pretty=format:"- %s" $PREVIOUS_TAG..HEAD)
+          else
+            CHANGELOG=$(git log --pretty=format:"- %s" -20)
+          fi
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          release_name: Release ${{ steps.get_version.outputs.version }}
+          body: |
+            ## Changes
+            ${{ steps.changelog.outputs.changelog }}
+
+            ## Installation
+
+            Download the appropriate binary for your platform:
+            - **Linux**: `oip-linux-amd64`, `oip-gpu-linux-amd64`
+            - **macOS**: `oip-macos-amd64`, `oip-gpu-macos-amd64`
+            - **Windows**: `oip-windows-amd64.exe`, `oip-gpu-windows-amd64.exe`
+
+            Verify checksums with the `checksums.txt` file.
+          draft: false
+          prerelease: ${{ contains(steps.get_version.outputs.version, '-') }}
+
   build-release:
-    name: Build Release
+    name: Build Release (${{ matrix.os }})
+    needs: create-release
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
         include:
           - os: ubuntu-latest
-            artifact_name: oip
-            asset_name: oip-linux-amd64
+            target: x86_64-unknown-linux-gnu
+            suffix: linux-amd64
+            ext: ""
           - os: macos-latest
-            artifact_name: oip
-            asset_name: oip-macos-amd64
+            target: x86_64-apple-darwin
+            suffix: macos-amd64
+            ext: ""
           - os: windows-latest
-            artifact_name: oip.exe
-            asset_name: oip-windows-amd64.exe
+            target: x86_64-pc-windows-msvc
+            suffix: windows-amd64
+            ext: ".exe"
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-
-      - name: Build
-        run: cargo build --release
-
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@v2
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/release/${{ matrix.artifact_name }}
-          asset_name: ${{ matrix.asset_name }}
-          tag: ${{ github.ref }}
+          targets: ${{ matrix.target }}
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build release binaries
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Prepare artifacts (Unix)
+        if: matrix.os != 'windows-latest'
+        run: |
+          mkdir -p artifacts
+          cp target/${{ matrix.target }}/release/oip artifacts/oip-${{ matrix.suffix }}
+          cp target/${{ matrix.target }}/release/oip-gpu artifacts/oip-gpu-${{ matrix.suffix }}
+          chmod +x artifacts/*
+
+      - name: Prepare artifacts (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          mkdir artifacts
+          copy target\${{ matrix.target }}\release\oip.exe artifacts\oip-${{ matrix.suffix }}.exe
+          copy target\${{ matrix.target }}\release\oip-gpu.exe artifacts\oip-gpu-${{ matrix.suffix }}.exe
+
+      - name: Upload oip binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: artifacts/oip-${{ matrix.suffix }}${{ matrix.ext }}
+          asset_name: oip-${{ matrix.suffix }}${{ matrix.ext }}
+          asset_content_type: application/octet-stream
+
+      - name: Upload oip-gpu binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: artifacts/oip-gpu-${{ matrix.suffix }}${{ matrix.ext }}
+          asset_name: oip-gpu-${{ matrix.suffix }}${{ matrix.ext }}
+          asset_content_type: application/octet-stream
+
+      - name: Generate checksums (Unix)
+        if: matrix.os != 'windows-latest'
+        run: |
+          cd artifacts
+          sha256sum * > checksums-${{ matrix.suffix }}.txt
+
+      - name: Generate checksums (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          cd artifacts
+          Get-FileHash * -Algorithm SHA256 | Format-Table -Property Hash,@{N='Name';E={Split-Path $_.Path -Leaf}} -HideTableHeaders | Out-File checksums-${{ matrix.suffix }}.txt
+
+      - name: Upload checksums
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: artifacts/checksums-${{ matrix.suffix }}.txt
+          asset_name: checksums-${{ matrix.suffix }}.txt
+          asset_content_type: text/plain
+
+  publish-crate:
+    name: Publish to crates.io
+    needs: [create-release, build-release]
+    runs-on: ubuntu-latest
+    if: ${{ !contains(needs.create-release.outputs.version, '-') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Publish to crates.io
+        run: cargo publish --dry-run
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
