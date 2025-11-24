@@ -459,4 +459,169 @@ mod tests {
         let p_at_100 = AuprcMetric::precision_at_recall(&predictions, &labels, 1.0).unwrap();
         assert!((p_at_100 - 1.0).abs() < 0.01); // Both positives ranked first
     }
+
+    #[test]
+    fn test_smote_default() {
+        let smote = Smote::default();
+        assert_eq!(smote.k_neighbors, 5);
+    }
+
+    #[test]
+    fn test_smote_no_samples_needed() {
+        // Minority already balanced
+        let features = vec![
+            make_feature(0, 1),
+            make_feature(0, 2),
+            make_feature(1, 10),
+            make_feature(1, 11),
+        ];
+
+        let smote = Smote::new();
+        let result = smote.oversample(&features, 1, 0.5).unwrap();
+
+        // Should return original features (no oversampling needed)
+        assert_eq!(result.len(), features.len());
+    }
+
+    #[test]
+    fn test_smote_vector_to_features_clamping() {
+        let smote = Smote::new();
+
+        // Test negative values are clamped to 0
+        let vec = vec![0.0, -5.0, -10.0, -1.0, 0.5, 1700000000.0, 25.0, 8.0];
+        let feature = smote.vector_to_features(&vec, 3);
+
+        assert_eq!(feature.files_changed, 0.0); // Clamped from -5.0
+        assert_eq!(feature.lines_added, 0.0); // Clamped from -10.0
+        assert_eq!(feature.lines_deleted, 0.0); // Clamped from -1.0
+        assert_eq!(feature.hour_of_day, 23); // Clamped from 25
+        assert_eq!(feature.day_of_week, 6); // Clamped from 8
+    }
+
+    #[test]
+    fn test_focal_loss_with_params() {
+        let weights = vec![2.0, 1.5, 1.0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
+        let fl = FocalLoss::with_params(3.0, weights.clone());
+
+        assert_eq!(fl.gamma, 3.0);
+        assert_eq!(fl.alpha, weights);
+    }
+
+    #[test]
+    fn test_focal_loss_default() {
+        let fl = FocalLoss::default();
+        assert_eq!(fl.gamma, 2.0);
+        assert_eq!(fl.alpha.len(), 10);
+    }
+
+    #[test]
+    fn test_focal_loss_batch() {
+        let fl = FocalLoss::new();
+        let probs = vec![0.9, 0.8, 0.7, 0.6];
+        let classes = vec![0, 0, 1, 1];
+
+        let batch_loss = fl.batch_loss(&probs, &classes);
+        assert!(batch_loss > 0.0);
+
+        // Average of individual losses
+        let expected =
+            (fl.loss(0.9, 0) + fl.loss(0.8, 0) + fl.loss(0.7, 1) + fl.loss(0.6, 1)) / 4.0;
+        assert!((batch_loss - expected).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_focal_loss_compute_weights_edge_cases() {
+        // Single class
+        let features = vec![make_feature(0, 1), make_feature(0, 2), make_feature(0, 3)];
+        let weights = FocalLoss::compute_weights(&features);
+
+        // All weight should go to class 0
+        assert!(weights[0] > 0.0);
+        assert_eq!(weights[1], 0.0); // No samples in class 1
+    }
+
+    #[test]
+    fn test_auprc_length_mismatch() {
+        let predictions = vec![0.9, 0.8, 0.7];
+        let labels = vec![1, 0]; // Different length
+
+        let result = AuprcMetric::compute(&predictions, &labels);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("same length"));
+    }
+
+    #[test]
+    fn test_auprc_empty() {
+        let predictions: Vec<f32> = vec![];
+        let labels: Vec<u8> = vec![];
+
+        let result = AuprcMetric::compute(&predictions, &labels);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Empty predictions"));
+    }
+
+    #[test]
+    fn test_auprc_no_positives() {
+        let predictions = vec![0.9, 0.8, 0.7];
+        let labels = vec![0, 0, 0]; // All negatives
+
+        let result = AuprcMetric::compute(&predictions, &labels);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("No positive samples"));
+    }
+
+    #[test]
+    fn test_precision_at_recall_length_mismatch() {
+        let predictions = vec![0.9, 0.8];
+        let labels = vec![1, 0, 0];
+
+        let result = AuprcMetric::precision_at_recall(&predictions, &labels, 0.5);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_precision_at_recall_no_positives() {
+        let predictions = vec![0.9, 0.8, 0.7];
+        let labels = vec![0, 0, 0];
+
+        let result = AuprcMetric::precision_at_recall(&predictions, &labels, 0.5);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("No positive samples"));
+    }
+
+    #[test]
+    fn test_precision_at_recall_target_not_reached() {
+        let predictions = vec![0.9, 0.7, 0.3];
+        let labels = vec![0, 0, 1]; // Positive ranked last
+
+        // Can't reach 100% recall without going through all samples
+        let p = AuprcMetric::precision_at_recall(&predictions, &labels, 1.0).unwrap();
+        assert!((p - 1.0 / 3.0).abs() < 0.01); // 1 positive out of 3 samples
+    }
+
+    #[test]
+    fn test_smote_interpolate_deterministic() {
+        let smote = Smote::new();
+        let base = vec![1.0, 2.0, 3.0];
+        let neighbor = vec![2.0, 4.0, 6.0];
+
+        let synthetic1 = smote.interpolate(&base, &neighbor, 0);
+        let synthetic2 = smote.interpolate(&base, &neighbor, 0);
+
+        // Same seed produces same result
+        assert_eq!(synthetic1, synthetic2);
+
+        // Different seeds produce different results
+        let synthetic3 = smote.interpolate(&base, &neighbor, 1);
+        assert_ne!(synthetic1, synthetic3);
+    }
 }
