@@ -13,6 +13,7 @@ pub mod summarizer;
 
 // GPU acceleration modules
 pub mod correlation;
+pub mod features;
 pub mod gpu_store;
 
 // Re-export main types for convenience
