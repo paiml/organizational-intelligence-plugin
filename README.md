@@ -46,6 +46,13 @@ Organizational Intelligence Plugin (OIP) mines Git history and integrates with p
 - Context-aware warnings based on organizational history
 - Multiple output formats (Markdown, JSON)
 
+🚀 **Phase 1 GPU Extension** (`oip-gpu`) - **NEW!**
+- GPU-accelerated correlation analysis for defect patterns
+- SIMD-optimized feature extraction (trueno backend)
+- Benchmark suite with criterion (10-50× speedup targets)
+- Complete GitHub → Features → Storage pipeline
+- See: [GPU Quick Start](docs/GPU_QUICKSTART.md) | [Full Spec](docs/specifications/GPU-correlation-predictions-spec.md)
+
 ### Toyota Way Principles
 
 This tool is built following Toyota Production System principles:
@@ -173,6 +180,23 @@ oip review-pr \
   --files $(git diff --name-only HEAD~1) \
   --format json
 ```
+
+### Phase 1 GPU: Accelerated Analysis
+
+```bash
+# Analyze repository with GPU-accelerated features
+oip-gpu analyze --repo rust-lang/rust --output features.db
+
+# Run performance benchmarks
+oip-gpu benchmark --suite all
+
+# Force SIMD backend (CPU)
+oip-gpu analyze --repo owner/repo --backend simd --output out.db
+```
+
+**Output**: Feature vectors ready for GPU correlation analysis
+
+See [GPU Quick Start](docs/GPU_QUICKSTART.md) for detailed examples.
 
 **Output**: Context-aware warnings based on organizational defect patterns
 
