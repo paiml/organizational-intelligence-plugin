@@ -445,4 +445,233 @@ mod tests {
         // (This is probabilistic, but rustlings has fix commits)
         assert!(!patterns.is_empty() || patterns.is_empty()); // Always passes, just testing it runs
     }
+
+    #[test]
+    fn test_category_stats_new() {
+        let stats = CategoryStats::new(DefectCategory::LogicErrors);
+        assert_eq!(stats.count, 0);
+        assert_eq!(stats.total_confidence, 0.0);
+        assert_eq!(stats.instances.len(), 0);
+        assert_eq!(stats.total_files_changed, 0);
+        assert_eq!(stats.total_lines_added, 0);
+        assert_eq!(stats.total_lines_removed, 0);
+    }
+
+    #[test]
+    fn test_category_stats_averaging() {
+        let mut stats = CategoryStats::new(DefectCategory::SecurityVulnerabilities);
+
+        // Add multiple commits to test averaging
+        for i in 0..3 {
+            let commit = CommitInfo {
+                hash: format!("hash{}", i),
+                message: "fix: SQL injection".to_string(),
+                author: "test@example.com".to_string(),
+                timestamp: 1234567890 + i as i64,
+                files_changed: 2,
+                lines_added: 10,
+                lines_removed: 5,
+            };
+
+            let classification = Classification {
+                category: DefectCategory::SecurityVulnerabilities,
+                confidence: 0.9,
+                explanation: "test".to_string(),
+                matched_patterns: vec!["sql injection".to_string()],
+            };
+
+            stats.add_instance(&commit, &classification);
+        }
+
+        let pattern = stats.into_defect_pattern();
+        assert_eq!(pattern.frequency, 3);
+        assert!((pattern.confidence - 0.9).abs() < 0.01); // Floating point tolerance
+        assert_eq!(pattern.quality_signals.avg_lines_changed, 15.0); // (10+5) per commit
+        assert_eq!(pattern.quality_signals.avg_files_per_commit, 2.0);
+    }
+
+    #[test]
+    fn test_commit_hash_truncation() {
+        let mut stats = CategoryStats::new(DefectCategory::MemorySafety);
+
+        let commit = CommitInfo {
+            hash: "abcdefghijklmnop".to_string(), // 16 chars
+            message: "fix: memory leak".to_string(),
+            author: "test@example.com".to_string(),
+            timestamp: 1234567890,
+            files_changed: 1,
+            lines_added: 10,
+            lines_removed: 5,
+        };
+
+        let classification = Classification {
+            category: DefectCategory::MemorySafety,
+            confidence: 0.8,
+            explanation: "test".to_string(),
+            matched_patterns: vec!["memory leak".to_string()],
+        };
+
+        stats.add_instance(&commit, &classification);
+
+        assert_eq!(stats.instances[0].commit_hash, "abcdefgh"); // Truncated to 8
+        assert_eq!(stats.instances[0].commit_hash.len(), 8);
+    }
+
+    #[test]
+    fn test_commit_hash_short() {
+        let mut stats = CategoryStats::new(DefectCategory::MemorySafety);
+
+        let commit = CommitInfo {
+            hash: "abc".to_string(), // < 8 chars
+            message: "fix: memory leak".to_string(),
+            author: "test@example.com".to_string(),
+            timestamp: 1234567890,
+            files_changed: 1,
+            lines_added: 10,
+            lines_removed: 5,
+        };
+
+        let classification = Classification {
+            category: DefectCategory::MemorySafety,
+            confidence: 0.8,
+            explanation: "test".to_string(),
+            matched_patterns: vec!["memory leak".to_string()],
+        };
+
+        stats.add_instance(&commit, &classification);
+
+        // Short hash should remain unchanged
+        assert_eq!(stats.instances[0].commit_hash, "abc");
+    }
+
+    #[test]
+    fn test_category_stats_zero_count_pattern() {
+        let stats = CategoryStats::new(DefectCategory::TypeErrors);
+        let pattern = stats.into_defect_pattern();
+
+        assert_eq!(pattern.frequency, 0);
+        assert_eq!(pattern.confidence, 0.0);
+        assert_eq!(pattern.quality_signals.avg_lines_changed, 0.0);
+        assert_eq!(pattern.quality_signals.avg_files_per_commit, 0.0);
+    }
+
+    #[test]
+    fn test_aggregate_mixed_commits() {
+        let temp_dir = TempDir::new().unwrap();
+        let analyzer = OrgAnalyzer::new(temp_dir.path());
+
+        let commits = vec![
+            CommitInfo {
+                hash: "abc123".to_string(),
+                message: "fix: null pointer dereference".to_string(),
+                author: "test@example.com".to_string(),
+                timestamp: 1234567890,
+                files_changed: 2,
+                lines_added: 20,
+                lines_removed: 5,
+            },
+            CommitInfo {
+                hash: "def456".to_string(),
+                message: "docs: update README".to_string(), // Non-defect
+                author: "test@example.com".to_string(),
+                timestamp: 1234567891,
+                files_changed: 1,
+                lines_added: 5,
+                lines_removed: 2,
+            },
+            CommitInfo {
+                hash: "ghi789".to_string(),
+                message: "fix: another null pointer issue".to_string(),
+                author: "test@example.com".to_string(),
+                timestamp: 1234567892,
+                files_changed: 1,
+                lines_added: 10,
+                lines_removed: 3,
+            },
+        ];
+
+        let patterns = analyzer.aggregate_defect_patterns(&commits);
+
+        // Should have 1 category: MemorySafety (2x), ignore non-defect
+        assert_eq!(patterns.len(), 1);
+
+        let memory_pattern = &patterns[0];
+        assert_eq!(memory_pattern.category, DefectCategory::MemorySafety);
+        assert_eq!(memory_pattern.frequency, 2);
+        assert_eq!(memory_pattern.examples.len(), 2);
+    }
+
+    #[test]
+    fn test_quality_signals_calculation() {
+        let mut stats = CategoryStats::new(DefectCategory::ConcurrencyBugs);
+
+        let commit = CommitInfo {
+            hash: "abc123".to_string(),
+            message: "fix: race condition".to_string(),
+            author: "test@example.com".to_string(),
+            timestamp: 1234567890,
+            files_changed: 3,
+            lines_added: 50,
+            lines_removed: 20,
+        };
+
+        let classification = Classification {
+            category: DefectCategory::ConcurrencyBugs,
+            confidence: 0.82,
+            explanation: "test".to_string(),
+            matched_patterns: vec!["race condition".to_string()],
+        };
+
+        stats.add_instance(&commit, &classification);
+
+        let pattern = stats.into_defect_pattern();
+
+        // Verify quality signals
+        assert_eq!(pattern.quality_signals.avg_lines_changed, 70.0); // 50 + 20
+        assert_eq!(pattern.quality_signals.avg_files_per_commit, 3.0);
+        assert!(pattern.quality_signals.avg_tdg_score.is_none()); // Not enriched yet
+        assert!(pattern.quality_signals.avg_complexity.is_none());
+        assert!(pattern.quality_signals.avg_test_coverage.is_none());
+        assert_eq!(pattern.quality_signals.satd_instances, 0);
+    }
+
+    #[test]
+    fn test_enrich_with_tdg_multiple_patterns() {
+        use crate::pmat::TdgAnalysis;
+        use std::collections::HashMap;
+
+        let temp_dir = TempDir::new().unwrap();
+        let analyzer = OrgAnalyzer::new(temp_dir.path());
+
+        let mut patterns = vec![
+            DefectPattern {
+                category: DefectCategory::MemorySafety,
+                frequency: 5,
+                confidence: 0.85,
+                quality_signals: QualitySignals::default(),
+                examples: vec![],
+            },
+            DefectPattern {
+                category: DefectCategory::SecurityVulnerabilities,
+                frequency: 3,
+                confidence: 0.90,
+                quality_signals: QualitySignals::default(),
+                examples: vec![],
+            },
+        ];
+
+        let tdg_analysis = TdgAnalysis {
+            file_scores: HashMap::new(),
+            average_score: 85.5,
+            max_score: 95.0,
+        };
+
+        analyzer.enrich_with_tdg(&mut patterns, &tdg_analysis);
+
+        // Both patterns should be enriched
+        for pattern in &patterns {
+            assert_eq!(pattern.quality_signals.avg_tdg_score, Some(85.5));
+            assert_eq!(pattern.quality_signals.max_tdg_score, Some(95.0));
+        }
+    }
 }
