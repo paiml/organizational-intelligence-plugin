@@ -61,6 +61,11 @@ wgpu = "0.19"
 bytemuck = "1.14"
 
 [dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "gpu_benchmarks"
+harness = false
 
 [profile.release]
 opt-level = 3

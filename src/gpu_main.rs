@@ -483,10 +483,48 @@ async fn cmd_export(
 }
 
 async fn cmd_benchmark(
-    _suite: BenchmarkSuite,
-    _output: Option<std::path::PathBuf>,
-    _backend: Option<Backend>,
+    suite: BenchmarkSuite,
+    output: Option<std::path::PathBuf>,
+    backend: Option<Backend>,
 ) -> Result<()> {
-    println!("Benchmark command - not yet implemented");
+    println!("🚀 Running GPU benchmark suite");
+    if let Some(b) = backend {
+        println!("⚙️  Backend: {:?}", b);
+    }
+
+    let bench_filter = match suite {
+        BenchmarkSuite::Correlation => "correlation",
+        BenchmarkSuite::Clustering => "clustering",
+        BenchmarkSuite::Graph => "graph",
+        BenchmarkSuite::All => "",
+    };
+
+    println!("📊 Suite: {:?}", suite);
+    println!("🔬 Running criterion benchmarks...");
+    println!();
+
+    // Run cargo bench with appropriate filter
+    let mut cmd = std::process::Command::new("cargo");
+    cmd.arg("bench").arg("--bench").arg("gpu_benchmarks");
+
+    if !bench_filter.is_empty() {
+        cmd.arg("--").arg(bench_filter);
+    }
+
+    let status = cmd.status()?;
+
+    if !status.success() {
+        anyhow::bail!("Benchmark execution failed");
+    }
+
+    if let Some(output_path) = output {
+        println!("💾 Results saved to: {}", output_path.display());
+        println!("ℹ️  Note: Criterion results are in target/criterion/");
+    }
+
+    println!();
+    println!("✨ Benchmarks complete!");
+    println!("📈 See target/criterion/ for detailed results");
+
     Ok(())
 }
