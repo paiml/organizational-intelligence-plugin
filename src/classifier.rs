@@ -1371,4 +1371,91 @@ mod tests {
 
         assert!(result.is_none());
     }
+
+    // ===== HybridClassifier Tests =====
+
+    #[test]
+    fn test_hybrid_classifier_rule_based_variant() {
+        let classifier = HybridClassifier::new_rule_based();
+
+        // Should work exactly like RuleBasedClassifier
+        let result = classifier.classify_from_message("fix: null pointer dereference");
+        assert!(result.is_some());
+
+        let classification = result.unwrap();
+        assert_eq!(classification.category, DefectCategory::MemorySafety);
+    }
+
+    #[test]
+    fn test_hybrid_classifier_default() {
+        let classifier = HybridClassifier::default();
+
+        // Default should be rule-based
+        let result = classifier.classify_from_message("fix: race condition");
+        assert!(result.is_some());
+    }
+
+    #[test]
+    fn test_hybrid_classifier_multi_label_rule_based() {
+        let classifier = HybridClassifier::new_rule_based();
+
+        let result = classifier
+            .classify_multi_label("fix: memory leak and null pointer", 3, 0.60)
+            .unwrap();
+
+        assert!(!result.categories.is_empty());
+        assert_eq!(result.primary_category, result.categories[0].0);
+    }
+
+    #[test]
+    fn test_hybrid_classifier_no_match() {
+        let classifier = HybridClassifier::new_rule_based();
+
+        // Non-defect message
+        let result = classifier.classify_from_message("docs: update README");
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_hybrid_classifier_multi_label_no_match() {
+        let classifier = HybridClassifier::new_rule_based();
+
+        // Should return error when no classification found
+        let result = classifier.classify_multi_label("docs: update README", 3, 0.60);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_hybrid_classifier_various_categories() {
+        let classifier = HybridClassifier::new_rule_based();
+
+        // Test multiple categories
+        let test_cases = vec![
+            (
+                "fix: operator precedence bug",
+                DefectCategory::OperatorPrecedence,
+            ),
+            (
+                "fix: type annotation missing",
+                DefectCategory::TypeAnnotationGaps,
+            ),
+            ("fix: stdlib mapping error", DefectCategory::StdlibMapping),
+            ("fix: ast transform issue", DefectCategory::ASTTransform),
+            ("fix: comprehension bug", DefectCategory::ComprehensionBugs),
+            ("fix: iterator chain error", DefectCategory::IteratorChain),
+            ("fix: ownership violation", DefectCategory::OwnershipBorrow),
+            ("fix: trait bound issue", DefectCategory::TraitBounds),
+        ];
+
+        for (message, expected_category) in test_cases {
+            let result = classifier.classify_from_message(message);
+            assert!(result.is_some(), "Failed to classify: {}", message);
+            assert_eq!(
+                result.unwrap().category,
+                expected_category,
+                "Wrong category for: {}",
+                message
+            );
+        }
+    }
 }

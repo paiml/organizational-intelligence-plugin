@@ -1,8 +1,9 @@
 // Integrated analyzer combining git history and defect classification
 // Phase 1: Combines GitAnalyzer + RuleBasedClassifier to generate defect patterns
+// Phase 2: Supports hybrid ML + rule-based classification (NLP-010)
 // Toyota Way: Simple integration, measure before optimizing
 
-use crate::classifier::{Classification, DefectCategory, RuleBasedClassifier};
+use crate::classifier::{Classification, DefectCategory, HybridClassifier};
 use crate::git::{CommitInfo, GitAnalyzer};
 use crate::pmat::{PmatIntegration, TdgAnalysis};
 use crate::report::{DefectInstance, DefectPattern, QualitySignals};
@@ -13,9 +14,11 @@ use tracing::{debug, info};
 
 /// Integrated organizational defect analyzer
 /// Combines git history analysis with defect classification
+///
+/// Supports both rule-based and ML-based classification (NLP-010)
 pub struct OrgAnalyzer {
     git_analyzer: GitAnalyzer,
-    classifier: RuleBasedClassifier,
+    classifier: HybridClassifier,
     cache_dir: PathBuf,
 }
 
@@ -36,7 +39,41 @@ impl OrgAnalyzer {
         let cache_dir = cache_dir.as_ref().to_path_buf();
         Self {
             git_analyzer: GitAnalyzer::new(&cache_dir),
-            classifier: RuleBasedClassifier::new(),
+            classifier: HybridClassifier::new_rule_based(),
+            cache_dir,
+        }
+    }
+
+    /// Create a new organizational analyzer with ML model
+    ///
+    /// # Arguments
+    /// * `cache_dir` - Directory for storing cloned repositories
+    /// * `ml_model` - Trained ML model for classification
+    /// * `confidence_threshold` - Minimum confidence for ML predictions
+    ///
+    /// # Examples
+    /// ```no_run
+    /// use organizational_intelligence_plugin::analyzer::OrgAnalyzer;
+    /// use organizational_intelligence_plugin::ml_trainer::MLTrainer;
+    /// use std::path::PathBuf;
+    ///
+    /// # fn example(model: organizational_intelligence_plugin::ml_trainer::TrainedModel) {
+    /// let analyzer = OrgAnalyzer::with_ml_model(
+    ///     PathBuf::from("/tmp/repos"),
+    ///     model,
+    ///     0.65
+    /// );
+    /// # }
+    /// ```
+    pub fn with_ml_model<P: AsRef<Path>>(
+        cache_dir: P,
+        ml_model: crate::ml_trainer::TrainedModel,
+        confidence_threshold: f32,
+    ) -> Self {
+        let cache_dir = cache_dir.as_ref().to_path_buf();
+        Self {
+            git_analyzer: GitAnalyzer::new(&cache_dir),
+            classifier: HybridClassifier::new_hybrid(ml_model, confidence_threshold),
             cache_dir,
         }
     }
