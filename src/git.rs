@@ -456,4 +456,349 @@ mod tests {
         let commits = analyzer.analyze_commits("rustlings", 5).unwrap();
         assert!(!commits.is_empty());
     }
+
+    #[test]
+    fn test_clone_repository_already_exists() {
+        let temp_dir = TempDir::new().unwrap();
+        let repo_path = temp_dir.path().join("existing-repo");
+        std::fs::create_dir(&repo_path).unwrap();
+
+        // Initialize a repo to simulate already exists
+        Repository::init(&repo_path).unwrap();
+
+        let analyzer = GitAnalyzer::new(temp_dir.path());
+
+        // Should not fail when repo already exists
+        let result = analyzer.clone_repository("https://example.com/repo.git", "existing-repo");
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_clone_repository_invalid_url() {
+        let temp_dir = TempDir::new().unwrap();
+        let analyzer = GitAnalyzer::new(temp_dir.path());
+
+        // Try to clone from invalid URL
+        let result = analyzer.clone_repository("not-a-valid-url", "test-repo");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_analyze_commits_with_zero_limit() {
+        let temp_dir = TempDir::new().unwrap();
+        let repo_path = temp_dir.path().join("zero-limit-repo");
+        std::fs::create_dir(&repo_path).unwrap();
+
+        let repo = Repository::init(&repo_path).unwrap();
+
+        let mut config = repo.config().unwrap();
+        config.set_str("user.name", "Test").unwrap();
+        config.set_str("user.email", "test@test.com").unwrap();
+
+        // Create one commit
+        let file_path = repo_path.join("file.txt");
+        std::fs::write(&file_path, "content").unwrap();
+
+        let mut index = repo.index().unwrap();
+        index.add_path(Path::new("file.txt")).unwrap();
+        index.write().unwrap();
+
+        let tree_id = index.write_tree().unwrap();
+        let tree = repo.find_tree(tree_id).unwrap();
+        let sig = repo.signature().unwrap();
+
+        repo.commit(Some("HEAD"), &sig, &sig, "Test commit", &tree, &[])
+            .unwrap();
+
+        let analyzer = GitAnalyzer::new(temp_dir.path());
+
+        // Analyze with limit=0 should return empty
+        let commits = analyzer.analyze_commits("zero-limit-repo", 0).unwrap();
+        assert_eq!(commits.len(), 0);
+    }
+
+    #[test]
+    fn test_analyze_commits_with_modifications() {
+        let temp_dir = TempDir::new().unwrap();
+        let repo_path = temp_dir.path().join("modify-repo");
+        std::fs::create_dir(&repo_path).unwrap();
+
+        let repo = Repository::init(&repo_path).unwrap();
+
+        let mut config = repo.config().unwrap();
+        config.set_str("user.name", "Test User").unwrap();
+        config.set_str("user.email", "test@example.com").unwrap();
+
+        // Initial commit
+        let file_path = repo_path.join("test.txt");
+        std::fs::write(&file_path, "Line 1\nLine 2\nLine 3\n").unwrap();
+
+        let mut index = repo.index().unwrap();
+        index.add_path(Path::new("test.txt")).unwrap();
+        index.write().unwrap();
+
+        let tree_id = index.write_tree().unwrap();
+        let tree = repo.find_tree(tree_id).unwrap();
+        let sig = repo.signature().unwrap();
+
+        repo.commit(Some("HEAD"), &sig, &sig, "Initial commit", &tree, &[])
+            .unwrap();
+
+        // Second commit with modifications
+        std::fs::write(&file_path, "Line 1\nLine 2 modified\nLine 3\nLine 4\n").unwrap();
+
+        let mut index = repo.index().unwrap();
+        index.add_path(Path::new("test.txt")).unwrap();
+        index.write().unwrap();
+
+        let tree_id = index.write_tree().unwrap();
+        let tree = repo.find_tree(tree_id).unwrap();
+
+        let parent = repo.head().unwrap().peel_to_commit().unwrap();
+
+        repo.commit(Some("HEAD"), &sig, &sig, "Modify file", &tree, &[&parent])
+            .unwrap();
+
+        let analyzer = GitAnalyzer::new(temp_dir.path());
+        let commits = analyzer.analyze_commits("modify-repo", 10).unwrap();
+
+        assert_eq!(commits.len(), 2);
+        // Second commit should have lines added/removed
+        assert!(commits[0].lines_added > 0 || commits[0].lines_removed > 0);
+    }
+
+    #[test]
+    fn test_commit_info_clone() {
+        let original = CommitInfo {
+            hash: "abc123".to_string(),
+            message: "test".to_string(),
+            author: "test@example.com".to_string(),
+            timestamp: 1234567890,
+            files_changed: 1,
+            lines_added: 10,
+            lines_removed: 5,
+        };
+
+        let cloned = original.clone();
+
+        assert_eq!(original.hash, cloned.hash);
+        assert_eq!(original.message, cloned.message);
+        assert_eq!(original.author, cloned.author);
+        assert_eq!(original.timestamp, cloned.timestamp);
+        assert_eq!(original.files_changed, cloned.files_changed);
+        assert_eq!(original.lines_added, cloned.lines_added);
+        assert_eq!(original.lines_removed, cloned.lines_removed);
+    }
+
+    #[test]
+    fn test_commit_info_debug_format() {
+        let commit = CommitInfo {
+            hash: "abc123".to_string(),
+            message: "test".to_string(),
+            author: "test@example.com".to_string(),
+            timestamp: 1234567890,
+            files_changed: 1,
+            lines_added: 10,
+            lines_removed: 5,
+        };
+
+        let debug_str = format!("{:?}", commit);
+        assert!(debug_str.contains("abc123"));
+        assert!(debug_str.contains("test"));
+    }
+
+    #[test]
+    fn test_analyzer_with_path_ref() {
+        let temp_dir = TempDir::new().unwrap();
+        let path = temp_dir.path();
+
+        // Test that it accepts AsRef<Path>
+        let _analyzer = GitAnalyzer::new(path);
+        let _analyzer2 = GitAnalyzer::new(path.to_str().unwrap());
+    }
+
+    #[test]
+    fn test_analyze_empty_repository() {
+        let temp_dir = TempDir::new().unwrap();
+        let repo_path = temp_dir.path().join("empty-repo");
+        std::fs::create_dir(&repo_path).unwrap();
+
+        // Initialize empty repository (no commits)
+        Repository::init(&repo_path).unwrap();
+
+        let analyzer = GitAnalyzer::new(temp_dir.path());
+
+        // Analyzing empty repo should return error (no HEAD)
+        let result = analyzer.analyze_commits("empty-repo", 10);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_analyze_commits_with_large_diff() {
+        let temp_dir = TempDir::new().unwrap();
+        let repo_path = temp_dir.path().join("large-diff-repo");
+        std::fs::create_dir(&repo_path).unwrap();
+
+        let repo = Repository::init(&repo_path).unwrap();
+
+        let mut config = repo.config().unwrap();
+        config.set_str("user.name", "Test").unwrap();
+        config.set_str("user.email", "test@test.com").unwrap();
+
+        // Create a file with many lines
+        let mut content = String::new();
+        for i in 0..1000 {
+            content.push_str(&format!("Line {}\n", i));
+        }
+
+        let file_path = repo_path.join("large.txt");
+        std::fs::write(&file_path, &content).unwrap();
+
+        let mut index = repo.index().unwrap();
+        index.add_path(Path::new("large.txt")).unwrap();
+        index.write().unwrap();
+
+        let tree_id = index.write_tree().unwrap();
+        let tree = repo.find_tree(tree_id).unwrap();
+        let sig = repo.signature().unwrap();
+
+        repo.commit(Some("HEAD"), &sig, &sig, "Large commit", &tree, &[])
+            .unwrap();
+
+        let analyzer = GitAnalyzer::new(temp_dir.path());
+        let commits = analyzer.analyze_commits("large-diff-repo", 10).unwrap();
+
+        assert_eq!(commits.len(), 1);
+        assert_eq!(commits[0].files_changed, 1);
+    }
+
+    #[test]
+    fn test_commit_info_with_empty_strings() {
+        let commit = CommitInfo {
+            hash: "".to_string(),
+            message: "".to_string(),
+            author: "".to_string(),
+            timestamp: 0,
+            files_changed: 0,
+            lines_added: 0,
+            lines_removed: 0,
+        };
+
+        assert_eq!(commit.hash, "");
+        assert_eq!(commit.message, "");
+        assert_eq!(commit.author, "");
+    }
+
+    #[test]
+    fn test_multiple_files_in_single_commit() {
+        let temp_dir = TempDir::new().unwrap();
+        let repo_path = temp_dir.path().join("multi-file-repo");
+        std::fs::create_dir(&repo_path).unwrap();
+
+        let repo = Repository::init(&repo_path).unwrap();
+
+        let mut config = repo.config().unwrap();
+        config.set_str("user.name", "Test").unwrap();
+        config.set_str("user.email", "test@test.com").unwrap();
+
+        // Create multiple files in one commit
+        for i in 0..5 {
+            let file_path = repo_path.join(format!("file{}.txt", i));
+            std::fs::write(&file_path, format!("content {}", i)).unwrap();
+        }
+
+        let mut index = repo.index().unwrap();
+        for i in 0..5 {
+            index
+                .add_path(Path::new(&format!("file{}.txt", i)))
+                .unwrap();
+        }
+        index.write().unwrap();
+
+        let tree_id = index.write_tree().unwrap();
+        let tree = repo.find_tree(tree_id).unwrap();
+        let sig = repo.signature().unwrap();
+
+        repo.commit(Some("HEAD"), &sig, &sig, "Add 5 files", &tree, &[])
+            .unwrap();
+
+        let analyzer = GitAnalyzer::new(temp_dir.path());
+        let commits = analyzer.analyze_commits("multi-file-repo", 10).unwrap();
+
+        assert_eq!(commits.len(), 1);
+        assert_eq!(commits[0].files_changed, 5);
+    }
+
+    #[test]
+    fn test_commit_with_deletions() {
+        let temp_dir = TempDir::new().unwrap();
+        let repo_path = temp_dir.path().join("deletion-repo");
+        std::fs::create_dir(&repo_path).unwrap();
+
+        let repo = Repository::init(&repo_path).unwrap();
+
+        let mut config = repo.config().unwrap();
+        config.set_str("user.name", "Test").unwrap();
+        config.set_str("user.email", "test@test.com").unwrap();
+
+        // First commit with content
+        let file_path = repo_path.join("file.txt");
+        std::fs::write(&file_path, "Line 1\nLine 2\nLine 3\nLine 4\nLine 5\n").unwrap();
+
+        let mut index = repo.index().unwrap();
+        index.add_path(Path::new("file.txt")).unwrap();
+        index.write().unwrap();
+
+        let tree_id = index.write_tree().unwrap();
+        let tree = repo.find_tree(tree_id).unwrap();
+        let sig = repo.signature().unwrap();
+
+        repo.commit(Some("HEAD"), &sig, &sig, "Initial", &tree, &[])
+            .unwrap();
+
+        // Second commit with deletions
+        std::fs::write(&file_path, "Line 1\nLine 5\n").unwrap();
+
+        let mut index = repo.index().unwrap();
+        index.add_path(Path::new("file.txt")).unwrap();
+        index.write().unwrap();
+
+        let tree_id = index.write_tree().unwrap();
+        let tree = repo.find_tree(tree_id).unwrap();
+
+        let parent = repo.head().unwrap().peel_to_commit().unwrap();
+
+        repo.commit(Some("HEAD"), &sig, &sig, "Delete lines", &tree, &[&parent])
+            .unwrap();
+
+        let analyzer = GitAnalyzer::new(temp_dir.path());
+        let commits = analyzer.analyze_commits("deletion-repo", 10).unwrap();
+
+        assert_eq!(commits.len(), 2);
+        // First commit (most recent) should have deletions
+        assert!(commits[0].lines_removed > 0);
+    }
+
+    #[test]
+    fn test_commit_info_deserialization() {
+        let json = r#"{
+            "hash": "abc123",
+            "message": "test message",
+            "author": "test@example.com",
+            "timestamp": 1234567890,
+            "files_changed": 3,
+            "lines_added": 15,
+            "lines_removed": 8
+        }"#;
+
+        let commit: CommitInfo = serde_json::from_str(json).unwrap();
+
+        assert_eq!(commit.hash, "abc123");
+        assert_eq!(commit.message, "test message");
+        assert_eq!(commit.author, "test@example.com");
+        assert_eq!(commit.timestamp, 1234567890);
+        assert_eq!(commit.files_changed, 3);
+        assert_eq!(commit.lines_added, 15);
+        assert_eq!(commit.lines_removed, 8);
+    }
 }
