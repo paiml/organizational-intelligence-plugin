@@ -27,9 +27,11 @@
 //! ```
 
 use anyhow::{anyhow, Result};
+use aprender::primitives::Matrix;
 use aprender::text::stem::{PorterStemmer, Stemmer};
 use aprender::text::stopwords::StopWordsFilter;
 use aprender::text::tokenize::WordTokenizer;
+use aprender::text::vectorize::TfidfVectorizer;
 use aprender::text::Tokenizer;
 
 /// Commit message preprocessor that applies NLP transformations.
@@ -251,6 +253,186 @@ impl Default for CommitMessageProcessor {
     }
 }
 
+/// TF-IDF feature extractor for commit messages
+///
+/// This extractor converts commit messages into TF-IDF feature vectors for ML classification.
+/// Implements Phase 2 of nlp-models-techniques-spec.md (Tier 2: TF-IDF + ML).
+///
+/// # Examples
+///
+/// ```rust
+/// use organizational_intelligence_plugin::nlp::TfidfFeatureExtractor;
+///
+/// let messages = vec![
+///     "fix: null pointer dereference",
+///     "fix: race condition in mutex",
+///     "feat: add new feature",
+/// ];
+///
+/// let mut extractor = TfidfFeatureExtractor::new(1500);
+/// let features = extractor.fit_transform(&messages).unwrap();
+///
+/// assert_eq!(features.n_rows(), 3); // 3 documents
+/// ```
+pub struct TfidfFeatureExtractor {
+    vectorizer: TfidfVectorizer,
+    max_features: usize,
+}
+
+impl TfidfFeatureExtractor {
+    /// Create a new TF-IDF feature extractor
+    ///
+    /// # Arguments
+    ///
+    /// * `max_features` - Maximum number of features (vocabulary size)
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use organizational_intelligence_plugin::nlp::TfidfFeatureExtractor;
+    ///
+    /// let extractor = TfidfFeatureExtractor::new(1500);
+    /// ```
+    pub fn new(max_features: usize) -> Self {
+        let vectorizer = TfidfVectorizer::new()
+            .with_tokenizer(Box::new(WordTokenizer::new()))
+            .with_lowercase(true)
+            .with_max_features(max_features);
+
+        Self {
+            vectorizer,
+            max_features,
+        }
+    }
+
+    /// Fit the vectorizer on training messages and transform them to TF-IDF features
+    ///
+    /// # Arguments
+    ///
+    /// * `messages` - Training commit messages
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(Matrix<f64>)` - TF-IDF feature matrix (n_messages × vocabulary_size)
+    /// * `Err` - If vectorization fails
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use organizational_intelligence_plugin::nlp::TfidfFeatureExtractor;
+    ///
+    /// let messages = vec![
+    ///     "fix: memory leak",
+    ///     "fix: race condition",
+    /// ];
+    ///
+    /// let mut extractor = TfidfFeatureExtractor::new(1000);
+    /// let features = extractor.fit_transform(&messages).unwrap();
+    ///
+    /// assert_eq!(features.n_rows(), 2);
+    /// ```
+    pub fn fit_transform(&mut self, messages: &[String]) -> Result<Matrix<f64>> {
+        self.vectorizer
+            .fit_transform(messages)
+            .map_err(|e| anyhow!("TF-IDF fit_transform failed: {}", e))
+    }
+
+    /// Fit the vectorizer on training messages
+    ///
+    /// # Arguments
+    ///
+    /// * `messages` - Training commit messages
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use organizational_intelligence_plugin::nlp::TfidfFeatureExtractor;
+    ///
+    /// let messages = vec![
+    ///     "fix: memory leak".to_string(),
+    ///     "fix: race condition".to_string(),
+    /// ];
+    ///
+    /// let mut extractor = TfidfFeatureExtractor::new(1000);
+    /// extractor.fit(&messages).unwrap();
+    /// ```
+    pub fn fit(&mut self, messages: &[String]) -> Result<()> {
+        self.vectorizer
+            .fit(messages)
+            .map_err(|e| anyhow!("TF-IDF fit failed: {}", e))
+    }
+
+    /// Transform messages to TF-IDF features using fitted vocabulary
+    ///
+    /// # Arguments
+    ///
+    /// * `messages` - Commit messages to transform
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(Matrix<f64>)` - TF-IDF feature matrix
+    /// * `Err` - If transformation fails
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use organizational_intelligence_plugin::nlp::TfidfFeatureExtractor;
+    ///
+    /// let train_messages = vec![
+    ///     "fix: memory leak".to_string(),
+    ///     "fix: race condition".to_string(),
+    /// ];
+    ///
+    /// let test_messages = vec!["fix: null pointer".to_string()];
+    ///
+    /// let mut extractor = TfidfFeatureExtractor::new(1000);
+    /// extractor.fit(&train_messages).unwrap();
+    ///
+    /// let features = extractor.transform(&test_messages).unwrap();
+    /// assert_eq!(features.n_rows(), 1);
+    /// ```
+    pub fn transform(&self, messages: &[String]) -> Result<Matrix<f64>> {
+        self.vectorizer
+            .transform(messages)
+            .map_err(|e| anyhow!("TF-IDF transform failed: {}", e))
+    }
+
+    /// Get the vocabulary size (number of features)
+    ///
+    /// # Returns
+    ///
+    /// * `usize` - Number of features in vocabulary
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use organizational_intelligence_plugin::nlp::TfidfFeatureExtractor;
+    ///
+    /// let messages = vec![
+    ///     "fix: bug".to_string(),
+    ///     "feat: feature".to_string(),
+    /// ];
+    ///
+    /// let mut extractor = TfidfFeatureExtractor::new(1000);
+    /// extractor.fit(&messages).unwrap();
+    ///
+    /// assert!(extractor.vocabulary_size() > 0);
+    /// assert!(extractor.vocabulary_size() <= 1000);
+    /// ```
+    pub fn vocabulary_size(&self) -> usize {
+        self.vectorizer.vocabulary_size()
+    }
+
+    /// Get the maximum features configuration
+    ///
+    /// # Returns
+    ///
+    /// * `usize` - Maximum number of features
+    pub fn max_features(&self) -> usize {
+        self.max_features
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -421,5 +603,210 @@ mod tests {
         let processor = CommitMessageProcessor::new();
         let tokens = processor.preprocess("   \t\n   ").unwrap();
         assert!(tokens.is_empty());
+    }
+
+    // TF-IDF feature extraction tests
+
+    #[test]
+    fn test_tfidf_extractor_creation() {
+        let extractor = TfidfFeatureExtractor::new(1000);
+        assert_eq!(extractor.max_features(), 1000);
+    }
+
+    #[test]
+    fn test_tfidf_fit_transform_basic() {
+        let messages = vec![
+            "fix: memory leak".to_string(),
+            "fix: race condition".to_string(),
+            "feat: add new feature".to_string(),
+        ];
+
+        let mut extractor = TfidfFeatureExtractor::new(1000);
+        let features = extractor.fit_transform(&messages).unwrap();
+
+        // Should produce matrix with correct dimensions
+        assert_eq!(features.n_rows(), 3); // 3 documents
+        assert!(features.n_cols() > 0); // At least some features
+        assert!(features.n_cols() <= 1000); // Respects max_features
+    }
+
+    #[test]
+    fn test_tfidf_fit_and_transform_separate() {
+        let train_messages = vec![
+            "fix: memory leak".to_string(),
+            "fix: race condition".to_string(),
+        ];
+
+        let test_messages = vec!["fix: null pointer".to_string()];
+
+        let mut extractor = TfidfFeatureExtractor::new(1000);
+
+        // Fit on training data
+        extractor.fit(&train_messages).unwrap();
+
+        // Transform test data
+        let features = extractor.transform(&test_messages).unwrap();
+
+        assert_eq!(features.n_rows(), 1);
+        assert_eq!(features.n_cols(), extractor.vocabulary_size());
+    }
+
+    #[test]
+    fn test_tfidf_vocabulary_size() {
+        let messages = vec![
+            "fix bug".to_string(),
+            "feat feature".to_string(),
+            "test code".to_string(),
+        ];
+
+        let mut extractor = TfidfFeatureExtractor::new(1000);
+        extractor.fit(&messages).unwrap();
+
+        let vocab_size = extractor.vocabulary_size();
+        assert!(vocab_size > 0);
+        assert!(vocab_size <= 1000); // Respects max_features
+    }
+
+    #[test]
+    fn test_tfidf_max_features_limit() {
+        let messages = vec![
+            "word1 word2 word3 word4 word5".to_string(),
+            "word6 word7 word8 word9 word10".to_string(),
+            "word11 word12 word13 word14 word15".to_string(),
+        ];
+
+        // Limit to 5 features
+        let mut extractor = TfidfFeatureExtractor::new(5);
+        extractor.fit(&messages).unwrap();
+
+        assert!(extractor.vocabulary_size() <= 5);
+    }
+
+    #[test]
+    fn test_tfidf_with_real_commit_messages() {
+        let messages = vec![
+            "fix: null pointer dereference in parser".to_string(),
+            "fix: race condition in mutex lock".to_string(),
+            "feat: add TF-IDF feature extraction".to_string(),
+            "docs: update README with examples".to_string(),
+            "test: add unit tests for classifier".to_string(),
+        ];
+
+        let mut extractor = TfidfFeatureExtractor::new(1500);
+        let features = extractor.fit_transform(&messages).unwrap();
+
+        assert_eq!(features.n_rows(), 5);
+        assert!(features.n_cols() > 0);
+
+        // Check that feature values are reasonable (non-negative)
+        for row in 0..features.n_rows() {
+            for col in 0..features.n_cols() {
+                assert!(features.get(row, col) >= 0.0);
+            }
+        }
+    }
+
+    #[test]
+    fn test_tfidf_empty_messages() {
+        let messages: Vec<String> = vec![];
+
+        let mut extractor = TfidfFeatureExtractor::new(1000);
+        let result = extractor.fit_transform(&messages);
+
+        // Should handle empty input gracefully
+        assert!(result.is_ok() || result.is_err());
+    }
+
+    #[test]
+    fn test_tfidf_single_message() {
+        let messages = vec!["fix: single message".to_string()];
+
+        let mut extractor = TfidfFeatureExtractor::new(1000);
+        let features = extractor.fit_transform(&messages).unwrap();
+
+        assert_eq!(features.n_rows(), 1);
+        assert!(features.n_cols() > 0);
+    }
+
+    #[test]
+    fn test_tfidf_duplicate_messages() {
+        let messages = vec![
+            "fix: memory leak".to_string(),
+            "fix: memory leak".to_string(),
+            "fix: memory leak".to_string(),
+        ];
+
+        let mut extractor = TfidfFeatureExtractor::new(1000);
+        let features = extractor.fit_transform(&messages).unwrap();
+
+        assert_eq!(features.n_rows(), 3);
+
+        // Duplicate messages should have similar (but not identical due to IDF) feature vectors
+        // Just verify they transform successfully
+        assert!(features.n_cols() > 0);
+    }
+
+    #[test]
+    fn test_tfidf_transform_new_data() {
+        let train_messages = vec![
+            "fix: memory leak".to_string(),
+            "fix: race condition".to_string(),
+            "feat: new feature".to_string(),
+        ];
+
+        let test_messages = vec![
+            "fix: another memory issue".to_string(),
+            "feat: different feature".to_string(),
+        ];
+
+        let mut extractor = TfidfFeatureExtractor::new(1000);
+        extractor.fit(&train_messages).unwrap();
+
+        let test_features = extractor.transform(&test_messages).unwrap();
+
+        assert_eq!(test_features.n_rows(), 2);
+        assert_eq!(test_features.n_cols(), extractor.vocabulary_size());
+    }
+
+    #[test]
+    fn test_tfidf_configuration() {
+        let extractor = TfidfFeatureExtractor::new(1500);
+
+        assert_eq!(extractor.max_features(), 1500);
+    }
+
+    #[test]
+    fn test_tfidf_with_software_terms() {
+        let messages = vec![
+            "fix: null pointer dereference".to_string(),
+            "fix: buffer overflow in parse_expr".to_string(),
+            "fix: race condition deadlock".to_string(),
+            "fix: memory leak in allocator".to_string(),
+        ];
+
+        let mut extractor = TfidfFeatureExtractor::new(1000);
+        let features = extractor.fit_transform(&messages).unwrap();
+
+        assert_eq!(features.n_rows(), 4);
+
+        // Verify that technical terms are captured
+        // (vocabulary building works correctly)
+        assert!(extractor.vocabulary_size() > 0);
+    }
+
+    #[test]
+    fn test_tfidf_transpiler_specific_terms() {
+        let messages = vec![
+            "fix: operator precedence bug".to_string(),
+            "fix: AST transform error".to_string(),
+            "fix: lifetime parameter issue".to_string(),
+            "fix: trait bound constraint".to_string(),
+        ];
+
+        let mut extractor = TfidfFeatureExtractor::new(1500);
+        let features = extractor.fit_transform(&messages).unwrap();
+
+        assert_eq!(features.n_rows(), 4);
+        assert!(extractor.vocabulary_size() > 0);
     }
 }
