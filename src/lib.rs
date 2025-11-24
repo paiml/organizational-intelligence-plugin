@@ -11,5 +11,9 @@ pub mod pr_reviewer;
 pub mod report;
 pub mod summarizer;
 
+// GPU acceleration modules
+pub mod correlation;
+pub mod gpu_store;
+
 // Re-export main types for convenience
 pub use cli::{Cli, Commands};

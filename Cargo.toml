@@ -11,6 +11,10 @@ repository = "https://github.com/paiml/organizational-intelligence-plugin"
 name = "oip"
 path = "src/main.rs"
 
+[[bin]]
+name = "oip-gpu"
+path = "src/gpu_main.rs"
+
 [dependencies]
 # CLI framework
 clap = { version = "4.5", features = ["derive", "env"] }
@@ -43,6 +47,18 @@ git2 = "0.20"
 
 # Temporary directories
 tempfile = "3.10"
+
+# GPU acceleration stack
+trueno = "0.7.1"
+trueno-db = "0.3.2"
+trueno-graph = "0.1.1"
+aprender = "0.1"
+
+# GPU compute (wgpu for cross-platform GPU)
+wgpu = "0.19"
+
+# Additional for GPU features
+bytemuck = "1.14"
 
 [dev-dependencies]
 
