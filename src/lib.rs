@@ -2,6 +2,7 @@
 // Toyota Way: Start simple, evolve based on evidence
 
 pub mod error;
+pub mod observability;
 
 pub mod analyzer;
 pub mod classifier;
