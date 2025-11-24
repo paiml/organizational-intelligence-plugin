@@ -320,6 +320,10 @@ mod tests {
 
     #[test]
     fn test_load_missing_file() {
+        // Clean up any env vars from other tests
+        std::env::remove_var("OIP_MAX_COMMITS");
+        std::env::remove_var("OIP_GPU_ENABLED");
+
         let config = Config::load(Some(Path::new("nonexistent.yaml"))).unwrap();
         // Should return defaults when file doesn't exist
         assert_eq!(config.analysis.max_commits, 1000);
@@ -327,6 +331,10 @@ mod tests {
 
     #[test]
     fn test_load_no_path_no_defaults() {
+        // Clean up any env vars from other tests
+        std::env::remove_var("OIP_MAX_COMMITS");
+        std::env::remove_var("OIP_GPU_ENABLED");
+
         // Load with no path and no default files present
         let config = Config::load(None).unwrap();
         assert_eq!(config.analysis.max_commits, 1000); // Should use defaults
@@ -516,6 +524,9 @@ mod tests {
 
     #[test]
     fn test_invalid_env_value_ignored() {
+        // Clean up any env vars from other tests
+        std::env::remove_var("OIP_GPU_ENABLED");
+
         std::env::set_var("OIP_MAX_COMMITS", "not-a-number");
         let config = Config::load(None).unwrap();
         assert_eq!(config.analysis.max_commits, 1000); // Should use default
