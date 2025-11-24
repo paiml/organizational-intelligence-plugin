@@ -4,6 +4,11 @@
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use organizational_intelligence_plugin::{
+    analyzer::OrgAnalyzer,
+    features::{CommitFeatures, FeatureExtractor},
+    storage::FeatureStore,
+};
 
 #[derive(Parser)]
 #[command(name = "oip-gpu")]
@@ -316,16 +321,93 @@ async fn main() -> Result<()> {
 // Command implementations (stubs for now - will implement in TDD fashion)
 
 async fn cmd_analyze(
-    _org: Option<String>,
-    _repos: Option<String>,
-    _repo: Option<String>,
-    _output: std::path::PathBuf,
+    org: Option<String>,
+    repos: Option<String>,
+    repo: Option<String>,
+    output: std::path::PathBuf,
     _since: Option<String>,
     _workers: Option<usize>,
-    _backend: Option<Backend>,
+    backend: Option<Backend>,
 ) -> Result<()> {
-    println!("Analyze command - not yet implemented");
-    println!("Phase 1 implementation pending");
+    tracing::info!("Starting GPU-accelerated analysis");
+
+    // Determine target
+    let target = if let Some(_org_name) = org {
+        println!("📦 Organization analysis not yet implemented");
+        println!("🔜 Phase 1: Single repository only");
+        anyhow::bail!("Organization analysis pending (use --repo instead)");
+    } else if let Some(_repos_list) = repos {
+        println!("📦 Multi-repository analysis not yet implemented");
+        anyhow::bail!("Multi-repo analysis pending (use --repo instead)");
+    } else if let Some(repo_spec) = repo {
+        repo_spec
+    } else {
+        anyhow::bail!("Must specify --org, --repos, or --repo");
+    };
+
+    // Parse repo_spec (owner/repo format)
+    let parts: Vec<&str> = target.split('/').collect();
+    if parts.len() != 2 {
+        anyhow::bail!("Repository must be in owner/repo format (e.g., rust-lang/rust)");
+    }
+    let (owner, repo_name) = (parts[0], parts[1]);
+    let repo_url = format!("https://github.com/{}/{}", owner, repo_name);
+
+    println!("🔍 Analyzing repository: {}", target);
+    if let Some(b) = backend {
+        println!("⚙️  Backend: {:?}", b);
+    }
+
+    // Create analyzer with temp cache
+    let cache_dir = std::env::temp_dir().join("oip-gpu-cache");
+    std::fs::create_dir_all(&cache_dir)?;
+    let analyzer = OrgAnalyzer::new(&cache_dir);
+
+    // Analyze repository (max 1000 commits for Phase 1)
+    println!("📊 Analyzing commits (max 1000)...");
+    let patterns = analyzer
+        .analyze_repository(&repo_url, repo_name, 1000)
+        .await?;
+
+    println!("✅ Found {} defect categories", patterns.len());
+
+    // Extract features
+    println!("🔧 Extracting features for GPU processing...");
+    let extractor = FeatureExtractor::new();
+    let mut store = FeatureStore::new()?;
+
+    let mut total_features = 0;
+    for pattern in &patterns {
+        let category_num = pattern.category as u8;
+
+        for instance in &pattern.examples {
+            let features = extractor.extract(
+                category_num,
+                instance.files_affected,
+                instance.lines_added,
+                instance.lines_removed,
+                instance.timestamp,
+            )?;
+
+            store.insert(features)?;
+            total_features += 1;
+        }
+    }
+
+    println!("✅ Extracted {} feature vectors", total_features);
+
+    // Save to storage
+    println!("💾 Saving to {}...", output.display());
+    store.save(&output).await?;
+
+    println!("✨ Analysis complete!");
+    println!(
+        "📈 Features: {} vectors × {} dimensions",
+        total_features,
+        CommitFeatures::DIMENSION
+    );
+    println!("🎯 Next: oip-gpu correlate --input {}", output.display());
+
     Ok(())
 }
 
