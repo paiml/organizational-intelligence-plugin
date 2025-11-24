@@ -620,7 +620,7 @@ impl HybridClassifier {
     /// # Examples
     /// ```no_run
     /// # use organizational_intelligence_plugin::classifier::HybridClassifier;
-    /// # use organizational_intelligence_plugin::ml_trainer::{MLTrainer, TrainingDataset};
+    /// # use organizational_intelligence_plugin::ml_trainer::MLTrainer;
     /// # fn example(model: organizational_intelligence_plugin::ml_trainer::TrainedModel) {
     /// let classifier = HybridClassifier::new_hybrid(model, 0.65);
     /// # }

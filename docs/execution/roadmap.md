@@ -72,19 +72,20 @@
 - **NLP preprocessing**: 3.0 µs
 - **Batch 100**: 69.4 µs
 
-## Next Sprint: v0.5.0 ML Classifier Integration & Production Validation
+## Sprint v0.5.0: ML Classifier Integration & Production Validation
 - **Duration**: 2025-11-29 to 2025-12-06
 - **Priority**: P0
 - **Quality Gates**: Complexity ≤ 15, Coverage ≥ 90%
+- **Status**: IN PROGRESS
 
 ### Tasks
-| ID | Description | Status | Complexity | Priority |
-|----|-------------|--------|------------|----------|
-| NLP-010 | Integrate trained ML model into analysis pipeline | TODO | 15 | P0 |
-| NLP-011 | Validate on real data (depyler repository) | TODO | 10 | P0 |
-| NLP-012 | Add model selection logic (rule-based vs ML) | TODO | 8 | P1 |
-| NLP-013 | Implement confidence-based tier routing | TODO | 12 | P1 |
-| DOC-001 | Update Issue #1 with completion results | TODO | 3 | P1 |
+| ID | Description | Status | Complexity | Priority | Commit |
+|----|-------------|--------|------------|----------|--------|
+| NLP-010 | Integrate trained ML model into analysis pipeline | ✅ DONE | 15 | P0 | 1a875fc, c89c588, 1f299a5, c34c897 |
+| NLP-011 | Validate on real data (depyler repository) | IN PROGRESS | 10 | P0 | - |
+| NLP-012 | Add model selection logic (rule-based vs ML) | TODO | 8 | P1 | - |
+| NLP-013 | Implement confidence-based tier routing | TODO | 12 | P1 | - |
+| DOC-001 | Update Issue #1 with completion results | TODO | 3 | P1 | - |
 
 ### Definition of Done
 - [ ] All tasks completed
