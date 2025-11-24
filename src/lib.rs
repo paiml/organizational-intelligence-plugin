@@ -16,6 +16,7 @@ pub mod correlation;
 pub mod features;
 pub mod gpu_store;
 pub mod query;
+pub mod sliding_window;
 pub mod storage;
 
 // GPU compute (Phase 2) - requires `gpu` feature flag

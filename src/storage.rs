@@ -45,6 +45,27 @@ impl FeatureStore {
             .collect())
     }
 
+    /// Query features by time range (for sliding window correlation)
+    ///
+    /// Returns features where start_time <= timestamp < end_time
+    /// Time is in Unix epoch seconds (f64)
+    pub fn query_by_time_range(
+        &self,
+        start_time: f64,
+        end_time: f64,
+    ) -> Result<Vec<&CommitFeatures>> {
+        Ok(self
+            .features
+            .iter()
+            .filter(|f| f.timestamp >= start_time && f.timestamp < end_time)
+            .collect())
+    }
+
+    /// Get all features (for compatibility)
+    pub fn all_features(&self) -> &[CommitFeatures] {
+        &self.features
+    }
+
     /// Get all features as vectors (for GPU transfer)
     pub fn to_vectors(&self) -> Vec<Vec<f32>> {
         self.features.iter().map(|f| f.to_vector()).collect()
@@ -170,6 +191,37 @@ mod tests {
         assert_eq!(vectors[0][1], 2.0); // files
         assert_eq!(vectors[1][0], 2.0); // category
         assert_eq!(vectors[1][1], 3.0); // files
+    }
+
+    #[test]
+    fn test_query_by_time_range() {
+        let mut store = FeatureStore::new().unwrap();
+
+        // Insert features with different timestamps
+        let mut f1 = make_test_feature(1, 2);
+        f1.timestamp = 1000.0;
+        let mut f2 = make_test_feature(2, 3);
+        f2.timestamp = 2000.0;
+        let mut f3 = make_test_feature(3, 4);
+        f3.timestamp = 3000.0;
+        let mut f4 = make_test_feature(4, 5);
+        f4.timestamp = 4000.0;
+
+        store.bulk_insert(vec![f1, f2, f3, f4]).unwrap();
+
+        // Query range [2000, 4000) - should get f2 and f3
+        let range_result = store.query_by_time_range(2000.0, 4000.0).unwrap();
+        assert_eq!(range_result.len(), 2);
+        assert_eq!(range_result[0].timestamp, 2000.0);
+        assert_eq!(range_result[1].timestamp, 3000.0);
+
+        // Query range [1000, 2500) - should get f1 and f2
+        let range_result2 = store.query_by_time_range(1000.0, 2500.0).unwrap();
+        assert_eq!(range_result2.len(), 2);
+
+        // Query empty range
+        let empty_range = store.query_by_time_range(5000.0, 6000.0).unwrap();
+        assert_eq!(empty_range.len(), 0);
     }
 
     #[tokio::test]
