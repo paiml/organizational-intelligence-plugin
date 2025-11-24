@@ -156,6 +156,8 @@ dependencies = [
 [[package]]
 name = "aprender"
 version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1c52f58c1b0dbee6bfdcf007cb70aed42d0f1471a3fb0809db179d190dcb35ff"
 dependencies = [
  "bincode",
  "nalgebra",

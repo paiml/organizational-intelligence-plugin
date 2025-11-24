@@ -57,7 +57,7 @@ tempfile = "3.10"
 trueno = "0.7.1"
 trueno-db = "0.3.2"
 trueno-graph = "0.1.1"
-aprender = { path = "../aprender" }
+aprender = "0.8.0"
 
 # GPU compute (wgpu for cross-platform GPU)
 wgpu = { version = "0.19", features = ["wgsl"] }
