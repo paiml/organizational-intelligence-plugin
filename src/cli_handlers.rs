@@ -12,6 +12,7 @@ use tracing::{error, info, warn};
 use crate::analyzer::OrgAnalyzer;
 use crate::git;
 use crate::github::GitHubMiner;
+use crate::ml_trainer::MLTrainer;
 use crate::pr_reviewer::PrReviewer;
 use crate::report::{AnalysisMetadata, AnalysisReport, ReportGenerator};
 use crate::summarizer::{ReportSummarizer, SummaryConfig};
@@ -393,6 +394,118 @@ pub async fn handle_extract_training_data(
     println!("   1. Review extracted data: cat {}", output.display());
     println!("   2. Train ML classifier: oip train-classifier --input {}", output.display());
     println!("   3. Evaluate model performance on test set");
+
+    Ok(())
+}
+
+/// Handle the `train-classifier` command
+pub async fn handle_train_classifier(
+    input: PathBuf,
+    output: Option<PathBuf>,
+    n_estimators: usize,
+    max_depth: usize,
+    max_features: usize,
+) -> Result<()> {
+    info!("Training ML classifier from: {}", input.display());
+    if let Some(ref output_path) = output {
+        info!("Output model file: {}", output_path.display());
+    }
+    info!("Hyperparameters: n_estimators={}, max_depth={}, max_features={}",
+          n_estimators, max_depth, max_features);
+
+    println!("\n🤖 ML Classifier Training (Phase 2)");
+    println!("   Input:         {}", input.display());
+    if let Some(ref output_path) = output {
+        println!("   Output:        {}", output_path.display());
+    }
+    println!("   N Estimators:  {}", n_estimators);
+    println!("   Max Depth:     {}", max_depth);
+    println!("   Max Features:  {}", max_features);
+
+    // Validate input file
+    if !input.exists() {
+        return Err(anyhow::anyhow!("Input file does not exist: {}", input.display()));
+    }
+
+    // Load training dataset
+    println!("\n📂 Loading training dataset...");
+    let dataset = MLTrainer::load_dataset(&input)?;
+    println!("   ✅ Loaded {} total examples", dataset.metadata.total_examples);
+    println!("      Train:      {} examples", dataset.train.len());
+    println!("      Validation: {} examples", dataset.validation.len());
+    println!("      Test:       {} examples", dataset.test.len());
+
+    // Show class distribution
+    println!("\n📊 Class Distribution:");
+    let mut sorted_classes: Vec<_> = dataset.metadata.class_distribution.iter().collect();
+    sorted_classes.sort_by(|a, b| b.1.cmp(a.1));
+    for (class, count) in sorted_classes.iter().take(10) {
+        let percentage = (**count as f32 / dataset.metadata.total_examples as f32) * 100.0;
+        println!("      {}: {} ({:.1}%)", class, count, percentage);
+    }
+
+    // Train model
+    println!("\n🎯 Training Random Forest Classifier...");
+    let trainer = MLTrainer::new(n_estimators, Some(max_depth), max_features);
+
+    let model = trainer.train(&dataset)?;
+
+    println!("   ✅ Training complete!");
+    println!("      Classes:  {}", model.metadata.n_classes);
+    println!("      Features: {}", model.metadata.n_features);
+
+    // Show accuracy metrics
+    println!("\n📈 Model Performance:");
+    println!("   Training accuracy:   {:.2}%", model.metadata.train_accuracy * 100.0);
+    println!("   Validation accuracy: {:.2}%", model.metadata.validation_accuracy * 100.0);
+
+    // Evaluate on test set
+    if !dataset.test.is_empty() {
+        println!("\n🔍 Evaluating on test set...");
+        let test_accuracy = MLTrainer::evaluate(&model, &dataset.test)?;
+        println!("   Test accuracy:       {:.2}%", test_accuracy * 100.0);
+
+        // Check if we meet the target
+        if test_accuracy >= 0.80 {
+            println!("\n✅ Model meets ≥80% accuracy target!");
+        } else {
+            println!("\n⚠️  Model accuracy {:.2}% below 80% target", test_accuracy * 100.0);
+            println!("   Consider:");
+            println!("   - Collecting more training data");
+            println!("   - Increasing n_estimators (current: {})", n_estimators);
+            println!("   - Adjusting max_depth (current: {})", max_depth);
+            println!("   - Increasing max_features (current: {})", max_features);
+        }
+    }
+
+    // Save model if output specified
+    if let Some(output_path) = output {
+        println!("\n💾 Saving model metadata...");
+        MLTrainer::save_model(&model, &output_path)?;
+        println!("   ✅ Model metadata saved to: {}", output_path.display());
+        println!("   Note: RandomForestClassifier and TfidfVectorizer are in-memory only");
+        println!("         Full serialization support coming in future update");
+    }
+
+    // Summary
+    println!("\n🎯 Phase 2 ML Training Complete!");
+    println!("   ✅ Random Forest with {} trees trained", n_estimators);
+    println!("   ✅ TF-IDF features: {} dimensions", model.metadata.n_features);
+    println!("   ✅ Defect categories: {}", model.metadata.n_classes);
+    println!("   ✅ Training examples: {}", model.metadata.n_train);
+
+    let improvement = (model.metadata.validation_accuracy / 0.308) * 100.0 - 100.0;
+    println!("\n📊 Performance vs Baseline:");
+    println!("   Baseline (rule-based):  30.8%");
+    println!("   ML Model (validation):  {:.2}%", model.metadata.validation_accuracy * 100.0);
+    if improvement > 0.0 {
+        println!("   Improvement:            +{:.1}%", improvement);
+    }
+
+    println!("\n💡 Next Steps:");
+    println!("   1. Integrate model into analysis pipeline (NLP-008)");
+    println!("   2. Benchmark inference performance (<100ms target)");
+    println!("   3. Deploy to production for real-time classification");
 
     Ok(())
 }
@@ -797,5 +910,61 @@ defect_patterns:
 
         // Should succeed with limited commits
         assert!(result.is_ok() || result.unwrap_err().to_string().contains("Git"));
+    }
+
+    #[tokio::test]
+    async fn test_handle_train_classifier_invalid_input() {
+        let input = PathBuf::from("/nonexistent/training-data.json");
+        let output = None;
+
+        let result = handle_train_classifier(input, output, 100, 20, 1500).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("does not exist"));
+    }
+
+    #[tokio::test]
+    async fn test_handle_train_classifier_invalid_json() {
+        // Create a temp file with invalid JSON
+        let temp_input = NamedTempFile::new().unwrap();
+        std::fs::write(temp_input.path(), "not valid json").unwrap();
+
+        let input = temp_input.path().to_path_buf();
+        let output = None;
+
+        let result = handle_train_classifier(input, output, 100, 20, 1500).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_handle_train_classifier_with_valid_data() {
+        // Use the test training data file if it exists
+        let input = PathBuf::from("/tmp/test-training-data.json");
+
+        if !input.exists() {
+            // Skip test if training data doesn't exist
+            return;
+        }
+
+        let temp_output = NamedTempFile::new().unwrap();
+        let output = Some(temp_output.path().to_path_buf());
+
+        let result = handle_train_classifier(input, output.clone(), 10, 5, 100).await;
+
+        // Should succeed or fail with reasonable error
+        match result {
+            Ok(_) => {
+                // If successful, output file should exist
+                assert!(output.unwrap().exists());
+            }
+            Err(e) => {
+                // Acceptable errors: not enough data, etc.
+                let msg = e.to_string();
+                assert!(
+                    msg.contains("empty") || msg.contains("training") || msg.contains("TF-IDF"),
+                    "Unexpected error: {}",
+                    msg
+                );
+            }
+        }
     }
 }

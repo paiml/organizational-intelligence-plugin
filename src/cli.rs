@@ -106,6 +106,29 @@ pub enum Commands {
         #[arg(long, default_value = "true")]
         create_splits: bool,
     },
+
+    /// Train ML classifier on extracted training data (Phase 2 ML)
+    TrainClassifier {
+        /// Input training data JSON file
+        #[arg(long, short, required = true)]
+        input: PathBuf,
+
+        /// Output model file (optional)
+        #[arg(long, short)]
+        output: Option<PathBuf>,
+
+        /// Number of trees in Random Forest
+        #[arg(long, default_value = "100")]
+        n_estimators: usize,
+
+        /// Maximum tree depth
+        #[arg(long, default_value = "20")]
+        max_depth: usize,
+
+        /// Maximum TF-IDF features
+        #[arg(long, default_value = "1500")]
+        max_features: usize,
+    },
 }
 
 #[cfg(test)]

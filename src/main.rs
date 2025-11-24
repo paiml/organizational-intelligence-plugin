@@ -87,5 +87,22 @@ async fn main() -> Result<()> {
             )
             .await
         }
+
+        Commands::TrainClassifier {
+            input,
+            output,
+            n_estimators,
+            max_depth,
+            max_features,
+        } => {
+            cli_handlers::handle_train_classifier(
+                input,
+                output,
+                n_estimators,
+                max_depth,
+                max_features,
+            )
+            .await
+        }
     }
 }
