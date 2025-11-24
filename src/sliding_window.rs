@@ -292,4 +292,238 @@ mod tests {
             assert!((result.matrix[i][i] - 1.0).abs() < 1e-6);
         }
     }
+
+    #[test]
+    fn test_window_contains_boundaries() {
+        let window = TimeWindow::new(1000.0, 2000.0);
+
+        // Start boundary (inclusive)
+        assert!(window.contains(1000.0));
+
+        // End boundary (exclusive)
+        assert!(!window.contains(2000.0));
+
+        // Before window
+        assert!(!window.contains(999.9));
+
+        // After window
+        assert!(!window.contains(2000.1));
+    }
+
+    #[test]
+    fn test_empty_store_compute_all_windows() {
+        let store = FeatureStore::new().unwrap();
+        let analyzer = SlidingWindowAnalyzer::new_six_month();
+
+        let result = analyzer.compute_all_windows(&store);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("No features in store"));
+    }
+
+    #[test]
+    fn test_window_with_no_features() {
+        let mut store = FeatureStore::new().unwrap();
+
+        // Add features outside the window
+        let f = CommitFeatures {
+            defect_category: 1,
+            files_changed: 5.0,
+            lines_added: 50.0,
+            lines_deleted: 20.0,
+            complexity_delta: 0.5,
+            timestamp: 10000.0, // Way outside window
+            hour_of_day: 10,
+            day_of_week: 1,
+        };
+        store.insert(f).unwrap();
+
+        let analyzer = SlidingWindowAnalyzer::new(5000.0, 2500.0);
+        let window = TimeWindow::new(0.0, 5000.0); // Features are at 10000.0
+
+        let result = analyzer.compute_window_correlation(&store, &window);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("No features in window"));
+    }
+
+    #[test]
+    fn test_detect_drift_with_no_matrices() {
+        let matrices = Vec::new();
+        let drifts = detect_drift(&matrices, 0.5).unwrap();
+        assert_eq!(drifts.len(), 0);
+    }
+
+    #[test]
+    fn test_detect_drift_with_one_matrix() {
+        let matrix = WindowedCorrelationMatrix {
+            window: TimeWindow::new(0.0, 1000.0),
+            matrix: vec![vec![1.0; 8]; 8],
+            feature_count: 10,
+        };
+
+        let drifts = detect_drift(&[matrix], 0.5).unwrap();
+        assert_eq!(drifts.len(), 0);
+    }
+
+    #[test]
+    fn test_detect_drift_identical_matrices() {
+        let matrix1 = WindowedCorrelationMatrix {
+            window: TimeWindow::new(0.0, 1000.0),
+            matrix: vec![vec![1.0; 8]; 8],
+            feature_count: 10,
+        };
+
+        let matrix2 = WindowedCorrelationMatrix {
+            window: TimeWindow::new(1000.0, 2000.0),
+            matrix: vec![vec![1.0; 8]; 8],
+            feature_count: 10,
+        };
+
+        let drifts = detect_drift(&[matrix1, matrix2], 0.5).unwrap();
+        assert_eq!(drifts.len(), 1);
+        assert!(!drifts[0].is_significant); // No difference
+        assert_eq!(drifts[0].matrix_diff, 0.0);
+    }
+
+    #[test]
+    fn test_detect_drift_different_matrices() {
+        let mut matrix1_data = vec![vec![1.0; 8]; 8];
+        matrix1_data[0][1] = 0.5; // Change one value
+
+        let matrix1 = WindowedCorrelationMatrix {
+            window: TimeWindow::new(0.0, 1000.0),
+            matrix: matrix1_data,
+            feature_count: 10,
+        };
+
+        let matrix2 = WindowedCorrelationMatrix {
+            window: TimeWindow::new(1000.0, 2000.0),
+            matrix: vec![vec![1.0; 8]; 8],
+            feature_count: 10,
+        };
+
+        let drifts = detect_drift(&[matrix1, matrix2], 0.01).unwrap();
+        assert_eq!(drifts.len(), 1);
+        assert!(drifts[0].is_significant); // Difference above threshold
+        assert!(drifts[0].matrix_diff > 0.0);
+    }
+
+    #[test]
+    fn test_detect_drift_multiple_windows() {
+        let mat1 = WindowedCorrelationMatrix {
+            window: TimeWindow::new(0.0, 1000.0),
+            matrix: vec![vec![1.0; 8]; 8],
+            feature_count: 10,
+        };
+
+        let mat2 = WindowedCorrelationMatrix {
+            window: TimeWindow::new(1000.0, 2000.0),
+            matrix: vec![vec![0.9; 8]; 8],
+            feature_count: 10,
+        };
+
+        let mat3 = WindowedCorrelationMatrix {
+            window: TimeWindow::new(2000.0, 3000.0),
+            matrix: vec![vec![0.8; 8]; 8],
+            feature_count: 10,
+        };
+
+        let drifts = detect_drift(&[mat1, mat2, mat3], 0.1).unwrap();
+        assert_eq!(drifts.len(), 2); // Two transitions
+        assert_eq!(drifts[0].window1_idx, 0);
+        assert_eq!(drifts[0].window2_idx, 1);
+        assert_eq!(drifts[1].window1_idx, 1);
+        assert_eq!(drifts[1].window2_idx, 2);
+    }
+
+    #[test]
+    fn test_custom_analyzer_creation() {
+        let analyzer = SlidingWindowAnalyzer::new(1000.0, 500.0);
+        let windows = analyzer.generate_windows(0.0, 3000.0);
+
+        // Windows: [0-1000], [500-1500], [1000-2000], [1500-2500], [2000-3000]
+        assert_eq!(windows.len(), 5);
+        assert_eq!(windows[0].start_time, 0.0);
+        assert_eq!(windows[0].end_time, 1000.0);
+        assert_eq!(windows[1].start_time, 500.0);
+    }
+
+    #[test]
+    fn test_generate_windows_no_full_window_at_end() {
+        let analyzer = SlidingWindowAnalyzer::new(1000.0, 500.0);
+        let windows = analyzer.generate_windows(0.0, 1500.0);
+
+        // Windows: [0-1000], [500-1500]
+        // No [1000-2000] because end_time is only 1500
+        assert_eq!(windows.len(), 2);
+    }
+
+    #[test]
+    fn test_compute_all_windows_skips_empty_windows() {
+        let mut store = FeatureStore::new().unwrap();
+
+        // Add features only in first half of time range
+        for i in 0..5 {
+            let f = CommitFeatures {
+                defect_category: 1,
+                files_changed: (i + 1) as f32,
+                lines_added: (i * 10) as f32,
+                lines_deleted: (i * 5) as f32,
+                complexity_delta: (i as f32) * 0.5,
+                timestamp: (i * 1000) as f64, // 0-4000
+                hour_of_day: 10,
+                day_of_week: 1,
+            };
+            store.insert(f).unwrap();
+        }
+
+        let analyzer = SlidingWindowAnalyzer::new(3000.0, 1500.0);
+        let results = analyzer.compute_all_windows(&store).unwrap();
+
+        // Only windows with data should be in results
+        assert!(!results.is_empty());
+        assert!(results.len() <= 3); // Won't have empty windows
+    }
+
+    #[test]
+    fn test_concept_drift_structure() {
+        let drift = ConceptDrift {
+            window1_idx: 0,
+            window2_idx: 1,
+            matrix_diff: 0.75,
+            is_significant: true,
+        };
+
+        assert_eq!(drift.window1_idx, 0);
+        assert_eq!(drift.window2_idx, 1);
+        assert_eq!(drift.matrix_diff, 0.75);
+        assert!(drift.is_significant);
+    }
+
+    #[test]
+    fn test_windowed_correlation_matrix_structure() {
+        let wcm = WindowedCorrelationMatrix {
+            window: TimeWindow::new(0.0, 1000.0),
+            matrix: vec![vec![1.0; 8]; 8],
+            feature_count: 42,
+        };
+
+        assert_eq!(wcm.window.start_time, 0.0);
+        assert_eq!(wcm.window.end_time, 1000.0);
+        assert_eq!(wcm.matrix.len(), 8);
+        assert_eq!(wcm.feature_count, 42);
+    }
+
+    #[test]
+    fn test_six_months_constant() {
+        // 6 months * 30 days * 24 hours * 3600 seconds
+        let expected = 6.0 * 30.0 * 24.0 * 3600.0;
+        assert_eq!(SIX_MONTHS_SECONDS, expected);
+        assert_eq!(SIX_MONTHS_SECONDS, 15_552_000.0);
+    }
 }
