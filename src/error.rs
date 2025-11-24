@@ -332,4 +332,160 @@ mod tests {
         assert!(with_context.is_err());
         assert!(with_context.unwrap_err().to_string().contains("analysis"));
     }
+
+    #[test]
+    fn test_result_with_context() {
+        let result: Result<(), OipError> = Err(OipError::no_data("test"));
+        let with_context = result.with_context(|| "lazy context");
+        assert!(with_context.is_err());
+        assert!(with_context.unwrap_err().to_string().contains("lazy"));
+    }
+
+    #[test]
+    fn test_invalid_data_constructor() {
+        let err = OipError::invalid_data("malformed JSON");
+        assert!(err.to_string().contains("Invalid data format"));
+        assert_eq!(err.category(), "data");
+    }
+
+    #[test]
+    fn test_github_error_constructor() {
+        let err = OipError::github("rate limit exceeded");
+        assert!(err.to_string().contains("GitHub API error"));
+        assert_eq!(err.category(), "git");
+    }
+
+    #[test]
+    fn test_git_error_constructor() {
+        let err = OipError::git("clone", "network timeout");
+        assert!(err.to_string().contains("Git operation failed"));
+        assert!(err.to_string().contains("clone"));
+        assert_eq!(err.category(), "git");
+    }
+
+    #[test]
+    fn test_auth_required_constructor() {
+        let err = OipError::auth_required("GitHub API requires token");
+        assert!(err.to_string().contains("Authentication required"));
+        assert!(err.recovery_hint().is_some());
+        assert!(err.recovery_hint().unwrap().contains("GITHUB_TOKEN"));
+        assert!(err.is_recoverable());
+    }
+
+    #[test]
+    fn test_compute_error_constructor() {
+        let err = OipError::compute("correlation", "division by zero");
+        assert!(err.to_string().contains("Computation failed"));
+        assert_eq!(err.category(), "compute");
+    }
+
+    #[test]
+    fn test_gpu_unavailable_constructor() {
+        let err = OipError::gpu_unavailable("no Vulkan driver");
+        assert!(err.to_string().contains("GPU not available"));
+        assert!(err.recovery_hint().unwrap().contains("simd"));
+        assert!(err.is_recoverable());
+    }
+
+    #[test]
+    fn test_storage_error_constructor() {
+        let err = OipError::storage("save", "disk full");
+        assert!(err.to_string().contains("Storage error"));
+        assert_eq!(err.category(), "storage");
+    }
+
+    #[test]
+    fn test_file_not_found_constructor() {
+        let err = OipError::file_not_found("/tmp/missing.db");
+        assert!(err.to_string().contains("File not found"));
+        assert!(err.recovery_hint().is_some());
+        assert!(err.is_recoverable());
+    }
+
+    #[test]
+    fn test_io_error_constructor() {
+        let io_err = std::io::Error::new(std::io::ErrorKind::PermissionDenied, "access denied");
+        let err = OipError::io("reading file", io_err);
+        assert!(err.to_string().contains("IO error"));
+        assert_eq!(err.category(), "storage");
+    }
+
+    #[test]
+    fn test_config_error_constructor() {
+        let err = OipError::config("invalid YAML syntax");
+        assert!(err.to_string().contains("Configuration error"));
+        assert!(err.recovery_hint().unwrap().contains("YAML"));
+        assert!(err.is_recoverable());
+    }
+
+    #[test]
+    fn test_invalid_arg_constructor() {
+        let err = OipError::invalid_arg("--backend", "must be simd or gpu");
+        assert!(err.to_string().contains("Invalid argument"));
+        assert!(err.recovery_hint().unwrap().contains("--help"));
+        assert!(err.is_recoverable());
+    }
+
+    #[test]
+    fn test_failed_constructor() {
+        let err = OipError::failed("network unreachable");
+        assert!(err.to_string().contains("Operation failed"));
+        assert!(!err.is_recoverable());
+        assert_eq!(err.category(), "other");
+    }
+
+    #[test]
+    fn test_model_not_trained_recovery() {
+        let err = OipError::ModelNotTrained;
+        assert!(err.recovery_hint().unwrap().contains("train"));
+        assert!(err.is_recoverable());
+        assert_eq!(err.category(), "compute");
+    }
+
+    #[test]
+    fn test_repo_not_found_recovery() {
+        let err = OipError::repo_not_found("invalid/repo");
+        assert!(err.recovery_hint().unwrap().contains("owner/repo"));
+        assert!(err.is_recoverable());
+    }
+
+    #[test]
+    fn test_no_data_recovery() {
+        let err = OipError::no_data("empty store");
+        assert!(err.recovery_hint().unwrap().contains("analyze"));
+        assert!(err.is_recoverable());
+    }
+
+    #[test]
+    fn test_non_recoverable_errors() {
+        assert!(!OipError::invalid_data("test").is_recoverable());
+        assert!(!OipError::github("test").is_recoverable());
+        assert!(!OipError::git("op", "reason").is_recoverable());
+        assert!(!OipError::compute("op", "reason").is_recoverable());
+        assert!(!OipError::storage("op", "reason").is_recoverable());
+    }
+
+    #[test]
+    fn test_category_assignments() {
+        // Data errors
+        assert_eq!(OipError::invalid_data("test").category(), "data");
+        assert_eq!(OipError::validation("f", "r").category(), "data");
+
+        // Git errors
+        assert_eq!(OipError::github("test").category(), "git");
+        assert_eq!(OipError::git("o", "r").category(), "git");
+        assert_eq!(OipError::auth_required("test").category(), "git");
+
+        // Compute errors
+        assert_eq!(OipError::compute("o", "r").category(), "compute");
+
+        // Storage errors
+        assert_eq!(OipError::storage("o", "r").category(), "storage");
+        let io = std::io::Error::other("test");
+        assert_eq!(OipError::io("ctx", io).category(), "storage");
+
+        // Config errors
+        assert_eq!(OipError::config("test").category(), "config");
+        assert_eq!(OipError::invalid_arg("a", "r").category(), "config");
+    }
 }

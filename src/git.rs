@@ -217,6 +217,173 @@ mod tests {
         assert!(result.is_err());
     }
 
+    #[test]
+    fn test_commit_info_serialization() {
+        let commit = CommitInfo {
+            hash: "test123".to_string(),
+            message: "test commit".to_string(),
+            author: "test@example.com".to_string(),
+            timestamp: 1234567890,
+            files_changed: 1,
+            lines_added: 10,
+            lines_removed: 5,
+        };
+
+        let json = serde_json::to_string(&commit).unwrap();
+        let deserialized: CommitInfo = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(commit.hash, deserialized.hash);
+        assert_eq!(commit.message, deserialized.message);
+        assert_eq!(commit.author, deserialized.author);
+    }
+
+    #[test]
+    fn test_analyze_local_repo_with_commits() {
+        let temp_dir = TempDir::new().unwrap();
+        let repo_path = temp_dir.path().join("test-repo");
+        std::fs::create_dir(&repo_path).unwrap();
+
+        // Initialize a git repository
+        let repo = Repository::init(&repo_path).unwrap();
+
+        // Create a test file
+        let test_file = repo_path.join("test.txt");
+        std::fs::write(&test_file, "Hello, world!").unwrap();
+
+        // Configure git
+        let mut config = repo.config().unwrap();
+        config.set_str("user.name", "Test User").unwrap();
+        config.set_str("user.email", "test@example.com").unwrap();
+
+        // Add and commit the file
+        let mut index = repo.index().unwrap();
+        index.add_path(Path::new("test.txt")).unwrap();
+        index.write().unwrap();
+
+        let tree_id = index.write_tree().unwrap();
+        let tree = repo.find_tree(tree_id).unwrap();
+        let sig = repo.signature().unwrap();
+
+        repo.commit(Some("HEAD"), &sig, &sig, "Initial commit", &tree, &[])
+            .unwrap();
+
+        // Now analyze the repo
+        let analyzer = GitAnalyzer::new(temp_dir.path());
+        let commits = analyzer.analyze_commits("test-repo", 10).unwrap();
+
+        assert_eq!(commits.len(), 1);
+        assert_eq!(commits[0].message, "Initial commit");
+        assert!(commits[0].files_changed > 0);
+    }
+
+    #[test]
+    fn test_analyze_local_repo_multiple_commits() {
+        let temp_dir = TempDir::new().unwrap();
+        let repo_path = temp_dir.path().join("multi-commit-repo");
+        std::fs::create_dir(&repo_path).unwrap();
+
+        let repo = Repository::init(&repo_path).unwrap();
+
+        let mut config = repo.config().unwrap();
+        config.set_str("user.name", "Test User").unwrap();
+        config.set_str("user.email", "test@example.com").unwrap();
+
+        // Helper to commit a file
+        let commit_file = |name: &str, content: &str, message: &str| {
+            let file_path = repo_path.join(name);
+            std::fs::write(&file_path, content).unwrap();
+
+            let mut index = repo.index().unwrap();
+            index.add_path(Path::new(name)).unwrap();
+            index.write().unwrap();
+
+            let tree_id = index.write_tree().unwrap();
+            let tree = repo.find_tree(tree_id).unwrap();
+            let sig = repo.signature().unwrap();
+
+            let parent = if let Ok(head) = repo.head() {
+                let parent_commit = head.peel_to_commit().unwrap();
+                vec![parent_commit]
+            } else {
+                vec![]
+            };
+
+            let parent_refs: Vec<_> = parent.iter().collect();
+
+            repo.commit(Some("HEAD"), &sig, &sig, message, &tree, &parent_refs)
+                .unwrap();
+        };
+
+        commit_file("file1.txt", "content 1", "Add file1");
+        commit_file("file2.txt", "content 2", "Add file2");
+        commit_file("file3.txt", "content 3", "Add file3");
+
+        // Analyze the repo
+        let analyzer = GitAnalyzer::new(temp_dir.path());
+        let commits = analyzer.analyze_commits("multi-commit-repo", 10).unwrap();
+
+        assert_eq!(commits.len(), 3);
+        assert_eq!(commits[0].message, "Add file3"); // Most recent first
+        assert_eq!(commits[1].message, "Add file2");
+        assert_eq!(commits[2].message, "Add file1");
+    }
+
+    #[test]
+    fn test_analyze_respects_commit_limit() {
+        let temp_dir = TempDir::new().unwrap();
+        let repo_path = temp_dir.path().join("limit-repo");
+        std::fs::create_dir(&repo_path).unwrap();
+
+        let repo = Repository::init(&repo_path).unwrap();
+
+        let mut config = repo.config().unwrap();
+        config.set_str("user.name", "Test").unwrap();
+        config.set_str("user.email", "test@test.com").unwrap();
+
+        // Create 5 commits
+        for i in 0..5 {
+            let file_path = repo_path.join(format!("file{}.txt", i));
+            std::fs::write(&file_path, format!("content {}", i)).unwrap();
+
+            let mut index = repo.index().unwrap();
+            index
+                .add_path(Path::new(&format!("file{}.txt", i)))
+                .unwrap();
+            index.write().unwrap();
+
+            let tree_id = index.write_tree().unwrap();
+            let tree = repo.find_tree(tree_id).unwrap();
+            let sig = repo.signature().unwrap();
+
+            let parent = if let Ok(head) = repo.head() {
+                vec![head.peel_to_commit().unwrap()]
+            } else {
+                vec![]
+            };
+            let parent_refs: Vec<_> = parent.iter().collect();
+
+            repo.commit(
+                Some("HEAD"),
+                &sig,
+                &sig,
+                &format!("Commit {}", i),
+                &tree,
+                &parent_refs,
+            )
+            .unwrap();
+        }
+
+        let analyzer = GitAnalyzer::new(temp_dir.path());
+
+        // Test with limit of 2
+        let commits = analyzer.analyze_commits("limit-repo", 2).unwrap();
+        assert_eq!(commits.len(), 2);
+
+        // Test with limit of 10 (more than available)
+        let commits = analyzer.analyze_commits("limit-repo", 10).unwrap();
+        assert_eq!(commits.len(), 5);
+    }
+
     // Integration tests that require network access are marked as ignored
     // Run with: cargo test -- --ignored
     #[test]

@@ -166,4 +166,204 @@ mod tests {
 
         assert!(result.is_err());
     }
+
+    #[test]
+    fn test_repo_info_structure() {
+        let now = Utc::now();
+        let repo = RepoInfo {
+            name: "test-repo".to_string(),
+            full_name: "owner/test-repo".to_string(),
+            description: Some("A test repository".to_string()),
+            language: Some("Rust".to_string()),
+            stars: 42,
+            default_branch: "main".to_string(),
+            updated_at: now,
+        };
+
+        assert_eq!(repo.name, "test-repo");
+        assert_eq!(repo.full_name, "owner/test-repo");
+        assert_eq!(repo.description, Some("A test repository".to_string()));
+        assert_eq!(repo.language, Some("Rust".to_string()));
+        assert_eq!(repo.stars, 42);
+        assert_eq!(repo.default_branch, "main");
+        assert_eq!(repo.updated_at, now);
+    }
+
+    #[test]
+    fn test_repo_info_serialization() {
+        let now = Utc::now();
+        let repo = RepoInfo {
+            name: "test".to_string(),
+            full_name: "owner/test".to_string(),
+            description: None,
+            language: None,
+            stars: 0,
+            default_branch: "main".to_string(),
+            updated_at: now,
+        };
+
+        let json = serde_json::to_string(&repo).unwrap();
+        let deserialized: RepoInfo = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(repo.name, deserialized.name);
+        assert_eq!(repo.full_name, deserialized.full_name);
+        assert_eq!(repo.stars, deserialized.stars);
+    }
+
+    #[test]
+    fn test_filter_by_date_includes_recent() {
+        let now = Utc::now();
+        let yesterday = now - chrono::Duration::days(1);
+        let last_week = now - chrono::Duration::days(7);
+
+        let repos = vec![
+            RepoInfo {
+                name: "recent".to_string(),
+                full_name: "org/recent".to_string(),
+                description: None,
+                language: None,
+                stars: 0,
+                default_branch: "main".to_string(),
+                updated_at: now,
+            },
+            RepoInfo {
+                name: "old".to_string(),
+                full_name: "org/old".to_string(),
+                description: None,
+                language: None,
+                stars: 0,
+                default_branch: "main".to_string(),
+                updated_at: last_week,
+            },
+        ];
+
+        let filtered = GitHubMiner::filter_by_date(repos, yesterday);
+        assert_eq!(filtered.len(), 1);
+        assert_eq!(filtered[0].name, "recent");
+    }
+
+    #[test]
+    fn test_filter_by_date_excludes_old() {
+        let now = Utc::now();
+        let two_days_ago = now - chrono::Duration::days(2);
+        let one_week_ago = now - chrono::Duration::days(7);
+
+        let repos = vec![RepoInfo {
+            name: "old".to_string(),
+            full_name: "org/old".to_string(),
+            description: None,
+            language: None,
+            stars: 0,
+            default_branch: "main".to_string(),
+            updated_at: one_week_ago,
+        }];
+
+        let filtered = GitHubMiner::filter_by_date(repos, two_days_ago);
+        assert_eq!(filtered.len(), 0);
+    }
+
+    #[test]
+    fn test_filter_by_date_empty_input() {
+        let now = Utc::now();
+        let repos: Vec<RepoInfo> = vec![];
+
+        let filtered = GitHubMiner::filter_by_date(repos, now);
+        assert_eq!(filtered.len(), 0);
+    }
+
+    #[test]
+    fn test_filter_by_date_exact_match() {
+        let now = Utc::now();
+
+        let repos = vec![RepoInfo {
+            name: "exact".to_string(),
+            full_name: "org/exact".to_string(),
+            description: None,
+            language: None,
+            stars: 0,
+            default_branch: "main".to_string(),
+            updated_at: now,
+        }];
+
+        // Filter with exact same timestamp - should be included (>=)
+        let filtered = GitHubMiner::filter_by_date(repos, now);
+        assert_eq!(filtered.len(), 1);
+    }
+
+    #[test]
+    fn test_repo_info_with_all_fields() {
+        let now = Utc::now();
+        let repo = RepoInfo {
+            name: "full-repo".to_string(),
+            full_name: "owner/full-repo".to_string(),
+            description: Some("Complete description".to_string()),
+            language: Some("Python".to_string()),
+            stars: 1000,
+            default_branch: "develop".to_string(),
+            updated_at: now,
+        };
+
+        assert!(repo.description.is_some());
+        assert!(repo.language.is_some());
+        assert!(repo.stars > 0);
+    }
+
+    #[test]
+    fn test_repo_info_minimal_fields() {
+        let now = Utc::now();
+        let repo = RepoInfo {
+            name: "minimal".to_string(),
+            full_name: "org/minimal".to_string(),
+            description: None,
+            language: None,
+            stars: 0,
+            default_branch: "main".to_string(),
+            updated_at: now,
+        };
+
+        assert!(repo.description.is_none());
+        assert!(repo.language.is_none());
+        assert_eq!(repo.stars, 0);
+    }
+
+    #[test]
+    fn test_filter_by_date_multiple_repos() {
+        let now = Utc::now();
+        let cutoff = now - chrono::Duration::days(3);
+
+        let repos = vec![
+            RepoInfo {
+                name: "repo1".to_string(),
+                full_name: "org/repo1".to_string(),
+                description: None,
+                language: None,
+                stars: 0,
+                default_branch: "main".to_string(),
+                updated_at: now,
+            },
+            RepoInfo {
+                name: "repo2".to_string(),
+                full_name: "org/repo2".to_string(),
+                description: None,
+                language: None,
+                stars: 0,
+                default_branch: "main".to_string(),
+                updated_at: now - chrono::Duration::days(2),
+            },
+            RepoInfo {
+                name: "repo3".to_string(),
+                full_name: "org/repo3".to_string(),
+                description: None,
+                language: None,
+                stars: 0,
+                default_branch: "main".to_string(),
+                updated_at: now - chrono::Duration::days(5),
+            },
+        ];
+
+        let filtered = GitHubMiner::filter_by_date(repos, cutoff);
+        assert_eq!(filtered.len(), 2);
+        assert_eq!(filtered[0].name, "repo1");
+        assert_eq!(filtered[1].name, "repo2");
+    }
 }

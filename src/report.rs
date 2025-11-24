@@ -299,4 +299,179 @@ mod tests {
         assert!(yaml.contains("ConcurrencyBugs"));
         assert!(yaml.contains("frequency: 42"));
     }
+
+    #[tokio::test]
+    async fn test_write_to_file() {
+        use tempfile::TempDir;
+
+        let temp_dir = TempDir::new().unwrap();
+        let report_path = temp_dir.path().join("test-report.yaml");
+
+        let metadata = AnalysisMetadata {
+            organization: "test-org".to_string(),
+            analysis_date: "2025-11-15T00:00:00Z".to_string(),
+            repositories_analyzed: 5,
+            commits_analyzed: 50,
+            analyzer_version: "0.1.0".to_string(),
+        };
+
+        let report = AnalysisReport {
+            version: "1.0".to_string(),
+            metadata,
+            defect_patterns: vec![],
+        };
+
+        let generator = ReportGenerator::new();
+        generator
+            .write_to_file(&report, &report_path)
+            .await
+            .expect("Should write file");
+
+        assert!(report_path.exists());
+
+        let content = tokio::fs::read_to_string(&report_path).await.unwrap();
+        assert!(content.contains("test-org"));
+    }
+
+    #[test]
+    fn test_quality_signals_default() {
+        let signals = QualitySignals::default();
+        assert!(signals.avg_tdg_score.is_none());
+        assert!(signals.avg_complexity.is_none());
+        assert_eq!(signals.satd_instances, 0);
+        assert_eq!(signals.avg_lines_changed, 0.0);
+    }
+
+    #[test]
+    fn test_quality_signals_with_values() {
+        let signals = QualitySignals {
+            avg_tdg_score: Some(2.5),
+            max_tdg_score: Some(5.0),
+            avg_complexity: Some(8.3),
+            avg_test_coverage: Some(0.75),
+            satd_instances: 10,
+            avg_lines_changed: 50.5,
+            avg_files_per_commit: 3.2,
+        };
+
+        assert_eq!(signals.avg_tdg_score, Some(2.5));
+        assert_eq!(signals.max_tdg_score, Some(5.0));
+        assert_eq!(signals.satd_instances, 10);
+    }
+
+    #[test]
+    fn test_defect_instance_structure() {
+        let instance = DefectInstance {
+            commit_hash: "abc123".to_string(),
+            message: "fix bug".to_string(),
+            author: "dev@example.com".to_string(),
+            timestamp: 1234567890,
+            files_affected: 3,
+            lines_added: 25,
+            lines_removed: 10,
+        };
+
+        assert_eq!(instance.commit_hash, "abc123");
+        assert_eq!(instance.files_affected, 3);
+        assert_eq!(instance.lines_added, 25);
+    }
+
+    #[test]
+    fn test_defect_pattern_structure() {
+        let pattern = DefectPattern {
+            category: DefectCategory::LogicErrors,
+            frequency: 15,
+            confidence: 0.70,
+            quality_signals: QualitySignals::default(),
+            examples: vec![],
+        };
+
+        assert_eq!(pattern.frequency, 15);
+        assert_eq!(pattern.confidence, 0.70);
+        assert!(pattern.examples.is_empty());
+    }
+
+    #[test]
+    fn test_analysis_metadata_structure() {
+        let metadata = AnalysisMetadata {
+            organization: "my-org".to_string(),
+            analysis_date: "2025-11-24T12:00:00Z".to_string(),
+            repositories_analyzed: 20,
+            commits_analyzed: 500,
+            analyzer_version: "0.2.0".to_string(),
+        };
+
+        assert_eq!(metadata.organization, "my-org");
+        assert_eq!(metadata.repositories_analyzed, 20);
+        assert_eq!(metadata.commits_analyzed, 500);
+    }
+
+    #[test]
+    fn test_report_serialization_deserialization() {
+        let metadata = AnalysisMetadata {
+            organization: "test".to_string(),
+            analysis_date: "2025-01-01T00:00:00Z".to_string(),
+            repositories_analyzed: 1,
+            commits_analyzed: 10,
+            analyzer_version: "0.1.0".to_string(),
+        };
+
+        let report = AnalysisReport {
+            version: "1.0".to_string(),
+            metadata,
+            defect_patterns: vec![],
+        };
+
+        let json = serde_json::to_string(&report).unwrap();
+        let deserialized: AnalysisReport = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(report.version, deserialized.version);
+        assert_eq!(
+            report.metadata.organization,
+            deserialized.metadata.organization
+        );
+    }
+
+    #[test]
+    fn test_report_generator_default() {
+        let generator = ReportGenerator;
+        let metadata = AnalysisMetadata {
+            organization: "test".to_string(),
+            analysis_date: "2025-01-01T00:00:00Z".to_string(),
+            repositories_analyzed: 1,
+            commits_analyzed: 1,
+            analyzer_version: "0.1.0".to_string(),
+        };
+
+        let report = AnalysisReport {
+            version: "1.0".to_string(),
+            metadata,
+            defect_patterns: vec![],
+        };
+
+        let yaml = generator.to_yaml(&report).expect("Should serialize");
+        assert!(yaml.contains("version"));
+    }
+
+    #[test]
+    fn test_empty_defect_patterns() {
+        let metadata = AnalysisMetadata {
+            organization: "empty-org".to_string(),
+            analysis_date: "2025-01-01T00:00:00Z".to_string(),
+            repositories_analyzed: 0,
+            commits_analyzed: 0,
+            analyzer_version: "0.1.0".to_string(),
+        };
+
+        let report = AnalysisReport {
+            version: "1.0".to_string(),
+            metadata,
+            defect_patterns: vec![],
+        };
+
+        let generator = ReportGenerator::new();
+        let yaml = generator.to_yaml(&report).expect("Should serialize");
+
+        assert!(yaml.contains("defect_patterns: []"));
+    }
 }

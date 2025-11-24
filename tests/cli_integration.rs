@@ -10,6 +10,14 @@ use std::process::Command;
 fn oip_gpu_bin() -> PathBuf {
     let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     path.push("target");
+
+    // Check for coverage build first (cargo llvm-cov)
+    let cov_path = path.join("llvm-cov-target").join("debug").join("oip-gpu");
+    if cov_path.exists() {
+        return cov_path;
+    }
+
+    // Fall back to normal debug build
     path.push("debug");
     path.push("oip-gpu");
     path

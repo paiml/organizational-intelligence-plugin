@@ -324,4 +324,201 @@ mod tests {
         // Should return defaults when file doesn't exist
         assert_eq!(config.analysis.max_commits, 1000);
     }
+
+    #[test]
+    fn test_load_no_path_no_defaults() {
+        // Load with no path and no default files present
+        let config = Config::load(None).unwrap();
+        assert_eq!(config.analysis.max_commits, 1000); // Should use defaults
+    }
+
+    #[test]
+    fn test_env_overrides_max_commits() {
+        std::env::set_var("OIP_MAX_COMMITS", "500");
+        let mut config = Config::default();
+        config.apply_env_overrides();
+        assert_eq!(config.analysis.max_commits, 500);
+        std::env::remove_var("OIP_MAX_COMMITS");
+    }
+
+    #[test]
+    fn test_env_overrides_workers() {
+        std::env::set_var("OIP_WORKERS", "8");
+        let mut config = Config::default();
+        config.apply_env_overrides();
+        assert_eq!(config.analysis.workers, 8);
+        std::env::remove_var("OIP_WORKERS");
+    }
+
+    #[test]
+    fn test_env_overrides_cache_dir() {
+        std::env::set_var("OIP_CACHE_DIR", "/tmp/custom-cache");
+        let mut config = Config::default();
+        config.apply_env_overrides();
+        assert_eq!(config.analysis.cache_dir, "/tmp/custom-cache");
+        std::env::remove_var("OIP_CACHE_DIR");
+    }
+
+    #[test]
+    fn test_env_overrides_k_clusters() {
+        std::env::set_var("OIP_K_CLUSTERS", "10");
+        let mut config = Config::default();
+        config.apply_env_overrides();
+        assert_eq!(config.ml.k_clusters, 10);
+        std::env::remove_var("OIP_K_CLUSTERS");
+    }
+
+    #[test]
+    fn test_env_overrides_backend() {
+        std::env::set_var("OIP_BACKEND", "simd");
+        let mut config = Config::default();
+        config.apply_env_overrides();
+        assert_eq!(config.compute.backend, "simd");
+        std::env::remove_var("OIP_BACKEND");
+    }
+
+    #[test]
+    fn test_env_overrides_gpu_enabled_true() {
+        std::env::set_var("OIP_GPU_ENABLED", "true");
+        let mut config = Config::default();
+        config.apply_env_overrides();
+        assert!(config.compute.gpu_enabled);
+        std::env::remove_var("OIP_GPU_ENABLED");
+    }
+
+    #[test]
+    fn test_env_overrides_gpu_enabled_1() {
+        std::env::set_var("OIP_GPU_ENABLED", "1");
+        let mut config = Config::default();
+        config.apply_env_overrides();
+        assert!(config.compute.gpu_enabled);
+        std::env::remove_var("OIP_GPU_ENABLED");
+    }
+
+    #[test]
+    fn test_env_overrides_gpu_enabled_false() {
+        std::env::set_var("OIP_GPU_ENABLED", "false");
+        let mut config = Config::default();
+        config.compute.gpu_enabled = true; // Start with true
+        config.apply_env_overrides();
+        assert!(!config.compute.gpu_enabled);
+        std::env::remove_var("OIP_GPU_ENABLED");
+    }
+
+    #[test]
+    fn test_env_overrides_log_level() {
+        std::env::set_var("OIP_LOG_LEVEL", "debug");
+        let mut config = Config::default();
+        config.apply_env_overrides();
+        assert_eq!(config.logging.level, "debug");
+        std::env::remove_var("OIP_LOG_LEVEL");
+    }
+
+    #[test]
+    fn test_env_overrides_log_json() {
+        std::env::set_var("OIP_LOG_JSON", "1");
+        let mut config = Config::default();
+        config.apply_env_overrides();
+        assert!(config.logging.json);
+        std::env::remove_var("OIP_LOG_JSON");
+    }
+
+    #[test]
+    fn test_validation_workers_zero() {
+        let mut config = Config::default();
+        config.analysis.workers = 0;
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_k_clusters_zero() {
+        let mut config = Config::default();
+        config.ml.k_clusters = 0;
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_smote_ratio_zero() {
+        let mut config = Config::default();
+        config.ml.smote_ratio = 0.0;
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_smote_ratio_over_one() {
+        let mut config = Config::default();
+        config.ml.smote_ratio = 1.5;
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_validation_smote_ratio_exactly_one() {
+        let mut config = Config::default();
+        config.ml.smote_ratio = 1.0;
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_analysis_config_defaults() {
+        let config = AnalysisConfig::default();
+        assert_eq!(config.max_commits, 1000);
+        assert!(config.workers > 0); // At least 1
+        assert_eq!(config.cache_dir, ".oip-cache");
+        assert!(!config.include_merges);
+    }
+
+    #[test]
+    fn test_ml_config_defaults() {
+        let config = MlConfig::default();
+        assert_eq!(config.n_trees, 100);
+        assert_eq!(config.max_depth, 10);
+        assert_eq!(config.k_clusters, 5);
+        assert_eq!(config.max_iterations, 100);
+        assert_eq!(config.smote_k, 5);
+        assert_eq!(config.smote_ratio, 0.5);
+    }
+
+    #[test]
+    fn test_storage_config_defaults() {
+        let config = StorageConfig::default();
+        assert_eq!(config.default_output, "oip-gpu.db");
+        assert!(config.compress);
+        assert_eq!(config.batch_size, 1000);
+    }
+
+    #[test]
+    fn test_compute_config_defaults() {
+        let config = ComputeConfig::default();
+        assert_eq!(config.backend, "auto");
+        assert_eq!(config.workgroup_size, 256);
+        assert!(config.gpu_enabled);
+    }
+
+    #[test]
+    fn test_logging_config_defaults() {
+        let config = LoggingConfig::default();
+        assert_eq!(config.level, "info");
+        assert!(!config.json);
+        assert!(config.file.is_none());
+    }
+
+    #[test]
+    fn test_config_serialization() {
+        let config = Config::default();
+        let yaml = serde_yaml::to_string(&config).unwrap();
+        let deserialized: Config = serde_yaml::from_str(&yaml).unwrap();
+        assert_eq!(
+            config.analysis.max_commits,
+            deserialized.analysis.max_commits
+        );
+        assert_eq!(config.ml.k_clusters, deserialized.ml.k_clusters);
+    }
+
+    #[test]
+    fn test_invalid_env_value_ignored() {
+        std::env::set_var("OIP_MAX_COMMITS", "not-a-number");
+        let config = Config::load(None).unwrap();
+        assert_eq!(config.analysis.max_commits, 1000); // Should use default
+        std::env::remove_var("OIP_MAX_COMMITS");
+    }
 }

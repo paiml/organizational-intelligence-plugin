@@ -306,4 +306,107 @@ mod tests {
         assert_eq!(span.repo, "owner/repo");
         assert_eq!(span.operation, "analyze");
     }
+
+    #[test]
+    fn test_timer_elapsed_us() {
+        let timer = Timer::new("test");
+        std::thread::sleep(std::time::Duration::from_micros(100));
+        assert!(timer.elapsed_us() >= 100);
+    }
+
+    #[test]
+    fn test_timer_log_completion() {
+        let timer = Timer::new("test_op");
+        timer.log_completion(); // Should not panic
+    }
+
+    #[test]
+    fn test_timer_drop() {
+        let _timer = Timer::new("test");
+        // Drop should not panic
+    }
+
+    #[test]
+    fn test_metrics_log_summary() {
+        let mut metrics = Metrics::new();
+        metrics.record_analysis(100);
+        metrics.log_summary(); // Should not panic
+    }
+
+    #[test]
+    fn test_logops_analysis_lifecycle() {
+        LogOps::analysis_start("test/repo", 100);
+        LogOps::analysis_complete("test/repo", 42, 1000);
+    }
+
+    #[test]
+    fn test_logops_features() {
+        LogOps::features_extracted(50);
+    }
+
+    #[test]
+    fn test_logops_correlation() {
+        LogOps::correlation_start(100, "simd");
+        LogOps::correlation_complete(0.95, 5000);
+    }
+
+    #[test]
+    fn test_logops_ml_training() {
+        LogOps::training_start("k-means", 100);
+        LogOps::training_complete("k-means", 0.85);
+    }
+
+    #[test]
+    fn test_logops_prediction() {
+        LogOps::prediction("DefectPredictor", 3);
+    }
+
+    #[test]
+    fn test_logops_clustering() {
+        LogOps::clustering_start(5, 100);
+        LogOps::clustering_complete(5, 123.45);
+    }
+
+    #[test]
+    fn test_logops_storage() {
+        LogOps::storage_op("save", 100);
+    }
+
+    #[test]
+    fn test_logops_gpu() {
+        LogOps::gpu_op("correlate", "gpu");
+    }
+
+    #[test]
+    fn test_logops_error_with_context() {
+        let error = std::io::Error::other("test error");
+        LogOps::error_with_context(&error, "during analysis");
+    }
+
+    #[test]
+    fn test_logops_warning() {
+        LogOps::warning("low memory", "performance");
+    }
+
+    #[test]
+    fn test_logops_performance_with_throughput() {
+        LogOps::performance("analysis", 1000, Some(100.5));
+    }
+
+    #[test]
+    fn test_logops_performance_without_throughput() {
+        LogOps::performance("analysis", 1000, None);
+    }
+
+    #[test]
+    fn test_multiple_metrics_recordings() {
+        let mut metrics = Metrics::new();
+        for i in 0..10 {
+            metrics.record_analysis(i * 10);
+            metrics.record_features(i * 5);
+        }
+        assert_eq!(metrics.analyses_count, 10);
+        assert_eq!(metrics.features_extracted, 225); // 0+5+10+...+45
+        assert_eq!(metrics.total_duration_ms, 450); // 0+10+20+...+90
+    }
 }
