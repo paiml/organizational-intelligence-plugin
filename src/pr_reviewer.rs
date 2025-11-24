@@ -429,4 +429,182 @@ mod tests {
         assert!(is_code_file("app.py"));
         assert!(!is_code_file("README.md"));
     }
+
+    #[test]
+    fn test_should_warn_high_frequency_low_tdg() {
+        use crate::summarizer::DefectPatternSummary;
+
+        let pattern = DefectPatternSummary {
+            category: "Test".to_string(),
+            frequency: 15, // >= 10
+            confidence: 0.8,
+            avg_tdg_score: 55.0, // < 60
+            common_patterns: vec![],
+            prevention_strategies: vec![],
+        };
+
+        assert!(should_warn(&pattern));
+    }
+
+    #[test]
+    fn test_should_warn_very_high_frequency() {
+        use crate::summarizer::DefectPatternSummary;
+
+        let pattern = DefectPatternSummary {
+            category: "Test".to_string(),
+            frequency: 25, // >= 20
+            confidence: 0.8,
+            avg_tdg_score: 85.0, // High TDG - should still warn due to frequency
+            common_patterns: vec![],
+            prevention_strategies: vec![],
+        };
+
+        assert!(should_warn(&pattern));
+    }
+
+    #[test]
+    fn test_should_not_warn_low_frequency_high_tdg() {
+        use crate::summarizer::DefectPatternSummary;
+
+        let pattern = DefectPatternSummary {
+            category: "Test".to_string(),
+            frequency: 8, // < 10
+            confidence: 0.8,
+            avg_tdg_score: 85.0,
+            common_patterns: vec![],
+            prevention_strategies: vec![],
+        };
+
+        assert!(!should_warn(&pattern));
+    }
+
+    #[test]
+    fn test_config_file_all_extensions() {
+        assert!(is_config_file("file.yaml"));
+        assert!(is_config_file("file.yml"));
+        assert!(is_config_file("file.toml"));
+        assert!(is_config_file("file.json"));
+        assert!(is_config_file("file.env"));
+        assert!(is_config_file("file.config"));
+        assert!(is_config_file("file.ini"));
+        assert!(!is_config_file("file.txt"));
+    }
+
+    #[test]
+    fn test_integration_file_all_patterns() {
+        assert!(is_integration_file("api_service.rs"));
+        assert!(is_integration_file("http_client.go"));
+        assert!(is_integration_file("rest_api.py"));
+        assert!(is_integration_file("integration_tests.rs"));
+        assert!(is_integration_file("user_service.js"));
+        assert!(is_integration_file("API_client.rs")); // Case insensitive
+        assert!(!is_integration_file("main.rs"));
+    }
+
+    #[test]
+    fn test_code_file_all_extensions() {
+        assert!(is_code_file("main.rs"));
+        assert!(is_code_file("script.py"));
+        assert!(is_code_file("app.js"));
+        assert!(is_code_file("component.ts"));
+        assert!(is_code_file("App.java"));
+        assert!(is_code_file("server.go"));
+        assert!(is_code_file("utils.cpp"));
+        assert!(is_code_file("lib.c"));
+        assert!(is_code_file("controller.rb"));
+        assert!(is_code_file("index.php"));
+        assert!(!is_code_file("README.md"));
+        assert!(!is_code_file("config.yaml"));
+    }
+
+    #[test]
+    fn test_pr_warning_equality() {
+        let warning1 = PrWarning {
+            file: "test.rs".to_string(),
+            category: "Test".to_string(),
+            message: "Test message".to_string(),
+            prevention_tips: vec!["Tip 1".to_string()],
+            frequency: 10,
+            avg_tdg_score: 50.0,
+        };
+
+        let warning2 = warning1.clone();
+        assert_eq!(warning1, warning2);
+    }
+
+    #[test]
+    fn test_markdown_plural_logic() {
+        let summary = create_test_summary();
+        let reviewer = PrReviewer { baseline: summary };
+
+        // Single warning
+        let review1 = reviewer.review_pr(&["config.yaml".to_string()]);
+        let markdown1 = review1.to_markdown();
+        assert!(markdown1.contains("1 Warning"));
+
+        // Multiple warnings
+        let review2 =
+            reviewer.review_pr(&["config.yaml".to_string(), "src/api_client.rs".to_string()]);
+        let markdown2 = review2.to_markdown();
+        assert!(markdown2.contains("Warnings"));
+    }
+
+    #[test]
+    fn test_load_baseline_invalid_path() {
+        let result = PrReviewer::load_baseline("nonexistent.yaml");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_review_empty_files() {
+        let summary = create_test_summary();
+        let reviewer = PrReviewer { baseline: summary };
+
+        let review = reviewer.review_pr(&[]);
+        assert_eq!(review.warnings.len(), 0);
+        assert_eq!(review.files_analyzed.len(), 0);
+    }
+
+    #[test]
+    fn test_markdown_with_prevention_tips() {
+        use crate::classifier::DefectCategory;
+        use crate::report::{DefectPattern, QualitySignals};
+        use crate::summarizer::OrganizationalInsights;
+
+        let summary = Summary {
+            organizational_insights: OrganizationalInsights {
+                top_defect_categories: vec![DefectPattern {
+                    category: DefectCategory::ConfigurationErrors,
+                    frequency: 25,
+                    confidence: 0.78,
+                    quality_signals: QualitySignals {
+                        avg_tdg_score: Some(45.2),
+                        max_tdg_score: Some(60.0),
+                        avg_complexity: Some(8.0),
+                        avg_test_coverage: Some(0.5),
+                        satd_instances: 5,
+                        avg_lines_changed: 10.0,
+                        avg_files_per_commit: 2.0,
+                    },
+                    examples: vec![],
+                }],
+            },
+            code_quality_thresholds: QualityThresholds::default(),
+            metadata: SummaryMetadata {
+                analysis_date: "2025-11-15".to_string(),
+                repositories_analyzed: 25,
+                commits_analyzed: 2500,
+            },
+        };
+
+        let reviewer = PrReviewer { baseline: summary };
+
+        // Override pattern to include prevention tips
+        let mut review = reviewer.review_pr(&["config.yaml".to_string()]);
+        review.warnings[0].prevention_tips = vec!["Use validation".to_string()];
+
+        let markdown = review.to_markdown();
+        assert!(markdown.contains("Prevention Strategies"));
+        assert!(markdown.contains("Use validation"));
+    }
 }
