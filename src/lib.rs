@@ -1,6 +1,7 @@
 // Organizational Intelligence Plugin - Library
 // Toyota Way: Start simple, evolve based on evidence
 
+pub mod config;
 pub mod error;
 pub mod observability;
 
