@@ -56,6 +56,10 @@ enum Commands {
         #[arg(long, group = "target")]
         repo: Option<String>,
 
+        /// Local repository path
+        #[arg(long, group = "target")]
+        local: Option<std::path::PathBuf>,
+
         /// Output database file (trueno-db format)
         #[arg(short, long, default_value = "oip-gpu.db")]
         output: std::path::PathBuf,
@@ -67,6 +71,10 @@ enum Commands {
         /// Parallel worker count (default: auto)
         #[arg(long)]
         workers: Option<usize>,
+
+        /// Maximum commits to analyze
+        #[arg(long, default_value = "1000")]
+        max_commits: usize,
     },
 
     /// Compute correlations between defect patterns
@@ -248,11 +256,24 @@ async fn main() -> Result<()> {
             org,
             repos,
             repo,
+            local,
             output,
             since,
             workers,
+            max_commits,
         } => {
-            cmd_analyze(org, repos, repo, output, since, workers, cli.backend).await?;
+            cmd_analyze(
+                org,
+                repos,
+                repo,
+                local,
+                output,
+                since,
+                workers,
+                max_commits,
+                cli.backend,
+            )
+            .await?;
         }
         Commands::Correlate {
             input,
@@ -322,29 +343,41 @@ async fn main() -> Result<()> {
 
 // Command implementations (stubs for now - will implement in TDD fashion)
 
+#[allow(clippy::too_many_arguments)]
 async fn cmd_analyze(
     org: Option<String>,
     repos: Option<String>,
     repo: Option<String>,
+    local: Option<std::path::PathBuf>,
     output: std::path::PathBuf,
     _since: Option<String>,
     _workers: Option<usize>,
+    max_commits: usize,
     backend: Option<Backend>,
 ) -> Result<()> {
     tracing::info!("Starting GPU-accelerated analysis");
+
+    if let Some(b) = backend {
+        println!("⚙️  Backend: {:?}", b);
+    }
+
+    // Handle local repository analysis
+    if let Some(local_path) = local {
+        return cmd_analyze_local(local_path, output, max_commits).await;
+    }
 
     // Determine target
     let target = if let Some(_org_name) = org {
         println!("📦 Organization analysis not yet implemented");
         println!("🔜 Phase 1: Single repository only");
-        anyhow::bail!("Organization analysis pending (use --repo instead)");
+        anyhow::bail!("Organization analysis pending (use --repo or --local instead)");
     } else if let Some(_repos_list) = repos {
         println!("📦 Multi-repository analysis not yet implemented");
-        anyhow::bail!("Multi-repo analysis pending (use --repo instead)");
+        anyhow::bail!("Multi-repo analysis pending (use --repo or --local instead)");
     } else if let Some(repo_spec) = repo {
         repo_spec
     } else {
-        anyhow::bail!("Must specify --org, --repos, or --repo");
+        anyhow::bail!("Must specify --org, --repos, --repo, or --local");
     };
 
     // Parse repo_spec (owner/repo format)
@@ -356,19 +389,16 @@ async fn cmd_analyze(
     let repo_url = format!("https://github.com/{}/{}", owner, repo_name);
 
     println!("🔍 Analyzing repository: {}", target);
-    if let Some(b) = backend {
-        println!("⚙️  Backend: {:?}", b);
-    }
 
     // Create analyzer with temp cache
     let cache_dir = std::env::temp_dir().join("oip-gpu-cache");
     std::fs::create_dir_all(&cache_dir)?;
     let analyzer = OrgAnalyzer::new(&cache_dir);
 
-    // Analyze repository (max 1000 commits for Phase 1)
-    println!("📊 Analyzing commits (max 1000)...");
+    // Analyze repository
+    println!("📊 Analyzing commits (max {})...", max_commits);
     let patterns = analyzer
-        .analyze_repository(&repo_url, repo_name, 1000)
+        .analyze_repository(&repo_url, repo_name, max_commits)
         .await?;
 
     println!("✅ Found {} defect categories", patterns.len());
@@ -409,6 +439,115 @@ async fn cmd_analyze(
         CommitFeatures::DIMENSION
     );
     println!("🎯 Next: oip-gpu correlate --input {}", output.display());
+
+    Ok(())
+}
+
+/// Analyze a local git repository
+async fn cmd_analyze_local(
+    local_path: std::path::PathBuf,
+    output: std::path::PathBuf,
+    max_commits: usize,
+) -> Result<()> {
+    use organizational_intelligence_plugin::classifier::RuleBasedClassifier;
+
+    println!("🔍 Analyzing local repository: {}", local_path.display());
+
+    // Verify it's a git repo
+    if !local_path.join(".git").exists() {
+        anyhow::bail!("Not a git repository: {}", local_path.display());
+    }
+
+    println!("📊 Analyzing commits (max {})...", max_commits);
+
+    // Open the repository
+    let repo = git2::Repository::open(&local_path)?;
+
+    // Walk commits
+    let mut revwalk = repo.revwalk()?;
+    revwalk.push_head()?;
+    revwalk.set_sorting(git2::Sort::TIME)?;
+
+    let classifier = RuleBasedClassifier::new();
+    let extractor = FeatureExtractor::new();
+    let mut store = FeatureStore::new()?;
+
+    let mut commit_count = 0;
+    let mut feature_count = 0;
+    let mut category_counts = std::collections::HashMap::new();
+
+    for oid in revwalk.take(max_commits) {
+        let oid = oid?;
+        let commit = repo.find_commit(oid)?;
+
+        // Get commit stats
+        let (files_changed, lines_added, lines_deleted) = if commit.parent_count() > 0 {
+            let parent = commit.parent(0)?;
+            let diff =
+                repo.diff_tree_to_tree(Some(&parent.tree()?), Some(&commit.tree()?), None)?;
+            let stats = diff.stats()?;
+            (stats.files_changed(), stats.insertions(), stats.deletions())
+        } else {
+            (0, 0, 0)
+        };
+
+        // Classify the commit by message
+        let message = commit.message().unwrap_or("");
+        let category_num = if let Some(classification) = classifier.classify_from_message(message) {
+            classification.category as u8
+        } else {
+            0 // Default to category 0 if no classification
+        };
+
+        *category_counts.entry(category_num).or_insert(0usize) += 1;
+
+        // Extract features
+        if let Ok(features) = extractor.extract(
+            category_num,
+            files_changed,
+            lines_added,
+            lines_deleted,
+            commit.time().seconds(),
+        ) {
+            store.insert(features)?;
+            feature_count += 1;
+        }
+
+        commit_count += 1;
+        if commit_count % 100 == 0 {
+            print!("\r📊 Processed {} commits...", commit_count);
+        }
+    }
+    println!();
+
+    println!("✅ Analyzed {} commits", commit_count);
+    println!("✅ Extracted {} feature vectors", feature_count);
+
+    // Print category distribution
+    println!();
+    println!("📊 Defect category distribution:");
+    let mut sorted: Vec<_> = category_counts.iter().collect();
+    sorted.sort_by(|a, b| b.1.cmp(a.1));
+    for (cat, count) in sorted.iter().take(5) {
+        let pct = (**count as f32 / commit_count as f32) * 100.0;
+        println!("   Category {}: {} ({:.1}%)", cat, count, pct);
+    }
+
+    // Save to storage
+    println!();
+    println!("💾 Saving to {}...", output.display());
+    store.save(&output).await?;
+
+    println!("✨ Analysis complete!");
+    println!(
+        "📈 Features: {} vectors × {} dimensions",
+        feature_count,
+        CommitFeatures::DIMENSION
+    );
+    println!(
+        "🎯 Next: oip-gpu query --input {} \"show all defects\"",
+        output.display()
+    );
 
     Ok(())
 }

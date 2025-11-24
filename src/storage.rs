@@ -2,6 +2,8 @@
 //!
 //! Implements Section 4.4: Trueno-DB Storage Layer
 //! GPU-first columnar storage using Arrow/Parquet
+//!
+//! UAT: Added JSON persistence for Phase 1
 
 use anyhow::Result;
 use std::path::Path;
@@ -81,18 +83,23 @@ impl FeatureStore {
         self.features.is_empty()
     }
 
-    /// Save to file (Parquet in Phase 2)
-    pub async fn save(&self, _path: &Path) -> Result<()> {
-        // Phase 1: stub
-        // Phase 2: write to Parquet via trueno-db
+    /// Save to file (JSON in Phase 1, Parquet in Phase 2)
+    pub async fn save(&self, path: &Path) -> Result<()> {
+        // Phase 1: JSON persistence
+        let json = serde_json::to_string(&self.features)?;
+        std::fs::write(path, json)?;
         Ok(())
     }
 
-    /// Load from file (Parquet in Phase 2)
-    pub async fn load(_path: &Path) -> Result<Self> {
-        // Phase 1: stub
-        // Phase 2: read from Parquet via trueno-db
-        Self::new()
+    /// Load from file (JSON in Phase 1, Parquet in Phase 2)
+    pub async fn load(path: &Path) -> Result<Self> {
+        // Phase 1: JSON persistence
+        if !path.exists() {
+            return Self::new();
+        }
+        let json = std::fs::read_to_string(path)?;
+        let features: Vec<CommitFeatures> = serde_json::from_str(&json)?;
+        Ok(Self { features })
     }
 }
 

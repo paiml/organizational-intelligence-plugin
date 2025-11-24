@@ -8,10 +8,11 @@
 use crate::perf::{BatchProcessor, PerfStats};
 use anyhow::Result;
 use chrono::{Datelike, Timelike};
+use serde::{Deserialize, Serialize};
 use std::time::Instant;
 
 /// Commit features optimized for GPU processing
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommitFeatures {
     // Categorical (one-hot encoded for GPU)
     pub defect_category: u8, // 0-9 (10 categories from OIP)
