@@ -15,6 +15,7 @@ pub mod summarizer;
 pub mod correlation;
 pub mod features;
 pub mod gpu_store;
+pub mod query;
 pub mod storage;
 
 // Re-export main types for convenience

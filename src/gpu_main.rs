@@ -7,8 +7,10 @@ use clap::{Parser, Subcommand};
 use organizational_intelligence_plugin::{
     analyzer::OrgAnalyzer,
     features::{CommitFeatures, FeatureExtractor},
+    query::{QueryParser, QueryType},
     storage::FeatureStore,
 };
+use std::collections::HashMap;
 
 #[derive(Parser)]
 #[command(name = "oip-gpu")]
@@ -439,15 +441,193 @@ async fn cmd_predict(
 }
 
 async fn cmd_query(
-    _query: String,
-    _input: std::path::PathBuf,
-    _format: OutputFormat,
-    _limit: Option<usize>,
-    _export: Option<std::path::PathBuf>,
+    query: String,
+    input: std::path::PathBuf,
+    format: OutputFormat,
+    limit: Option<usize>,
+    export: Option<std::path::PathBuf>,
     _backend: Option<Backend>,
 ) -> Result<()> {
-    println!("Query command - not yet implemented");
-    println!("Phase 1 implementation pending");
+    println!("🔍 Executing query: \"{}\"", query);
+
+    // Parse natural language query
+    let parser = QueryParser::new();
+    let parsed = parser.parse(&query)?;
+
+    println!("📋 Query type: {:?}", parsed.query_type);
+    println!();
+
+    // Load feature store
+    println!("📂 Loading features from {}...", input.display());
+    let store = FeatureStore::load(&input).await?;
+
+    if store.is_empty() {
+        println!("⚠️  No features found in store");
+        println!(
+            "💡 Run: oip-gpu analyze --repo owner/repo --output {}",
+            input.display()
+        );
+        return Ok(());
+    }
+
+    println!("✅ Loaded {} feature vectors", store.len());
+    println!();
+
+    // Execute query
+    let result = execute_query(&store, &parsed, limit)?;
+
+    // Format output
+    match format {
+        OutputFormat::Table => {
+            print_table(&result);
+        }
+        OutputFormat::Json => {
+            println!("{}", serde_json::to_string_pretty(&result)?);
+        }
+        OutputFormat::Yaml => {
+            println!("{}", serde_yaml::to_string(&result)?);
+        }
+        OutputFormat::Csv => {
+            print_csv(&result)?;
+        }
+    }
+
+    // Export if requested
+    if let Some(export_path) = export {
+        std::fs::write(&export_path, serde_json::to_string_pretty(&result)?)?;
+        println!();
+        println!("💾 Results exported to: {}", export_path.display());
+    }
+
+    Ok(())
+}
+
+/// Execute parsed query against feature store
+fn execute_query(
+    store: &FeatureStore,
+    query: &organizational_intelligence_plugin::query::Query,
+    limit: Option<usize>,
+) -> Result<QueryResult> {
+    match &query.query_type {
+        QueryType::MostCommonDefect => {
+            let counts = count_by_category(store);
+            let mut sorted: Vec<_> = counts.into_iter().collect();
+            sorted.sort_by(|a, b| b.1.cmp(&a.1));
+
+            if let Some(limit) = limit {
+                sorted.truncate(limit);
+            }
+
+            Ok(QueryResult::CategoryCounts(sorted))
+        }
+        QueryType::CountByCategory => {
+            let counts = count_by_category(store);
+            let mut sorted: Vec<_> = counts.into_iter().collect();
+            sorted.sort_by_key(|(cat, _)| *cat);
+
+            Ok(QueryResult::CategoryCounts(sorted))
+        }
+        QueryType::ListAll => {
+            let total = store.len();
+            let counts = count_by_category(store);
+
+            Ok(QueryResult::Summary {
+                total_features: total,
+                category_counts: counts,
+            })
+        }
+        QueryType::Unknown(q) => {
+            anyhow::bail!("Unknown query: '{}'\n\nSupported queries:\n  - show me most common defect\n  - count defects by category\n  - show all defects", q)
+        }
+    }
+}
+
+/// Count features by category
+fn count_by_category(store: &FeatureStore) -> HashMap<u8, usize> {
+    let mut counts: HashMap<u8, usize> = HashMap::new();
+
+    // Query each category (0-9)
+    for category in 0..10 {
+        if let Ok(results) = store.query_by_category(category) {
+            counts.insert(category, results.len());
+        }
+    }
+
+    counts
+}
+
+/// Query result types
+#[derive(Debug, serde::Serialize)]
+enum QueryResult {
+    CategoryCounts(Vec<(u8, usize)>),
+    Summary {
+        total_features: usize,
+        category_counts: HashMap<u8, usize>,
+    },
+}
+
+/// Print results as table
+fn print_table(result: &QueryResult) {
+    match result {
+        QueryResult::CategoryCounts(counts) => {
+            println!("┌──────────┬───────┐");
+            println!("│ Category │ Count │");
+            println!("├──────────┼───────┤");
+
+            for (cat, count) in counts {
+                if *count > 0 {
+                    println!("│ {:8} │ {:5} │", cat, count);
+                }
+            }
+
+            println!("└──────────┴───────┘");
+        }
+        QueryResult::Summary {
+            total_features,
+            category_counts,
+        } => {
+            println!("📊 Total features: {}", total_features);
+            println!();
+            println!("By category:");
+
+            let mut sorted: Vec<_> = category_counts.iter().collect();
+            sorted.sort_by(|a, b| b.1.cmp(a.1));
+
+            for (cat, count) in sorted {
+                if *count > 0 {
+                    let pct = (*count as f32 / *total_features as f32) * 100.0;
+                    println!("  Category {}: {} ({:.1}%)", cat, count, pct);
+                }
+            }
+        }
+    }
+}
+
+/// Print results as CSV
+fn print_csv(result: &QueryResult) -> Result<()> {
+    match result {
+        QueryResult::CategoryCounts(counts) => {
+            println!("category,count");
+            for (cat, count) in counts {
+                if *count > 0 {
+                    println!("{},{}", cat, count);
+                }
+            }
+        }
+        QueryResult::Summary {
+            total_features,
+            category_counts,
+        } => {
+            println!("metric,value");
+            println!("total_features,{}", total_features);
+
+            for (cat, count) in category_counts {
+                if *count > 0 {
+                    println!("category_{},{}", cat, count);
+                }
+            }
+        }
+    }
     Ok(())
 }
 
