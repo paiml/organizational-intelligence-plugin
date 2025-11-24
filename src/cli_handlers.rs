@@ -168,6 +168,8 @@ pub async fn handle_analyze(
     _max_concurrent: usize,
     github_token: Option<String>,
     analyzer_version: String,
+    model_path: Option<PathBuf>,
+    ml_confidence: f32,
 ) -> Result<()> {
     info!("Analyzing organization: {}", org);
     info!("Output file: {}", output.display());
@@ -217,7 +219,37 @@ pub async fn handle_analyze(
             println!("\n🔍 Analyzing defect patterns in ALL repos from last 2 years...");
 
             let temp_dir = TempDir::new()?;
-            let analyzer = OrgAnalyzer::new(temp_dir.path());
+
+            // Load ML model if provided
+            let analyzer = if let Some(model_path) = model_path {
+                info!("Loading ML model from: {}", model_path.display());
+                match crate::ml_trainer::MLTrainer::load_model(&model_path) {
+                    Ok(model) => {
+                        info!("✅ ML model loaded successfully");
+                        info!("   Using confidence threshold: {:.2}", ml_confidence);
+                        println!("\n🤖 Using ML-based classification (Tier 2)");
+                        println!("   Model: {}", model_path.display());
+                        println!("   Confidence threshold: {:.2}", ml_confidence);
+                        println!(
+                            "   Training accuracy: {:.2}%",
+                            model.metadata.train_accuracy * 100.0
+                        );
+                        println!("   Classes: {}", model.metadata.n_classes);
+                        OrgAnalyzer::with_ml_model(temp_dir.path(), model, ml_confidence)
+                    }
+                    Err(e) => {
+                        warn!("Failed to load ML model: {}", e);
+                        warn!("Falling back to rule-based classification");
+                        println!("\n⚠️  Failed to load ML model: {}", e);
+                        println!("   Falling back to rule-based classification (Tier 1)");
+                        OrgAnalyzer::new(temp_dir.path())
+                    }
+                }
+            } else {
+                info!("No ML model specified, using rule-based classification");
+                println!("\n📏 Using rule-based classification (Tier 1)");
+                OrgAnalyzer::new(temp_dir.path())
+            };
 
             let mut all_patterns = vec![];
             let mut total_commits = 0;
@@ -799,7 +831,7 @@ defect_patterns:
         // Use a fake token to test the token path
         let token = Some("fake-token-for-testing".to_string());
 
-        let result = handle_analyze(org, output, 5, token, "1.0.0".to_string()).await;
+        let result = handle_analyze(org, output, 5, token, "1.0.0".to_string(), None, 0.65).await;
         // Should fail because org doesn't exist, but we're testing the code path
         assert!(result.is_err());
     }
@@ -811,7 +843,7 @@ defect_patterns:
         let temp_output = NamedTempFile::new().unwrap();
         let output = temp_output.path().to_path_buf();
 
-        let result = handle_analyze(org, output, 5, None, "1.0.0".to_string()).await;
+        let result = handle_analyze(org, output, 5, None, "1.0.0".to_string(), None, 0.65).await;
         // Should fail because org doesn't exist
         assert!(result.is_err());
     }

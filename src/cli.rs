@@ -36,6 +36,14 @@ pub enum Commands {
         /// Maximum concurrent repository analysis
         #[arg(long, default_value = "10")]
         max_concurrent: usize,
+
+        /// Path to trained ML model (optional, uses rule-based if not provided)
+        #[arg(long)]
+        model: Option<PathBuf>,
+
+        /// Confidence threshold for ML predictions (0.0-1.0)
+        #[arg(long, default_value = "0.65")]
+        ml_confidence: f32,
     },
 
     /// Summarize analysis report for AI consumption (Phase 2)

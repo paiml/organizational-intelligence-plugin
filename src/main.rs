@@ -58,6 +58,8 @@ async fn main() -> Result<()> {
             org,
             output,
             max_concurrent,
+            model,
+            ml_confidence,
         } => {
             let github_token = env::var("GITHUB_TOKEN").ok();
             let analyzer_version = env!("CARGO_PKG_VERSION").to_string();
@@ -67,6 +69,8 @@ async fn main() -> Result<()> {
                 max_concurrent,
                 github_token,
                 analyzer_version,
+                model,
+                ml_confidence,
             )
             .await
         }
