@@ -1,0 +1,26 @@
+[book]
+authors = ["Pragmatic AI Labs <info@paiml.com>"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Organizational Intelligence Plugin - Defect Pattern Analysis with ML"
+description = "A comprehensive guide to analyzing organizational defect patterns using ML, GPU acceleration, and EXTREME TDD methodology"
+
+[build]
+build-dir = "build"
+create-missing = true
+use-default-preprocessors = true
+
+[output.html]
+default-theme = "rust"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/paiml/organizational-intelligence-plugin"
+git-repository-icon = "fa-github"
+edit-url-template = "https://github.com/paiml/organizational-intelligence-plugin/edit/main/book/{path}"
+site-url = "/organizational-intelligence-plugin/"
+
+[output.html.playground]
+editable = true
+copyable = true
+copy-js = true
+runnable = false
