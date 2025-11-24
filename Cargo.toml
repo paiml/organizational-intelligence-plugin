@@ -55,7 +55,7 @@ trueno-graph = "0.1.1"
 aprender = "0.1"
 
 # GPU compute (wgpu for cross-platform GPU)
-wgpu = "0.19"
+wgpu = { version = "0.19", features = ["wgsl"] }
 
 # Additional for GPU features
 bytemuck = "1.14"
@@ -66,6 +66,10 @@ criterion = "0.5"
 [[bench]]
 name = "gpu_benchmarks"
 harness = false
+
+[features]
+default = []
+gpu = ["wgpu/default"]  # Enable GPU compute (requires GPU hardware)
 
 [profile.release]
 opt-level = 3

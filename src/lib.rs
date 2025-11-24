@@ -18,5 +18,9 @@ pub mod gpu_store;
 pub mod query;
 pub mod storage;
 
+// GPU compute (Phase 2) - requires `gpu` feature flag
+#[cfg(feature = "gpu")]
+pub mod gpu_correlation;
+
 // Re-export main types for convenience
 pub use cli::{Cli, Commands};
