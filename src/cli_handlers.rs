@@ -298,6 +298,68 @@ mod tests {
     use super::*;
     use tempfile::NamedTempFile;
 
+    // Helper to create a minimal valid baseline YAML for testing
+    fn create_test_baseline() -> String {
+        r#"organizational_insights:
+  top_defect_categories:
+    - category: ConfigurationErrors
+      frequency: 25
+      confidence: 0.78
+      quality_signals:
+        avg_tdg_score: 45.2
+        max_tdg_score: 60.0
+        avg_complexity: 8.0
+        avg_test_coverage: 0.5
+        satd_instances: 5
+        avg_lines_changed: 10.0
+        avg_files_per_commit: 2.0
+      examples: []
+code_quality_thresholds:
+  tdg_minimum: 85.0
+  test_coverage_minimum: 0.85
+  max_function_length: 50
+  max_cyclomatic_complexity: 10
+metadata:
+  analysis_date: "2024-01-01T00:00:00Z"
+  repositories_analyzed: 1
+  commits_analyzed: 10
+"#
+        .to_string()
+    }
+
+    // Helper to create a minimal valid report YAML for testing
+    fn create_test_report() -> String {
+        r#"version: "1.0"
+metadata:
+  organization: "test-org"
+  analysis_date: "2024-01-01T00:00:00Z"
+  repositories_analyzed: 1
+  commits_analyzed: 10
+  analyzer_version: "1.0.0"
+defect_patterns:
+  - category: LogicErrors
+    frequency: 5
+    confidence: 0.91
+    quality_signals:
+      avg_tdg_score: 88.5
+      max_tdg_score: 95.0
+      avg_complexity: 4.0
+      avg_test_coverage: 0.85
+      satd_instances: 0
+      avg_lines_changed: 8.0
+      avg_files_per_commit: 1.5
+    examples:
+      - commit_hash: "abc123"
+        message: "Fix critical bug"
+        author: "test-author"
+        timestamp: 1704067200
+        files_affected: 2
+        lines_added: 10
+        lines_removed: 5
+"#
+        .to_string()
+    }
+
     #[tokio::test]
     async fn test_handle_summarize_invalid_input() {
         let input = PathBuf::from("nonexistent.yaml");
@@ -316,5 +378,218 @@ mod tests {
 
         let result = handle_review_pr(baseline, files, format, None).await;
         assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_handle_review_pr_markdown_format() {
+        // Create a temporary baseline file
+        let temp_baseline = NamedTempFile::new().unwrap();
+        std::fs::write(temp_baseline.path(), create_test_baseline()).unwrap();
+
+        let baseline = temp_baseline.path().to_path_buf();
+        let files = "src/main.rs,src/lib.rs".to_string();
+        let format = "markdown".to_string();
+
+        let result = handle_review_pr(baseline, files, format, None).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_handle_review_pr_json_format() {
+        // Create a temporary baseline file
+        let temp_baseline = NamedTempFile::new().unwrap();
+        std::fs::write(temp_baseline.path(), create_test_baseline()).unwrap();
+
+        let baseline = temp_baseline.path().to_path_buf();
+        let files = "src/test.rs".to_string();
+        let format = "json".to_string();
+
+        let result = handle_review_pr(baseline, files, format, None).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_handle_review_pr_with_output_file() {
+        // Create temporary baseline and output files
+        let temp_baseline = NamedTempFile::new().unwrap();
+        std::fs::write(temp_baseline.path(), create_test_baseline()).unwrap();
+
+        let temp_output = NamedTempFile::new().unwrap();
+        let output_path = temp_output.path().to_path_buf();
+
+        let baseline = temp_baseline.path().to_path_buf();
+        let files = "src/main.rs".to_string();
+        let format = "markdown".to_string();
+
+        let result = handle_review_pr(baseline, files, format, Some(output_path.clone())).await;
+        assert!(result.is_ok());
+
+        // Verify output file was created and has content
+        let content = std::fs::read_to_string(&output_path).unwrap();
+        assert!(!content.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_handle_review_pr_empty_files() {
+        // Create a temporary baseline file
+        let temp_baseline = NamedTempFile::new().unwrap();
+        std::fs::write(temp_baseline.path(), create_test_baseline()).unwrap();
+
+        let baseline = temp_baseline.path().to_path_buf();
+        let files = "".to_string(); // Empty files list
+        let format = "markdown".to_string();
+
+        let result = handle_review_pr(baseline, files, format, None).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_handle_review_pr_multiple_files() {
+        let temp_baseline = NamedTempFile::new().unwrap();
+        std::fs::write(temp_baseline.path(), create_test_baseline()).unwrap();
+
+        let baseline = temp_baseline.path().to_path_buf();
+        let files = "src/main.rs, src/lib.rs, src/test.rs, src/utils.rs".to_string();
+        let format = "markdown".to_string();
+
+        let result = handle_review_pr(baseline, files, format, None).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_handle_summarize_valid_report() {
+        // Create temporary report and output files
+        let temp_report = NamedTempFile::new().unwrap();
+        std::fs::write(temp_report.path(), create_test_report()).unwrap();
+
+        let temp_output = NamedTempFile::new().unwrap();
+        let output_path = temp_output.path().to_path_buf();
+
+        let input = temp_report.path().to_path_buf();
+
+        let result = handle_summarize(input, output_path.clone(), false, 10, 1, true).await;
+        assert!(result.is_ok());
+
+        // Verify output file was created
+        assert!(output_path.exists());
+    }
+
+    #[tokio::test]
+    async fn test_handle_summarize_with_pii_stripping() {
+        let temp_report = NamedTempFile::new().unwrap();
+        std::fs::write(temp_report.path(), create_test_report()).unwrap();
+
+        let temp_output = NamedTempFile::new().unwrap();
+        let output_path = temp_output.path().to_path_buf();
+
+        let input = temp_report.path().to_path_buf();
+
+        let result = handle_summarize(input, output_path.clone(), true, 5, 1, false).await;
+        assert!(result.is_ok());
+
+        // Verify output file was created
+        assert!(output_path.exists());
+    }
+
+    #[tokio::test]
+    async fn test_handle_summarize_different_top_n() {
+        let temp_report = NamedTempFile::new().unwrap();
+        std::fs::write(temp_report.path(), create_test_report()).unwrap();
+
+        let temp_output = NamedTempFile::new().unwrap();
+        let output_path = temp_output.path().to_path_buf();
+
+        let input = temp_report.path().to_path_buf();
+
+        // Test with top_n = 3
+        let result = handle_summarize(input, output_path.clone(), false, 3, 1, true).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_handle_summarize_min_frequency_filter() {
+        let temp_report = NamedTempFile::new().unwrap();
+        std::fs::write(temp_report.path(), create_test_report()).unwrap();
+
+        let temp_output = NamedTempFile::new().unwrap();
+        let output_path = temp_output.path().to_path_buf();
+
+        let input = temp_report.path().to_path_buf();
+
+        // Test with high min_frequency
+        let result = handle_summarize(input, output_path.clone(), false, 10, 100, false).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_handle_summarize_invalid_yaml_format() {
+        let temp_report = NamedTempFile::new().unwrap();
+        // Write invalid YAML
+        std::fs::write(temp_report.path(), "not: valid: yaml: {{{").unwrap();
+
+        let temp_output = NamedTempFile::new().unwrap();
+        let output_path = temp_output.path().to_path_buf();
+
+        let input = temp_report.path().to_path_buf();
+
+        let result = handle_summarize(input, output_path, false, 10, 1, false).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_handle_analyze_with_token() {
+        // This test will fail because it requires real GitHub API
+        // But it exercises the code path
+        let org = "nonexistent-org-12345678".to_string();
+        let temp_output = NamedTempFile::new().unwrap();
+        let output = temp_output.path().to_path_buf();
+
+        // Use a fake token to test the token path
+        let token = Some("fake-token-for-testing".to_string());
+
+        let result = handle_analyze(org, output, 5, token, "1.0.0".to_string()).await;
+        // Should fail because org doesn't exist, but we're testing the code path
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_handle_analyze_without_token() {
+        // Test without GitHub token (unauthenticated)
+        let org = "nonexistent-org-87654321".to_string();
+        let temp_output = NamedTempFile::new().unwrap();
+        let output = temp_output.path().to_path_buf();
+
+        let result = handle_analyze(org, output, 5, None, "1.0.0".to_string()).await;
+        // Should fail because org doesn't exist
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_handle_review_pr_whitespace_in_files() {
+        let temp_baseline = NamedTempFile::new().unwrap();
+        std::fs::write(temp_baseline.path(), create_test_baseline()).unwrap();
+
+        let baseline = temp_baseline.path().to_path_buf();
+        // Test with extra whitespace and commas
+        let files = "  src/main.rs  ,  src/lib.rs  ,  , src/test.rs  ".to_string();
+        let format = "markdown".to_string();
+
+        let result = handle_review_pr(baseline, files, format, None).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_handle_summarize_all_config_combinations() {
+        let temp_report = NamedTempFile::new().unwrap();
+        std::fs::write(temp_report.path(), create_test_report()).unwrap();
+
+        let temp_output = NamedTempFile::new().unwrap();
+        let output_path = temp_output.path().to_path_buf();
+
+        let input = temp_report.path().to_path_buf();
+
+        // Test with all config options enabled
+        let result = handle_summarize(input, output_path.clone(), true, 20, 2, true).await;
+        assert!(result.is_ok());
     }
 }
