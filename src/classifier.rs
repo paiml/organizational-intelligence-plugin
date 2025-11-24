@@ -7,9 +7,10 @@ use std::fmt;
 use tracing::debug;
 
 /// Defect categories based on research literature
-/// See specification Section 2.2.3
+/// See specification Section 2.2.3 and Section 5.2 (Expanded Taxonomy)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum DefectCategory {
+    // General defect categories (10)
     MemorySafety,
     ConcurrencyBugs,
     LogicErrors,
@@ -20,6 +21,15 @@ pub enum DefectCategory {
     SecurityVulnerabilities,
     PerformanceIssues,
     IntegrationFailures,
+    // Transpiler-specific categories (8)
+    OperatorPrecedence,
+    TypeAnnotationGaps,
+    StdlibMapping,
+    ASTTransform,
+    ComprehensionBugs,
+    IteratorChain,
+    OwnershipBorrow,
+    TraitBounds,
 }
 
 impl DefectCategory {
@@ -36,6 +46,14 @@ impl DefectCategory {
             Self::SecurityVulnerabilities => "Security Vulnerabilities",
             Self::PerformanceIssues => "Performance Issues",
             Self::IntegrationFailures => "Integration Failures",
+            Self::OperatorPrecedence => "Operator Precedence",
+            Self::TypeAnnotationGaps => "Type Annotation Gaps",
+            Self::StdlibMapping => "Stdlib Mapping",
+            Self::ASTTransform => "AST Transform",
+            Self::ComprehensionBugs => "Comprehension Bugs",
+            Self::IteratorChain => "Iterator Chain",
+            Self::OwnershipBorrow => "Ownership/Borrow",
+            Self::TraitBounds => "Trait Bounds",
         }
     }
 }
@@ -54,6 +72,14 @@ impl fmt::Display for DefectCategory {
             Self::SecurityVulnerabilities => write!(f, "SecurityVulnerabilities"),
             Self::PerformanceIssues => write!(f, "PerformanceIssues"),
             Self::IntegrationFailures => write!(f, "IntegrationFailures"),
+            Self::OperatorPrecedence => write!(f, "OperatorPrecedence"),
+            Self::TypeAnnotationGaps => write!(f, "TypeAnnotationGaps"),
+            Self::StdlibMapping => write!(f, "StdlibMapping"),
+            Self::ASTTransform => write!(f, "ASTTransform"),
+            Self::ComprehensionBugs => write!(f, "ComprehensionBugs"),
+            Self::IteratorChain => write!(f, "IteratorChain"),
+            Self::OwnershipBorrow => write!(f, "OwnershipBorrow"),
+            Self::TraitBounds => write!(f, "TraitBounds"),
         }
     }
 }
@@ -227,6 +253,117 @@ impl RuleBasedClassifier {
                 ],
                 confidence: 0.70,
             },
+            // Transpiler-specific patterns
+            // Operator Precedence patterns
+            Rule {
+                category: DefectCategory::OperatorPrecedence,
+                patterns: vec![
+                    "operator precedence",
+                    "parentheses",
+                    "parse expression",
+                    "order of operations",
+                    "precedence",
+                    "expression parsing",
+                    "operator order",
+                ],
+                confidence: 0.80,
+            },
+            // Type Annotation Gaps patterns
+            Rule {
+                category: DefectCategory::TypeAnnotationGaps,
+                patterns: vec![
+                    "type annotation",
+                    "type hint",
+                    "unsupported type",
+                    "generic type",
+                    "type parameter",
+                    "annotation",
+                    "typing",
+                ],
+                confidence: 0.75,
+            },
+            // Stdlib Mapping patterns
+            Rule {
+                category: DefectCategory::StdlibMapping,
+                patterns: vec![
+                    "stdlib",
+                    "standard library",
+                    "python to rust",
+                    "library mapping",
+                    "std::",
+                    "builtin",
+                    "library conversion",
+                ],
+                confidence: 0.80,
+            },
+            // AST Transform patterns
+            Rule {
+                category: DefectCategory::ASTTransform,
+                patterns: vec![
+                    "ast",
+                    "hir",
+                    "codegen",
+                    "transform",
+                    "syntax tree",
+                    "ast node",
+                    "tree traversal",
+                ],
+                confidence: 0.85,
+            },
+            // Comprehension Bugs patterns
+            Rule {
+                category: DefectCategory::ComprehensionBugs,
+                patterns: vec![
+                    "comprehension",
+                    "list comprehension",
+                    "dict comprehension",
+                    "set comprehension",
+                    "generator",
+                    "generator expression",
+                ],
+                confidence: 0.80,
+            },
+            // Iterator Chain patterns
+            Rule {
+                category: DefectCategory::IteratorChain,
+                patterns: vec![
+                    "iterator",
+                    "into_iter",
+                    ".map(",
+                    ".filter(",
+                    ".chain(",
+                    "iterator chain",
+                    "iter method",
+                ],
+                confidence: 0.80,
+            },
+            // Ownership/Borrow patterns
+            Rule {
+                category: DefectCategory::OwnershipBorrow,
+                patterns: vec![
+                    "ownership",
+                    "borrow",
+                    "lifetime",
+                    "borrow checker",
+                    "move",
+                    "borrowed value",
+                    "lifetime parameter",
+                ],
+                confidence: 0.85,
+            },
+            // Trait Bounds patterns
+            Rule {
+                category: DefectCategory::TraitBounds,
+                patterns: vec![
+                    "trait bound",
+                    "generic constraint",
+                    "where clause",
+                    "impl trait",
+                    "trait constraint",
+                    "bound",
+                ],
+                confidence: 0.80,
+            },
         ];
 
         Self { rules }
@@ -327,7 +464,7 @@ mod tests {
     fn test_all_categories_covered() {
         let classifier = RuleBasedClassifier::new();
 
-        // Verify we have rules for all 10 categories
+        // Verify we have rules for all 18 categories (10 general + 8 transpiler)
         let mut categories_covered = std::collections::HashSet::new();
         for rule in &classifier.rules {
             categories_covered.insert(rule.category);
@@ -335,8 +472,8 @@ mod tests {
 
         assert_eq!(
             categories_covered.len(),
-            10,
-            "Should have rules for all 10 categories"
+            18,
+            "Should have rules for all 18 categories (10 general + 8 transpiler)"
         );
     }
 
@@ -383,6 +520,7 @@ mod tests {
 
     #[test]
     fn test_defect_category_as_str() {
+        // General categories
         assert_eq!(DefectCategory::MemorySafety.as_str(), "Memory Safety");
         assert_eq!(DefectCategory::ConcurrencyBugs.as_str(), "Concurrency Bugs");
         assert_eq!(DefectCategory::LogicErrors.as_str(), "Logic Errors");
@@ -405,10 +543,29 @@ mod tests {
             DefectCategory::IntegrationFailures.as_str(),
             "Integration Failures"
         );
+        // Transpiler categories
+        assert_eq!(
+            DefectCategory::OperatorPrecedence.as_str(),
+            "Operator Precedence"
+        );
+        assert_eq!(
+            DefectCategory::TypeAnnotationGaps.as_str(),
+            "Type Annotation Gaps"
+        );
+        assert_eq!(DefectCategory::StdlibMapping.as_str(), "Stdlib Mapping");
+        assert_eq!(DefectCategory::ASTTransform.as_str(), "AST Transform");
+        assert_eq!(
+            DefectCategory::ComprehensionBugs.as_str(),
+            "Comprehension Bugs"
+        );
+        assert_eq!(DefectCategory::IteratorChain.as_str(), "Iterator Chain");
+        assert_eq!(DefectCategory::OwnershipBorrow.as_str(), "Ownership/Borrow");
+        assert_eq!(DefectCategory::TraitBounds.as_str(), "Trait Bounds");
     }
 
     #[test]
     fn test_defect_category_display() {
+        // General categories
         assert_eq!(format!("{}", DefectCategory::MemorySafety), "MemorySafety");
         assert_eq!(
             format!("{}", DefectCategory::ConcurrencyBugs),
@@ -437,12 +594,39 @@ mod tests {
             format!("{}", DefectCategory::IntegrationFailures),
             "IntegrationFailures"
         );
+        // Transpiler categories
+        assert_eq!(
+            format!("{}", DefectCategory::OperatorPrecedence),
+            "OperatorPrecedence"
+        );
+        assert_eq!(
+            format!("{}", DefectCategory::TypeAnnotationGaps),
+            "TypeAnnotationGaps"
+        );
+        assert_eq!(
+            format!("{}", DefectCategory::StdlibMapping),
+            "StdlibMapping"
+        );
+        assert_eq!(format!("{}", DefectCategory::ASTTransform), "ASTTransform");
+        assert_eq!(
+            format!("{}", DefectCategory::ComprehensionBugs),
+            "ComprehensionBugs"
+        );
+        assert_eq!(
+            format!("{}", DefectCategory::IteratorChain),
+            "IteratorChain"
+        );
+        assert_eq!(
+            format!("{}", DefectCategory::OwnershipBorrow),
+            "OwnershipBorrow"
+        );
+        assert_eq!(format!("{}", DefectCategory::TraitBounds), "TraitBounds");
     }
 
     #[test]
     fn test_default_constructor() {
         let classifier = RuleBasedClassifier::default();
-        assert_eq!(classifier.rules.len(), 10);
+        assert_eq!(classifier.rules.len(), 18);
     }
 
     #[test]
@@ -508,6 +692,7 @@ mod tests {
         let classifier = RuleBasedClassifier::new();
 
         let test_cases = vec![
+            // General categories
             ("null pointer bug", DefectCategory::MemorySafety),
             ("race condition fix", DefectCategory::ConcurrencyBugs),
             ("off by one error", DefectCategory::LogicErrors),
@@ -518,6 +703,21 @@ mod tests {
             ("security fix", DefectCategory::SecurityVulnerabilities),
             ("performance fix", DefectCategory::PerformanceIssues),
             ("integration failure", DefectCategory::IntegrationFailures),
+            // Transpiler categories
+            (
+                "fix operator precedence issue",
+                DefectCategory::OperatorPrecedence,
+            ),
+            (
+                "type annotation not supported",
+                DefectCategory::TypeAnnotationGaps,
+            ),
+            ("stdlib mapping bug", DefectCategory::StdlibMapping),
+            ("ast transform error", DefectCategory::ASTTransform),
+            ("list comprehension bug", DefectCategory::ComprehensionBugs),
+            ("iterator chain issue", DefectCategory::IteratorChain),
+            ("ownership error", DefectCategory::OwnershipBorrow),
+            ("trait bound issue", DefectCategory::TraitBounds),
         ];
 
         for (message, expected_category) in test_cases {
@@ -568,5 +768,120 @@ mod tests {
         assert_eq!(result.matched_patterns.len(), 2);
         assert!(result.matched_patterns.contains(&"double free".to_string()));
         assert!(result.matched_patterns.contains(&"memory leak".to_string()));
+    }
+
+    #[test]
+    fn test_transpiler_operator_precedence_classification() {
+        let classifier = RuleBasedClassifier::new();
+
+        let test_cases = vec![
+            "fix: operator precedence bug in expression parser",
+            "fix: incorrect parentheses handling",
+            "fix: parse expression order of operations",
+        ];
+
+        for message in test_cases {
+            let result = classifier.classify_from_message(message);
+            assert!(result.is_some(), "Should classify: {}", message);
+            assert_eq!(
+                result.unwrap().category,
+                DefectCategory::OperatorPrecedence,
+                "Failed for: {}",
+                message
+            );
+        }
+    }
+
+    #[test]
+    fn test_transpiler_type_annotation_classification() {
+        let classifier = RuleBasedClassifier::new();
+
+        let result = classifier
+            .classify_from_message("fix: type annotation gap in generic type")
+            .unwrap();
+
+        assert_eq!(result.category, DefectCategory::TypeAnnotationGaps);
+        assert!(result.matched_patterns.len() >= 2);
+    }
+
+    #[test]
+    fn test_transpiler_ownership_classification() {
+        let classifier = RuleBasedClassifier::new();
+
+        let test_cases = vec![
+            "fix: borrow checker error in iterator",
+            "fix: lifetime parameter issue",
+            "fix: ownership move bug",
+        ];
+
+        for message in test_cases {
+            let result = classifier.classify_from_message(message);
+            assert!(result.is_some(), "Should classify: {}", message);
+            assert_eq!(
+                result.unwrap().category,
+                DefectCategory::OwnershipBorrow,
+                "Failed for: {}",
+                message
+            );
+        }
+    }
+
+    #[test]
+    fn test_transpiler_comprehension_classification() {
+        let classifier = RuleBasedClassifier::new();
+
+        let result = classifier
+            .classify_from_message("fix: dict comprehension generation bug")
+            .unwrap();
+
+        assert_eq!(result.category, DefectCategory::ComprehensionBugs);
+        assert!(result.confidence >= 0.80);
+    }
+
+    #[test]
+    fn test_transpiler_iterator_chain_classification() {
+        let classifier = RuleBasedClassifier::new();
+
+        let result = classifier
+            .classify_from_message("fix: .map( and .filter( iterator chain issue")
+            .unwrap();
+
+        assert_eq!(result.category, DefectCategory::IteratorChain);
+        assert!(result.matched_patterns.len() >= 2);
+    }
+
+    #[test]
+    fn test_transpiler_ast_transform_classification() {
+        let classifier = RuleBasedClassifier::new();
+
+        let result = classifier
+            .classify_from_message("fix: ast node transform in codegen")
+            .unwrap();
+
+        assert_eq!(result.category, DefectCategory::ASTTransform);
+        assert!(result.confidence >= 0.85);
+    }
+
+    #[test]
+    fn test_transpiler_stdlib_mapping_classification() {
+        let classifier = RuleBasedClassifier::new();
+
+        let result = classifier
+            .classify_from_message("fix: stdlib mapping from python to rust")
+            .unwrap();
+
+        assert_eq!(result.category, DefectCategory::StdlibMapping);
+    }
+
+    #[test]
+    fn test_transpiler_trait_bounds_classification() {
+        let classifier = RuleBasedClassifier::new();
+
+        let result = classifier
+            .classify_from_message("fix: trait bound issue in where clause")
+            .unwrap();
+
+        assert_eq!(result.category, DefectCategory::TraitBounds);
+        assert!(result.matched_patterns.len() >= 2);
     }
 }
