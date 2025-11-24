@@ -12,6 +12,7 @@ pub mod cli;
 pub mod cli_handlers;
 pub mod git;
 pub mod github;
+pub mod ml_trainer;
 pub mod nlp;
 pub mod pmat;
 pub mod pr_reviewer;
