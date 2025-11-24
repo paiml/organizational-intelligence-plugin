@@ -2,9 +2,13 @@
 //!
 //! Implements Section 4.3: Feature Extraction
 //! Converts OIP defect classifications into GPU-friendly numerical features
+//!
+//! OPT-001: Integrated BatchProcessor for efficient bulk extraction
 
+use crate::perf::{BatchProcessor, PerfStats};
 use anyhow::Result;
 use chrono::{Datelike, Timelike};
+use std::time::Instant;
 
 /// Commit features optimized for GPU processing
 #[derive(Debug, Clone)]
@@ -88,6 +92,124 @@ impl Default for FeatureExtractor {
     }
 }
 
+/// Input data for batch feature extraction
+#[derive(Debug, Clone)]
+pub struct FeatureInput {
+    pub category: u8,
+    pub files_changed: usize,
+    pub lines_added: usize,
+    pub lines_deleted: usize,
+    pub timestamp: i64,
+}
+
+/// Batch feature extractor with performance tracking
+///
+/// OPT-001: Uses BatchProcessor for efficient bulk extraction
+pub struct BatchFeatureExtractor {
+    extractor: FeatureExtractor,
+    batch_processor: BatchProcessor<FeatureInput>,
+    stats: PerfStats,
+}
+
+impl BatchFeatureExtractor {
+    /// Create batch extractor with default batch size (1000)
+    pub fn new() -> Self {
+        Self::with_batch_size(1000)
+    }
+
+    /// Create batch extractor with custom batch size
+    pub fn with_batch_size(batch_size: usize) -> Self {
+        Self {
+            extractor: FeatureExtractor::new(),
+            batch_processor: BatchProcessor::new(batch_size),
+            stats: PerfStats::new(),
+        }
+    }
+
+    /// Add input to batch, returns extracted features if batch is full
+    pub fn add(&mut self, input: FeatureInput) -> Option<Vec<CommitFeatures>> {
+        self.batch_processor
+            .add(input)
+            .map(|batch| self.extract_batch(batch))
+    }
+
+    /// Flush remaining inputs and extract features
+    pub fn flush(&mut self) -> Vec<CommitFeatures> {
+        let batch = self.batch_processor.flush();
+        if batch.is_empty() {
+            Vec::new()
+        } else {
+            self.extract_batch(batch)
+        }
+    }
+
+    /// Extract features from batch with performance tracking
+    fn extract_batch(&mut self, inputs: Vec<FeatureInput>) -> Vec<CommitFeatures> {
+        let start = Instant::now();
+
+        let features: Vec<CommitFeatures> = inputs
+            .into_iter()
+            .filter_map(|input| {
+                self.extractor
+                    .extract(
+                        input.category,
+                        input.files_changed,
+                        input.lines_added,
+                        input.lines_deleted,
+                        input.timestamp,
+                    )
+                    .ok()
+            })
+            .collect();
+
+        let duration_ns = start.elapsed().as_nanos() as u64;
+        self.stats.record(duration_ns);
+
+        features
+    }
+
+    /// Extract all features at once (convenience method)
+    pub fn extract_all(&mut self, inputs: Vec<FeatureInput>) -> Vec<CommitFeatures> {
+        let start = Instant::now();
+
+        let features: Vec<CommitFeatures> = inputs
+            .into_iter()
+            .filter_map(|input| {
+                self.extractor
+                    .extract(
+                        input.category,
+                        input.files_changed,
+                        input.lines_added,
+                        input.lines_deleted,
+                        input.timestamp,
+                    )
+                    .ok()
+            })
+            .collect();
+
+        let duration_ns = start.elapsed().as_nanos() as u64;
+        self.stats.record(duration_ns);
+
+        features
+    }
+
+    /// Get performance statistics
+    pub fn stats(&self) -> &PerfStats {
+        &self.stats
+    }
+
+    /// Get pending item count
+    pub fn pending(&self) -> usize {
+        self.batch_processor.len()
+    }
+}
+
+impl Default for BatchFeatureExtractor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -153,5 +275,97 @@ mod tests {
         // Out of range timestamp should error
         let result = extractor.extract(0, 1, 1, 1, i64::MAX);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_batch_extractor_creation() {
+        let extractor = BatchFeatureExtractor::new();
+        assert_eq!(extractor.pending(), 0);
+    }
+
+    #[test]
+    fn test_batch_extractor_add() {
+        let mut extractor = BatchFeatureExtractor::with_batch_size(3);
+
+        let input1 = FeatureInput {
+            category: 0,
+            files_changed: 1,
+            lines_added: 10,
+            lines_deleted: 5,
+            timestamp: 1700000000,
+        };
+
+        // First two shouldn't trigger extraction
+        assert!(extractor.add(input1.clone()).is_none());
+        assert!(extractor.add(input1.clone()).is_none());
+        assert_eq!(extractor.pending(), 2);
+
+        // Third should trigger
+        let batch = extractor.add(input1);
+        assert!(batch.is_some());
+        assert_eq!(batch.unwrap().len(), 3);
+        assert_eq!(extractor.pending(), 0);
+    }
+
+    #[test]
+    fn test_batch_extractor_flush() {
+        let mut extractor = BatchFeatureExtractor::with_batch_size(10);
+
+        let input = FeatureInput {
+            category: 1,
+            files_changed: 2,
+            lines_added: 20,
+            lines_deleted: 10,
+            timestamp: 1700000000,
+        };
+
+        extractor.add(input.clone());
+        extractor.add(input.clone());
+        extractor.add(input);
+
+        let remaining = extractor.flush();
+        assert_eq!(remaining.len(), 3);
+        assert_eq!(extractor.pending(), 0);
+    }
+
+    #[test]
+    fn test_batch_extractor_extract_all() {
+        let mut extractor = BatchFeatureExtractor::new();
+
+        let inputs: Vec<FeatureInput> = (0..5)
+            .map(|i| FeatureInput {
+                category: i as u8,
+                files_changed: i + 1,
+                lines_added: (i + 1) * 10,
+                lines_deleted: (i + 1) * 5,
+                timestamp: 1700000000 + i as i64,
+            })
+            .collect();
+
+        let features = extractor.extract_all(inputs);
+        assert_eq!(features.len(), 5);
+        assert_eq!(features[0].defect_category, 0);
+        assert_eq!(features[4].defect_category, 4);
+    }
+
+    #[test]
+    fn test_batch_extractor_stats() {
+        let mut extractor = BatchFeatureExtractor::new();
+
+        let inputs: Vec<FeatureInput> = (0..100)
+            .map(|i| FeatureInput {
+                category: (i % 10) as u8,
+                files_changed: i + 1,
+                lines_added: (i + 1) * 10,
+                lines_deleted: (i + 1) * 5,
+                timestamp: 1700000000 + i as i64,
+            })
+            .collect();
+
+        extractor.extract_all(inputs);
+
+        let stats = extractor.stats();
+        assert_eq!(stats.operation_count, 1);
+        assert!(stats.avg_ns() > 0);
     }
 }
