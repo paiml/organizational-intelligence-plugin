@@ -17,6 +17,7 @@ pub mod pmat;
 pub mod pr_reviewer;
 pub mod report;
 pub mod summarizer;
+pub mod training;
 
 // GPU acceleration modules
 pub mod correlation;
