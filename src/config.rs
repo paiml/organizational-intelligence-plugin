@@ -342,6 +342,9 @@ mod tests {
 
     #[test]
     fn test_env_overrides_max_commits() {
+        // Clean up first to ensure clean state
+        std::env::remove_var("OIP_MAX_COMMITS");
+
         std::env::set_var("OIP_MAX_COMMITS", "500");
         let mut config = Config::default();
         config.apply_env_overrides();
@@ -351,6 +354,7 @@ mod tests {
 
     #[test]
     fn test_env_overrides_workers() {
+        std::env::remove_var("OIP_WORKERS");
         std::env::set_var("OIP_WORKERS", "8");
         let mut config = Config::default();
         config.apply_env_overrides();
@@ -360,6 +364,7 @@ mod tests {
 
     #[test]
     fn test_env_overrides_cache_dir() {
+        std::env::remove_var("OIP_CACHE_DIR");
         std::env::set_var("OIP_CACHE_DIR", "/tmp/custom-cache");
         let mut config = Config::default();
         config.apply_env_overrides();
@@ -369,6 +374,7 @@ mod tests {
 
     #[test]
     fn test_env_overrides_k_clusters() {
+        std::env::remove_var("OIP_K_CLUSTERS");
         std::env::set_var("OIP_K_CLUSTERS", "10");
         let mut config = Config::default();
         config.apply_env_overrides();
@@ -378,6 +384,7 @@ mod tests {
 
     #[test]
     fn test_env_overrides_backend() {
+        std::env::remove_var("OIP_BACKEND");
         std::env::set_var("OIP_BACKEND", "simd");
         let mut config = Config::default();
         config.apply_env_overrides();
@@ -387,6 +394,7 @@ mod tests {
 
     #[test]
     fn test_env_overrides_gpu_enabled_true() {
+        std::env::remove_var("OIP_GPU_ENABLED");
         std::env::set_var("OIP_GPU_ENABLED", "true");
         let mut config = Config::default();
         config.apply_env_overrides();
@@ -396,6 +404,7 @@ mod tests {
 
     #[test]
     fn test_env_overrides_gpu_enabled_1() {
+        std::env::remove_var("OIP_GPU_ENABLED");
         std::env::set_var("OIP_GPU_ENABLED", "1");
         let mut config = Config::default();
         config.apply_env_overrides();
@@ -405,6 +414,9 @@ mod tests {
 
     #[test]
     fn test_env_overrides_gpu_enabled_false() {
+        // Clean up first to avoid interference from parallel tests
+        std::env::remove_var("OIP_GPU_ENABLED");
+
         std::env::set_var("OIP_GPU_ENABLED", "false");
         let mut config = Config::default();
         config.compute.gpu_enabled = true; // Start with true
@@ -415,6 +427,7 @@ mod tests {
 
     #[test]
     fn test_env_overrides_log_level() {
+        std::env::remove_var("OIP_LOG_LEVEL");
         std::env::set_var("OIP_LOG_LEVEL", "debug");
         let mut config = Config::default();
         config.apply_env_overrides();
@@ -424,6 +437,7 @@ mod tests {
 
     #[test]
     fn test_env_overrides_log_json() {
+        std::env::remove_var("OIP_LOG_JSON");
         std::env::set_var("OIP_LOG_JSON", "1");
         let mut config = Config::default();
         config.apply_env_overrides();

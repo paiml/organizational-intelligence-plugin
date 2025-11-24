@@ -414,4 +414,179 @@ mod tests {
         let results = process_chunks(items, 2, |chunk| chunk.iter().map(|x| x * 2).collect());
         assert_eq!(results, vec![2, 4, 6, 8, 10]);
     }
+
+    #[test]
+    fn test_batch_processor_empty() {
+        let processor: BatchProcessor<i32> = BatchProcessor::new(5);
+        assert!(processor.is_empty());
+        assert_eq!(processor.len(), 0);
+    }
+
+    #[test]
+    fn test_batch_processor_flush_empty() {
+        let mut processor: BatchProcessor<i32> = BatchProcessor::new(5);
+        let result = processor.flush();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_lru_cache_with_ttl() {
+        let mut cache = LruCache::with_ttl(10, Duration::from_millis(50));
+
+        cache.insert("key", 42);
+        assert_eq!(cache.get(&"key"), Some(42));
+
+        // Wait for TTL to expire
+        std::thread::sleep(Duration::from_millis(60));
+        assert_eq!(cache.get(&"key"), None);
+    }
+
+    #[test]
+    fn test_lru_cache_contains() {
+        let mut cache = LruCache::new(2);
+        cache.insert("a", 1);
+
+        assert!(cache.contains(&"a"));
+        assert!(!cache.contains(&"b"));
+    }
+
+    #[test]
+    fn test_lru_cache_clear() {
+        let mut cache = LruCache::new(2);
+        cache.insert("a", 1);
+        cache.insert("b", 2);
+        assert_eq!(cache.len(), 2);
+
+        cache.clear();
+        assert_eq!(cache.len(), 0);
+        assert!(cache.is_empty());
+    }
+
+    #[test]
+    fn test_lru_cache_update_existing() {
+        let mut cache = LruCache::new(2);
+        cache.insert("a", 1);
+        cache.insert("a", 2); // Update
+
+        assert_eq!(cache.get(&"a"), Some(2));
+        assert_eq!(cache.len(), 1); // Should still be 1
+    }
+
+    #[test]
+    fn test_ring_buffer_empty() {
+        let buffer: RingBuffer<i32> = RingBuffer::new(5);
+        assert!(buffer.is_empty());
+        assert_eq!(buffer.len(), 0);
+        assert!(!buffer.is_full());
+    }
+
+    #[test]
+    fn test_ring_buffer_pop_empty() {
+        let mut buffer: RingBuffer<i32> = RingBuffer::new(5);
+        assert_eq!(buffer.pop(), None);
+    }
+
+    #[test]
+    fn test_ring_buffer_to_vec_empty() {
+        let buffer: RingBuffer<i32> = RingBuffer::new(5);
+        assert!(buffer.to_vec().is_empty());
+    }
+
+    #[test]
+    fn test_ring_buffer_wrap_around() {
+        let mut buffer = RingBuffer::new(3);
+
+        // Fill buffer
+        buffer.push(1);
+        buffer.push(2);
+        buffer.push(3);
+        assert!(buffer.is_full());
+
+        // Overwrite (wraps around)
+        buffer.push(4); // Overwrites 1
+        buffer.push(5); // Overwrites 2
+
+        let vec = buffer.to_vec();
+        assert_eq!(vec, vec![3, 4, 5]);
+    }
+
+    #[test]
+    fn test_perf_stats_default() {
+        let stats = PerfStats::default();
+        assert_eq!(stats.operation_count, 0);
+        assert_eq!(stats.avg_ns(), 0);
+    }
+
+    #[test]
+    fn test_perf_stats_zero_operations() {
+        let stats = PerfStats::new();
+        assert_eq!(stats.avg_ns(), 0);
+        assert_eq!(stats.avg_us(), 0.0);
+        assert_eq!(stats.avg_ms(), 0.0);
+        assert_eq!(stats.throughput(), 0.0);
+    }
+
+    #[test]
+    fn test_perf_stats_conversions() {
+        let mut stats = PerfStats::new();
+        stats.record(1_000_000); // 1ms in nanoseconds
+
+        assert_eq!(stats.avg_ns(), 1_000_000);
+        assert_eq!(stats.avg_us(), 1000.0);
+        assert_eq!(stats.avg_ms(), 1.0);
+    }
+
+    #[test]
+    fn test_perf_stats_throughput() {
+        let mut stats = PerfStats::new();
+
+        // 10 operations, each taking 100ms = 1 second total
+        for _ in 0..10 {
+            stats.record(100_000_000); // 100ms in nanoseconds
+        }
+
+        let throughput = stats.throughput();
+        // 10 operations / 1 second = 10 ops/sec
+        assert!((throughput - 10.0).abs() < 0.1);
+    }
+
+    #[test]
+    fn test_perf_stats_min_max() {
+        let mut stats = PerfStats::new();
+        stats.record(1000);
+        stats.record(5000);
+        stats.record(3000);
+
+        assert_eq!(stats.min_duration_ns, 1000);
+        assert_eq!(stats.max_duration_ns, 5000);
+    }
+
+    #[test]
+    fn test_format_bytes_boundaries() {
+        assert_eq!(format_bytes(0), "0 bytes");
+        assert_eq!(format_bytes(1023), "1023 bytes");
+        assert_eq!(format_bytes(2048), "2.00 KB");
+        assert_eq!(format_bytes(1536 * 1024), "1.50 MB");
+        assert_eq!(format_bytes(2 * 1024 * 1024 * 1024), "2.00 GB");
+    }
+
+    #[test]
+    fn test_estimate_memory_zero() {
+        let bytes = estimate_memory_bytes(0, 8);
+        assert_eq!(bytes, 0);
+    }
+
+    #[test]
+    fn test_process_chunks_empty() {
+        let items: Vec<i32> = vec![];
+        let results = process_chunks(items, 2, |chunk| chunk.iter().map(|x| x * 2).collect());
+        assert!(results.is_empty());
+    }
+
+    #[test]
+    fn test_process_chunks_single_chunk() {
+        let items = vec![1, 2];
+        let results = process_chunks(items, 10, |chunk| chunk.iter().map(|x| x * 2).collect());
+        assert_eq!(results, vec![2, 4]);
+    }
 }
