@@ -9,6 +9,7 @@ pub mod perf;
 pub mod analyzer;
 pub mod classifier;
 pub mod cli;
+pub mod cli_handlers;
 pub mod git;
 pub mod github;
 pub mod pmat;
