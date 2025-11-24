@@ -15,6 +15,7 @@ pub mod summarizer;
 pub mod correlation;
 pub mod features;
 pub mod gpu_store;
+pub mod imbalance;
 pub mod query;
 pub mod sliding_window;
 pub mod storage;
