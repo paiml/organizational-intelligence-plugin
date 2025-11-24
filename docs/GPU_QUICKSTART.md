@@ -8,6 +8,59 @@ Quick guide to using oip-gpu for defect pattern analysis.
 cargo install --path . --bin oip-gpu
 ```
 
+## GPU Hardware Requirements
+
+### Phase 1 (Current - SIMD Only)
+- **CPU**: Any x86_64 with AVX2 or ARM with NEON
+- **No GPU required**: Phase 1 uses CPU SIMD via trueno
+- **Backends**: Automatically selects best available (AVX-512 > AVX2 > scalar)
+
+### Phase 2 (GPU Acceleration - In Progress)
+- **GPU**: Any GPU with Vulkan 1.2+, Metal, or DirectX 12 support
+- **Compilation**: Requires `--features gpu` flag
+- **Platforms**: Linux (Vulkan), macOS (Metal), Windows (DX12/Vulkan)
+- **Memory**: 2GB+ VRAM recommended for large correlation matrices
+- **Fallback**: Gracefully degrades to SIMD if GPU unavailable
+
+### Compile with GPU Support
+
+```bash
+# Build with GPU features (requires GPU hardware)
+cargo build --release --features gpu
+
+# Run GPU-accelerated correlation
+oip-gpu correlate --backend gpu --input features.db
+```
+
+### Check GPU Availability
+
+```bash
+# Will report GPU adapter info or fallback to SIMD
+oip-gpu benchmark --suite correlation --backend gpu
+```
+
+### GPU Implementation Status
+
+**✅ Complete (Phase 1):**
+- SIMD-accelerated correlation via trueno
+- Feature extraction and storage
+- Columnar in-memory database
+- Natural language queries
+- Benchmark framework
+
+**🚧 In Progress (Phase 2 - PHASE2-001):**
+- GPU correlation matrix computation
+- wgpu backend initialization ✅
+- WGSL compute shader ✅
+- GPU buffer management ✅
+- Bind groups and dispatch (TODO)
+- Result readback (TODO)
+
+**📋 Planned (Phase 2):**
+- GPU/CPU equivalence tests (tolerance 1e-4)
+- Sliding window correlation (concept drift)
+- 20-50x speedup validation
+
 ## Quick Start
 
 ### 1. Analyze a Repository
