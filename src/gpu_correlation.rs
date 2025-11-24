@@ -68,6 +68,7 @@ pub struct GpuCorrelationEngine {
     device: wgpu::Device,
     queue: wgpu::Queue,
     pipeline: wgpu::ComputePipeline,
+    bind_group_layout: wgpu::BindGroupLayout,
 }
 
 #[cfg(feature = "gpu")]
@@ -103,6 +104,57 @@ impl GpuCorrelationEngine {
             )
             .await?;
 
+        // Create bind group layout matching shader bindings
+        let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("Correlation Bind Group Layout"),
+            entries: &[
+                // @binding(0): data_a - read-only storage
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+                // @binding(1): data_b - read-only storage
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: true },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+                // @binding(2): result - read-write storage
+                wgpu::BindGroupLayoutEntry {
+                    binding: 2,
+                    visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: false },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+                // @binding(3): size - uniform
+                wgpu::BindGroupLayoutEntry {
+                    binding: 3,
+                    visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+            ],
+        });
+
         // Create compute pipeline
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Correlation Shader"),
@@ -111,7 +163,7 @@ impl GpuCorrelationEngine {
 
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("Correlation Pipeline Layout"),
-            bind_group_layouts: &[],
+            bind_group_layouts: &[&bind_group_layout],
             push_constant_ranges: &[],
         });
 
@@ -126,6 +178,7 @@ impl GpuCorrelationEngine {
             device,
             queue,
             pipeline,
+            bind_group_layout,
         })
     }
 
@@ -137,10 +190,10 @@ impl GpuCorrelationEngine {
             anyhow::bail!("Vectors must have same length");
         }
 
-        let _size = data_a.len();
+        let size = data_a.len() as u32;
 
-        // Create GPU buffers (skeleton for Phase 2 - full implementation TBD)
-        let _buffer_a = self
+        // Create GPU buffers
+        let buffer_a = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Data A"),
@@ -148,7 +201,7 @@ impl GpuCorrelationEngine {
                 usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
             });
 
-        let _buffer_b = self
+        let buffer_b = self
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Data B"),
@@ -156,20 +209,101 @@ impl GpuCorrelationEngine {
                 usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
             });
 
-        let _result_buffer = self.device.create_buffer(&wgpu::BufferDescriptor {
+        let result_buffer = self.device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Result"),
             size: std::mem::size_of::<f32>() as u64,
             usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
             mapped_at_creation: false,
         });
 
-        // TODO: Create bind group, dispatch compute, read result
-        // This is a skeleton showing the structure
-        // Full implementation requires bind group setup and command encoding
+        // Create uniform buffer for size parameter
+        let size_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Size Uniform"),
+                contents: bytemuck::cast_slice(&[size]),
+                usage: wgpu::BufferUsages::UNIFORM,
+            });
 
-        // Placeholder: return 0.0 for now
-        // In full implementation, this would dispatch GPU compute and read result
-        Ok(0.0)
+        // Create staging buffer for reading result back to CPU
+        let staging_buffer = self.device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Staging Buffer"),
+            size: std::mem::size_of::<f32>() as u64,
+            usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+
+        // Create bind group
+        let bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("Correlation Bind Group"),
+            layout: &self.bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: buffer_a.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: buffer_b.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: result_buffer.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 3,
+                    resource: size_buffer.as_entire_binding(),
+                },
+            ],
+        });
+
+        // Encode compute commands
+        let mut encoder = self
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("Correlation Encoder"),
+            });
+
+        {
+            let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                label: Some("Correlation Pass"),
+                timestamp_writes: None,
+            });
+            compute_pass.set_pipeline(&self.pipeline);
+            compute_pass.set_bind_group(0, &bind_group, &[]);
+
+            // Dispatch 1 workgroup (256 threads, but only thread 0 does work)
+            compute_pass.dispatch_workgroups(1, 1, 1);
+        }
+
+        // Copy result to staging buffer
+        encoder.copy_buffer_to_buffer(
+            &result_buffer,
+            0,
+            &staging_buffer,
+            0,
+            std::mem::size_of::<f32>() as u64,
+        );
+
+        // Submit commands and wait
+        self.queue.submit(Some(encoder.finish()));
+
+        // Read result back
+        let buffer_slice = staging_buffer.slice(..);
+        let (sender, receiver) = futures::channel::oneshot::channel();
+        buffer_slice.map_async(wgpu::MapMode::Read, move |result| {
+            sender.send(result).ok();
+        });
+
+        self.device.poll(wgpu::Maintain::Wait);
+        receiver.await??;
+
+        let data = buffer_slice.get_mapped_range();
+        let result: f32 = bytemuck::cast_slice(&data)[0];
+        drop(data);
+        staging_buffer.unmap();
+
+        Ok(result)
     }
 }
 
