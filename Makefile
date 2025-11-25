@@ -2,7 +2,7 @@
 # Toyota Way: Fast feedback loops, outcome-focused quality
 
 .PHONY: help pre-commit ci-validate test-fast test-all lint lint-fast lint-full build run clean
-.PHONY: coverage coverage-summary coverage-open coverage-ci coverage-clean coverage-report
+.PHONY: coverage coverage-summary coverage-check coverage-open coverage-ci coverage-clean coverage-report
 
 # Default target
 help:
@@ -103,6 +103,23 @@ coverage: ## Generate HTML coverage report and open in browser
 
 coverage-summary: ## Show coverage summary
 	@cargo llvm-cov report --summary-only 2>/dev/null || echo "Run 'make coverage' first"
+
+coverage-check: ## Enforce 90% coverage threshold (excludes GPU/main)
+	@echo "📊 Checking coverage threshold (minimum 90%)..."
+	@command -v cargo-llvm-cov > /dev/null || (echo "📦 Installing cargo-llvm-cov..." && cargo install cargo-llvm-cov --locked)
+	@test -f ~/.cargo/config.toml && mv ~/.cargo/config.toml ~/.cargo/config.toml.cov-backup || true
+	@cargo llvm-cov clean --workspace 2>/dev/null || true
+	@echo "  Running tests with coverage instrumentation..."
+	@COVERAGE_OUTPUT=$$(cargo llvm-cov --ignore-filename-regex "(gpu_|main\.rs)" nextest --no-tests=warn --lib --bins 2>&1); \
+	test -f ~/.cargo/config.toml.cov-backup && mv ~/.cargo/config.toml.cov-backup ~/.cargo/config.toml || true; \
+	COVERAGE=$$(echo "$$COVERAGE_OUTPUT" | grep "^TOTAL" | awk '{print $$10}' | tr -d '%'); \
+	echo "  Line coverage: $${COVERAGE}%"; \
+	if [ "$$(echo "$${COVERAGE} < 90" | bc -l)" -eq 1 ]; then \
+		echo "❌ Coverage $${COVERAGE}% is below 90% threshold"; \
+		exit 1; \
+	else \
+		echo "✅ Coverage $${COVERAGE}% meets 90% threshold"; \
+	fi
 
 coverage-open: ## Open HTML coverage report in browser
 	@if [ -f target/coverage/html/index.html ]; then \

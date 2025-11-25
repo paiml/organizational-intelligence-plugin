@@ -1,0 +1,76 @@
+#!/bin/sh
+# Pre-commit hook for Organizational Intelligence Plugin
+# Enforces: formatting, clippy, tests, and 90% coverage threshold
+#
+# Install: cp scripts/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+# Skip coverage: SKIP_COVERAGE=1 git commit -m "message"
+
+set -e
+
+echo "🔍 Running pre-commit checks..."
+
+# Format check
+echo "  📝 Checking code formatting..."
+cargo fmt --check --quiet || {
+    echo "❌ Run 'cargo fmt' to fix formatting"
+    exit 1
+}
+
+# Clippy
+echo "  🔎 Running clippy..."
+cargo clippy --all-targets --quiet -- -D warnings || {
+    echo "❌ Fix clippy warnings"
+    exit 1
+}
+
+# Tests
+echo "  🧪 Running fast tests..."
+cargo test --lib --bins --quiet || {
+    echo "❌ Tests failed"
+    exit 1
+}
+
+# Coverage check (enforced by default, skip with SKIP_COVERAGE=1)
+SKIP_COVERAGE="${SKIP_COVERAGE:-0}"
+if [ "$SKIP_COVERAGE" != "1" ]; then
+    echo "  📊 Checking coverage threshold (90%)..."
+
+    # Check if cargo-llvm-cov is available
+    if command -v cargo-llvm-cov >/dev/null 2>&1; then
+        # Temporarily disable global cargo config (mold breaks coverage)
+        if [ -f ~/.cargo/config.toml ]; then
+            mv ~/.cargo/config.toml ~/.cargo/config.toml.cov-backup
+        fi
+
+        # Clean and run coverage (excluding GPU/main which require hardware)
+        cargo llvm-cov clean --workspace 2>/dev/null || true
+        COVERAGE_OUTPUT="$(cargo llvm-cov --ignore-filename-regex '(gpu_|main\.rs)' nextest --no-tests=warn --lib --bins 2>&1)" || true
+
+        # Restore cargo config
+        if [ -f ~/.cargo/config.toml.cov-backup ]; then
+            mv ~/.cargo/config.toml.cov-backup ~/.cargo/config.toml
+        fi
+
+        # Extract coverage percentage (column 10 is line coverage)
+        COVERAGE="$(printf '%s\n' "$COVERAGE_OUTPUT" | grep '^TOTAL' | awk '{print $10}' | tr -d '%')"
+
+        if [ -n "$COVERAGE" ]; then
+            echo "     Line coverage: ${COVERAGE}%"
+
+            # Check threshold (90%)
+            BELOW_THRESHOLD="$(printf '%s < 90\n' "$COVERAGE" | bc -l)"
+            if [ "$BELOW_THRESHOLD" = "1" ]; then
+                echo "❌ Coverage ${COVERAGE}% is below 90% threshold"
+                echo "   Run 'make coverage' for detailed report"
+                exit 1
+            fi
+        else
+            echo "⚠️  Could not determine coverage (skipping check)"
+        fi
+    else
+        echo "⚠️  cargo-llvm-cov not installed (skipping coverage check)"
+        echo "     Install with: cargo install cargo-llvm-cov"
+    fi
+fi
+
+echo "✅ All pre-commit checks passed!"
