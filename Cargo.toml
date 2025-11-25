@@ -68,6 +68,7 @@ bytemuck = "1.14"
 [dev-dependencies]
 criterion = "0.5"
 serial_test = "3.0"
+proptest = "1.4"
 
 [[bench]]
 name = "gpu_benchmarks"

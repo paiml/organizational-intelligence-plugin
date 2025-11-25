@@ -185,10 +185,7 @@ fn test_model_save_and_load() -> Result<()> {
 
     // Verify metadata
     assert_eq!(loaded_model.metadata.n_classes, model.metadata.n_classes);
-    assert_eq!(
-        loaded_model.metadata.n_features,
-        model.metadata.n_features
-    );
+    assert_eq!(loaded_model.metadata.n_features, model.metadata.n_features);
     assert_eq!(
         loaded_model.metadata.train_accuracy,
         model.metadata.train_accuracy
