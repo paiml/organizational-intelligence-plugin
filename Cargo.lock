@@ -155,9 +155,9 @@ dependencies = [
 
 [[package]]
 name = "aprender"
-version = "0.8.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1c52f58c1b0dbee6bfdcf007cb70aed42d0f1471a3fb0809db179d190dcb35ff"
+checksum = "00f7444e7188aa5d066ed38f7810634f30c19afd736fd244c54dd33f54ade90a"
 dependencies = [
  "bincode",
  "nalgebra",
@@ -2129,10 +2129,10 @@ dependencies = [
 
 [[package]]
 name = "organizational-intelligence-plugin"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
- "aprender 0.8.0",
+ "aprender 0.9.1",
  "async-trait",
  "bytemuck",
  "chrono",
@@ -3416,6 +3416,8 @@ dependencies = [
 [[package]]
 name = "trueno-viz"
 version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4bfe617e99bc99fea6211dd4dab08b41217f2a5635107f1c9690685b260c8a9a"
 dependencies = [
  "base64",
  "png",

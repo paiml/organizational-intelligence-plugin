@@ -1,6 +1,6 @@
 [package]
 name = "organizational-intelligence-plugin"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 rust-version = "1.75.0"
 authors = ["OIP Team"]
@@ -57,13 +57,13 @@ git2 = "0.20"
 tempfile = "3.10"
 
 # GPU acceleration stack
-trueno = "0.7.1"
+trueno = "0.7.3"
 trueno-db = "0.3.2"
 trueno-graph = "0.1.1"
-aprender = "0.8.0"
+aprender = "0.9.1"
 
-# Visualization (optional) - use path for local dev until published
-trueno-viz = { path = "../trueno-viz", optional = true }
+# Visualization (optional)
+trueno-viz = { version = "0.1.1", optional = true }
 
 # GPU compute (wgpu for cross-platform GPU)
 wgpu = { version = "0.19", features = ["wgsl"] }
