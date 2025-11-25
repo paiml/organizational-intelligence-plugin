@@ -113,6 +113,10 @@ pub enum Commands {
         /// Create train/validation/test splits
         #[arg(long, default_value = "true")]
         create_splits: bool,
+
+        /// Show visualization (requires --features viz)
+        #[arg(long, default_value = "false")]
+        viz: bool,
     },
 
     /// Train ML classifier on extracted training data (Phase 2 ML)

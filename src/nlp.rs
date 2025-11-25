@@ -78,8 +78,8 @@ impl CommitMessageProcessor {
     pub fn new() -> Self {
         let tokenizer = WordTokenizer::new();
 
-        // Use English stop words but exclude important software engineering terms
-        // Keep: fix, bug, error, null, pointer, race, deadlock, memory, leak, etc.
+        // English stop words filter; domain terms (fix, bug, error, memory, etc.)
+        // pass through as they carry semantic weight for defect classification.
         let stop_words = StopWordsFilter::english();
 
         let stemmer = PorterStemmer::new();

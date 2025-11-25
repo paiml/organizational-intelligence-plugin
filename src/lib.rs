@@ -34,5 +34,12 @@ pub mod storage;
 #[cfg(feature = "gpu")]
 pub mod gpu_correlation;
 
+// Visualization - requires `viz` feature flag
+pub mod viz;
+
+// WebAssembly bindings - requires `wasm` feature flag
+#[cfg(feature = "wasm")]
+pub mod wasm;
+
 // Re-export main types for convenience
 pub use cli::{Cli, Commands};

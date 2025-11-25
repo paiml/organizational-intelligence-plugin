@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OIP - Organizational Intelligence Plugin</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+        }
+        h1 { color: #4285f4; margin-bottom: 5px; }
+        h2 { color: #ea4335; margin-top: 30px; }
+        h3 { color: #34a853; }
+        .subtitle { color: #888; margin-top: 0; }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .tab {
+            padding: 12px 24px;
+            background: #16213e;
+            border: 2px solid #333;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            color: #888;
+        }
+        .tab.active {
+            background: #0f3460;
+            border-color: #4285f4;
+            border-bottom-color: #0f3460;
+            color: #4285f4;
+        }
+        .panel { display: none; }
+        .panel.active { display: block; }
+        .input-section {
+            background: #16213e;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        textarea {
+            width: 100%;
+            height: 180px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 14px;
+            background: #0f3460;
+            color: #fff;
+            border: 1px solid #4285f4;
+            border-radius: 4px;
+            resize: vertical;
+        }
+        button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px 10px 0;
+        }
+        button:hover { background: #3367d6; }
+        button.secondary { background: #333; }
+        button.secondary:hover { background: #444; }
+        .results {
+            background: #16213e;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        pre {
+            background: #0f3460;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 13px;
+        }
+        .stat {
+            display: inline-block;
+            background: #0f3460;
+            padding: 10px 20px;
+            border-radius: 4px;
+            margin: 5px;
+        }
+        .stat-value { font-size: 24px; font-weight: bold; color: #4285f4; }
+        .stat-label { font-size: 12px; color: #888; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+        th { background: #0f3460; color: #4285f4; }
+        .bar {
+            background: linear-gradient(90deg, #4285f4, #34a853);
+            height: 20px;
+            border-radius: 3px;
+        }
+        .cluster-viz {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .cluster-card {
+            background: #0f3460;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        .cluster-card:nth-child(1) { border-color: #4285f4; }
+        .cluster-card:nth-child(2) { border-color: #ea4335; }
+        .cluster-card:nth-child(3) { border-color: #34a853; }
+        .cluster-card:nth-child(4) { border-color: #fbbc04; }
+        .cluster-card:nth-child(5) { border-color: #9c27b0; }
+        .cluster-title { font-weight: bold; margin-bottom: 10px; }
+        .cluster-items { font-size: 13px; color: #aaa; }
+        .cluster-items li { margin: 5px 0; }
+        .similarity-grid {
+            display: grid;
+            gap: 2px;
+            margin: 20px 0;
+        }
+        .sim-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            border-radius: 2px;
+        }
+        .controls { margin: 15px 0; }
+        .controls label { margin-right: 20px; }
+        .controls input[type="number"] {
+            width: 60px;
+            padding: 5px;
+            background: #0f3460;
+            color: #fff;
+            border: 1px solid #333;
+            border-radius: 4px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            margin-left: 10px;
+        }
+        .badge-wasm { background: #4285f4; }
+        .badge-simd { background: #34a853; }
+    </style>
+</head>
+<body>
+    <h1>Organizational Intelligence Plugin <span class="badge badge-wasm">WASM</span><span class="badge badge-simd" id="simd-badge" style="display:none">SIMD</span></h1>
+    <p class="subtitle">Browser-based ML-powered commit analysis with TF-IDF + K-Means clustering</p>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('classify')">Defect Classification</div>
+        <div class="tab" onclick="switchTab('semantic')">Semantic Clustering</div>
+    </div>
+
+    <!-- Defect Classification Panel -->
+    <div id="panel-classify" class="panel active">
+        <div class="input-section">
+            <h3>Commit Messages</h3>
+            <textarea id="commits" placeholder="Enter commit messages (one per line)...">fix: null pointer dereference in parser
+fix: memory leak in connection pool
+fix: race condition in async handler
+fix: sql injection vulnerability in login
+fix: buffer overflow in string processing
+fix: deadlock when acquiring multiple locks
+feat: add new dashboard feature
+docs: update API documentation
+fix: security vulnerability in auth module
+refactor: improve error handling in API</textarea>
+            <br>
+            <button onclick="analyzeCommits()">Analyze Commits</button>
+            <button class="secondary" onclick="clearResults()">Clear</button>
+        </div>
+
+        <div class="results" id="results" style="display: none;">
+            <h2>Classification Results</h2>
+            <div id="stats"></div>
+            <h3>Defect Distribution</h3>
+            <table id="distribution"></table>
+            <h3>ASCII Visualization</h3>
+            <pre id="ascii-chart"></pre>
+        </div>
+    </div>
+
+    <!-- Semantic Clustering Panel -->
+    <div id="panel-semantic" class="panel">
+        <div class="input-section">
+            <h3>Commit Messages for Semantic Analysis</h3>
+            <textarea id="semantic-commits" placeholder="Enter commit messages (one per line)...">fix: null pointer exception in user service
+fix: memory leak when closing database connections
+fix: null reference in payment processor
+fix: connection pool exhaustion under load
+fix: NPE when parsing empty response
+fix: memory not freed after file upload
+refactor: extract database helper methods
+refactor: simplify authentication logic
+feat: add user profile page
+feat: implement password reset flow
+docs: update README with setup instructions
+docs: add API endpoint documentation</textarea>
+            <br>
+            <div class="controls">
+                <label>Clusters: <input type="number" id="n-clusters" value="4" min="2" max="10"></label>
+            </div>
+            <button onclick="runSemanticClustering()">Run Clustering</button>
+            <button onclick="computeSimilarity()">Compute Similarity</button>
+            <button class="secondary" onclick="clearSemantic()">Clear</button>
+        </div>
+
+        <div class="results" id="semantic-results" style="display: none;">
+            <h2>Semantic Analysis Results</h2>
+            <div id="semantic-stats"></div>
+
+            <h3>Clusters</h3>
+            <div class="cluster-viz" id="cluster-viz"></div>
+
+            <h3>Cluster Centroids (2D Projection)</h3>
+            <pre id="centroid-chart"></pre>
+
+            <div id="similarity-section" style="display: none;">
+                <h3>Similarity Matrix</h3>
+                <div id="similarity-matrix"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import init, {
+            OipAnalyzer,
+            SemanticAnalyzer,
+            classify_commit,
+            get_defect_categories,
+            distribution_to_ascii,
+            version
+        } from './pkg/oip_wasm.js';
+
+        let analyzer = null;
+        let semanticAnalyzer = null;
+
+        async function initWasm() {
+            await init();
+            analyzer = new OipAnalyzer();
+            console.log('OIP WASM initialized, version:', version());
+
+            // Check SIMD support
+            if (typeof WebAssembly.validate === 'function') {
+                const simdTest = new Uint8Array([0,97,115,109,1,0,0,0,1,5,1,96,0,1,123,3,2,1,0,10,10,1,8,0,65,0,253,15,253,98,11]);
+                if (WebAssembly.validate(simdTest)) {
+                    document.getElementById('simd-badge').style.display = 'inline-block';
+                }
+            }
+        }
+
+        window.switchTab = function(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelector(`.tab:nth-child(${tab === 'classify' ? 1 : 2})`).classList.add('active');
+            document.getElementById(`panel-${tab}`).classList.add('active');
+        };
+
+        window.analyzeCommits = function() {
+            if (!analyzer) { alert('WASM not initialized'); return; }
+            analyzer.clear();
+
+            const text = document.getElementById('commits').value;
+            const messages = text.split('\n').filter(m => m.trim());
+            if (messages.length === 0) { alert('Please enter commit messages'); return; }
+
+            for (const msg of messages) {
+                analyzer.analyze_message(msg);
+            }
+
+            const dist = analyzer.get_distribution();
+            const stats = analyzer.get_confidence_stats();
+
+            document.getElementById('stats').innerHTML = `
+                <div class="stat"><div class="stat-value">${dist.total}</div><div class="stat-label">Total Commits</div></div>
+                <div class="stat"><div class="stat-value">${dist.len()}</div><div class="stat-label">Categories</div></div>
+                <div class="stat"><div class="stat-value">${(stats.mean * 100).toFixed(1)}%</div><div class="stat-label">Avg Confidence</div></div>
+            `;
+
+            const categories = dist.categories;
+            const counts = dist.counts;
+            const percentages = dist.percentages;
+            const maxCount = Math.max(...counts);
+
+            let tableHtml = '<tr><th>Category</th><th>Count</th><th>%</th><th>Distribution</th></tr>';
+            for (let i = 0; i < categories.length; i++) {
+                const barWidth = (counts[i] / maxCount * 100).toFixed(0);
+                tableHtml += `<tr><td>${categories[i]}</td><td>${counts[i]}</td><td>${percentages[i].toFixed(1)}%</td><td><div class="bar" style="width: ${barWidth}%"></div></td></tr>`;
+            }
+            document.getElementById('distribution').innerHTML = tableHtml;
+            document.getElementById('ascii-chart').textContent = distribution_to_ascii(dist, 60);
+            document.getElementById('results').style.display = 'block';
+        };
+
+        window.clearResults = function() {
+            if (analyzer) analyzer.clear();
+            document.getElementById('results').style.display = 'none';
+        };
+
+        window.runSemanticClustering = function() {
+            const text = document.getElementById('semantic-commits').value;
+            const messages = text.split('\n').filter(m => m.trim());
+            if (messages.length < 2) { alert('Need at least 2 messages'); return; }
+
+            const nClusters = parseInt(document.getElementById('n-clusters').value) || 4;
+
+            try {
+                semanticAnalyzer = new SemanticAnalyzer();
+                for (const msg of messages) {
+                    semanticAnalyzer.add_message(msg);
+                }
+                const result = semanticAnalyzer.cluster(Math.min(nClusters, messages.length));
+
+                document.getElementById('semantic-stats').innerHTML = `
+                    <div class="stat"><div class="stat-value">${messages.length}</div><div class="stat-label">Messages</div></div>
+                    <div class="stat"><div class="stat-value">${result.n_clusters}</div><div class="stat-label">Clusters</div></div>
+                `;
+
+                // Group messages by cluster
+                const clusters = {};
+                const labels = result.labels;
+                for (let i = 0; i < labels.length; i++) {
+                    const label = labels[i];
+                    if (!clusters[label]) clusters[label] = [];
+                    clusters[label].push(messages[i]);
+                }
+
+                let clusterHtml = '';
+                for (const [label, items] of Object.entries(clusters)) {
+                    clusterHtml += `
+                        <div class="cluster-card">
+                            <div class="cluster-title">Cluster ${parseInt(label) + 1} (${items.length} items)</div>
+                            <ul class="cluster-items">${items.map(m => `<li>${m}</li>`).join('')}</ul>
+                        </div>`;
+                }
+                document.getElementById('cluster-viz').innerHTML = clusterHtml;
+
+                // Show centroids
+                const centroidsX = result.centroids_x;
+                const centroidsY = result.centroids_y;
+                let centroidText = 'Cluster Centroids (x, y projection):\n';
+                for (let i = 0; i < centroidsX.length; i++) {
+                    const x = centroidsX[i].toFixed(3);
+                    const y = centroidsY[i].toFixed(3);
+                    centroidText += `  Cluster ${i + 1}: (${x}, ${y})\n`;
+                }
+                document.getElementById('centroid-chart').textContent = centroidText;
+
+                document.getElementById('semantic-results').style.display = 'block';
+                document.getElementById('similarity-section').style.display = 'none';
+            } catch (e) {
+                alert('Clustering error: ' + e);
+            }
+        };
+
+        window.computeSimilarity = function() {
+            if (!semanticAnalyzer) {
+                const text = document.getElementById('semantic-commits').value;
+                const messages = text.split('\n').filter(m => m.trim());
+                if (messages.length < 2) { alert('Need at least 2 messages'); return; }
+
+                semanticAnalyzer = new SemanticAnalyzer();
+                for (const msg of messages) {
+                    semanticAnalyzer.add_message(msg);
+                }
+            }
+
+            try {
+                const sim = semanticAnalyzer.compute_similarity();
+                const n = sim.size;
+                const values = sim.data;
+                const messages = document.getElementById('semantic-commits').value.split('\n').filter(m => m.trim());
+
+                // Create heatmap grid
+                let gridHtml = `<div class="similarity-grid" style="grid-template-columns: repeat(${n}, 1fr); max-width: ${n * 40}px;">`;
+                for (let i = 0; i < n; i++) {
+                    for (let j = 0; j < n; j++) {
+                        const val = values[i * n + j];
+                        const intensity = Math.floor(val * 255);
+                        const color = `rgb(${intensity}, ${Math.floor(intensity * 0.5)}, ${255 - intensity})`;
+                        const title = `${messages[i].substring(0, 30)}... vs ${messages[j].substring(0, 30)}...: ${val.toFixed(2)}`;
+                        gridHtml += `<div class="sim-cell" style="background: ${color}" title="${title}">${val.toFixed(1)}</div>`;
+                    }
+                }
+                gridHtml += '</div>';
+                document.getElementById('similarity-matrix').innerHTML = gridHtml;
+                document.getElementById('similarity-section').style.display = 'block';
+                document.getElementById('semantic-results').style.display = 'block';
+            } catch (e) {
+                alert('Similarity error: ' + e);
+            }
+        };
+
+        window.clearSemantic = function() {
+            semanticAnalyzer = null;
+            document.getElementById('semantic-results').style.display = 'none';
+        };
+
+        initWasm();
+    </script>
+</body>
+</html>

@@ -1,0 +1,370 @@
+{
+  "train": [
+    {
+      "message": "test(proptest): Add property-based tests for validation\n\nAdd comprehensive property-based tests using proptest:\n- Classifier returns valid categories (18 defect types)\n- Classification confidence always in [0.0, 1.0] range\n- Classifier is deterministic (same input = same output)\n- Training extractor confidence threshold is monotonic\n- Training examples meet minimum confidence threshold\n- DefectCategory Display/Debug are non-empty\n- CommitInfo clone preserves all fields\n- TF-IDF vocabulary bounded by max_features\n- TF-IDF output dimensions are consistent\n\nAll 9 property tests passing with random input generation.\nValidates invariants across classifier, training, and NLP modules.\n\nAlso fixes minor formatting in ml_trainer_coverage.rs.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "TraitBounds",
+      "confidence": 0.8,
+      "commit_hash": "22402a74651a72fc5ef5b87cce7a7278d714b389",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1764041600,
+      "lines_added": 361,
+      "lines_removed": 13,
+      "files_changed": 4
+    },
+    {
+      "message": "docs(DOC-001): Update Issue #1 with NLP enhancement completion results\n\nPosted comprehensive update to Issue #1 documenting:\n- All 8 transpiler-specific categories implemented\n- Multi-label classification support\n- ML training pipeline (extract + train commands)\n- Hybrid rule-based + ML classifier\n- Production CLI integration\n- Validation results on depyler repository\n\nResults Summary:\n- Test Accuracy: 54.55% (+77% over 30.8% baseline)\n- Training Examples: 508 from depyler\n- Inference: 495 ns (202,020x faster than target)\n- Status: Production-ready with hybrid fallback\n\nSprint v0.5.0: ✅ COMPLETE (5/5 tasks)\n- NLP-010: ML integration ✅\n- NLP-011: depyler validation ✅\n- NLP-012: Model selection ✅\n- NLP-013: Confidence routing ✅\n- DOC-001: Issue update ✅\n\nGitHub Issue: https://github.com/paiml/organizational-intelligence-plugin/issues/1#issuecomment-3573099963\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "ASTTransform",
+      "confidence": 0.85,
+      "commit_hash": "8c6c0f5dac273c517633265f038c854e1a82a64a",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1764026046,
+      "lines_added": 8,
+      "lines_removed": 7,
+      "files_changed": 1
+    },
+    {
+      "message": "fix: Correct doctest examples for type compatibility and assertions\n\n- Remove unused TrainingDataset import from HybridClassifier example\n- Fix type mismatches in TfidfFeatureExtractor examples (Vec<&str> → Vec<String>)\n- Fix type mismatch in extract_ngrams example (Vec<&str> → Vec<String>)\n- Update CommitMessageProcessor assertions to handle stemming correctly\n- Update roadmap to mark NLP-010 as complete\n\nAll 472 tests + 40 doctests passing.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "OwnershipBorrow",
+      "confidence": 0.85,
+      "commit_hash": "bd98a9a679fc4cd27a9ed58835e37999b3eece9f",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1764025082,
+      "lines_added": 28,
+      "lines_removed": 21,
+      "files_changed": 3
+    },
+    {
+      "message": "fix(NLP-010): Fix clippy warnings (Box large enum variant, remove unnecessary cast)\n",
+      "label": "ASTTransform",
+      "confidence": 0.85,
+      "commit_hash": "c89c5883ba86ae2f114a1d7c7cdc444b8b0883c4",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1764023895,
+      "lines_added": 357,
+      "lines_removed": 16,
+      "files_changed": 3
+    },
+    {
+      "message": "feat(NLP-008): Add train-classifier CLI command for ML model training\n\nImplement CLI integration for Phase 2 ML classifier training pipeline.\n\n**New CLI Command:**\n```bash\noip train-classifier \\\n    --input training-data.json \\\n    --output model.json \\\n    --n-estimators 100 \\\n    --max-depth 20 \\\n    --max-features 1500\n```\n\n**Implementation:**\n- New `TrainClassifier` command in src/cli.rs\n- Handler `handle_train_classifier()` in src/cli_handlers.rs (+110 lines)\n- Wired up in src/main.rs command dispatch\n\n**Features:**\n- Load training dataset from JSON (train/validation/test splits)\n- Display class distribution and dataset statistics\n- Train Random Forest with configurable hyperparameters\n- Evaluate on train/validation/test sets\n- Show accuracy metrics and performance comparison vs baseline\n- Save model metadata to JSON (optional)\n- Provide actionable recommendations for improving accuracy\n\n**Command Output:**\n```\n🤖 ML Classifier Training (Phase 2)\n   Input:         training-data.json\n   N Estimators:  100\n   Max Depth:     20\n   Max Features:  1500\n\n📂 Loading training dataset...\n   ✅ Loaded 17 total examples\n      Train:      11 examples\n      Validation: 2 examples\n      Test:       4 examples\n\n📊 Class Distribution:\n      ConfigurationErrors: 4 (23.5%)\n      ASTTransform: 3 (17.6%)\n      ...\n\n🎯 Training Random Forest Classifier...\n   ✅ Training complete!\n      Classes:  6\n      Features: 628\n\n📈 Model Performance:\n   Training accuracy:   100.00%\n   Validation accuracy: 0.00%\n   Test accuracy:       0.00%\n\n📊 Performance vs Baseline:\n   Baseline (rule-based):  30.8%\n   ML Model (validation):  0.00%\n\n💡 Next Steps:\n   1. Collect more training data (recommend 500+ commits)\n   2. Benchmark inference performance (<100ms target)\n   3. Deploy to production for real-time classification\n```\n\n**Hyperparameter Configuration:**\n- `--n-estimators` - Number of trees in Random Forest (default: 100)\n- `--max-depth` - Maximum tree depth (default: 20)\n- `--max-features` - Maximum TF-IDF features (default: 1500)\n- `--input` - Training data JSON file (required)\n- `--output` - Model metadata JSON file (optional)\n\n**Validation & Error Handling:**\n- Validates input file exists\n- Graceful error handling for invalid JSON\n- Warns if accuracy below 80% target\n- Provides actionable recommendations:\n  - Collect more training data\n  - Adjust hyperparameters\n  - Review class distribution\n\n**Performance Tracking:**\n- Shows training/validation/test accuracy\n- Compares ML model vs rule-based baseline (30.8%)\n- Calculates improvement percentage\n- Highlights if model meets ≥80% target\n\n**Testing:**\n- 3 new comprehensive tests (100% passing)\n- Tests: invalid input, invalid JSON, valid training data\n- Total CLI handler tests: 24 → 27\n- Total test suite: 472 tests passing\n\n**End-to-End Workflow:**\n```bash\n# Step 1: Extract training data\noip extract-training-data \\\n    --repo ../depyler \\\n    --output depyler-training-data.json \\\n    --max-commits 500\n\n# Step 2: Train ML classifier\noip train-classifier \\\n    --input depyler-training-data.json \\\n    --output depyler-model.json \\\n    --n-estimators 200 \\\n    --max-depth 30\n\n# Result: Trained Random Forest ready for integration\n```\n\n**Limitations (Current):**\n- Model serialization incomplete (RandomForestClassifier + TfidfVectorizer in-memory only)\n- TODO: Full model persistence for production deployment\n- TODO: Inference API for real-time classification\n\n**Prepares Foundation for:**\n- Production deployment of ML classifier\n- Real-time inference in analysis pipeline\n- Performance benchmarking (<100ms target)\n- A/B testing ML vs rule-based classifier\n\nImplements Section 3 ML Classification from nlp-models-techniques-spec.md.\n\nDependencies:\n- ml_trainer::MLTrainer (NLP-007)\n- training::TrainingDataset (NLP-005)\n- cli::TrainClassifier command\n\nIssue: #1 - Improve NLP categorization with ML training CLI\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "ASTTransform",
+      "confidence": 0.90000004,
+      "commit_hash": "a9cfb2242ddffef4d7c569ebd68b8c47dbb38b6e",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1764021979,
+      "lines_added": 209,
+      "lines_removed": 0,
+      "files_changed": 3
+    },
+    {
+      "message": "feat(NLP-007): Implement ML model training with RandomForestClassifier\n\nAdd comprehensive ML training module for Phase 2 defect classification.\n\n**New Module: src/ml_trainer.rs (547 lines)**\n\n**Core Components:**\n- MLTrainer: Main training orchestrator\n- TrainedModel: Holds trained classifier + metadata\n- TrainingMetadata: Performance metrics and model configuration\n\n**Training Pipeline:**\n1. Load training dataset from JSON\n2. Extract TF-IDF features from commit messages (Matrix<f64>)\n3. Convert features to Matrix<f32> for Random Forest\n4. Map DefectCategory labels to numeric indices\n5. Train RandomForestClassifier (default: 100 trees, max_depth=20)\n6. Evaluate on training and validation sets\n7. Compute accuracy metrics\n\n**Key Features:**\n- TF-IDF feature extraction (max 1500 features)\n- Random Forest with configurable hyperparameters\n- Matrix type conversion (f64 → f32)\n- Label encoding/decoding (DefectCategory ↔ usize)\n- Train/validation accuracy calculation\n- Model metadata tracking\n\n**API Usage:**\n```rust\nlet trainer = MLTrainer::new(100, Some(20), 1500);\nlet dataset = MLTrainer::load_dataset(\"training-data.json\")?;\nlet model = trainer.train(&dataset)?;\n\nprintln!(\"Train accuracy: {:.2}%\", model.metadata.train_accuracy * 100.0);\nprintln!(\"Validation accuracy: {:.2}%\", model.metadata.validation_accuracy * 100.0);\n```\n\n**Testing:**\n- 8 comprehensive tests (100% passing)\n- Tests: trainer creation, accuracy calculation, matrix conversion, training pipeline\n- Edge cases: empty datasets, small datasets, proper data filtering\n- Total: +8 tests, 469 tests passing\n\n**Implementation Details:**\n- Uses aprender::tree::RandomForestClassifier (bootstrap aggregating)\n- Uses aprender::text::vectorize::TfidfVectorizer\n- Converts Matrix<f64> to Matrix<f32> element-by-element\n- Random state=42 for reproducibility\n- Skips training if dataset too small (<10 examples)\n\n**Limitations (Future Work):**\n- Model serialization incomplete (RandomForestClassifier + TfidfVectorizer skipped)\n- TODO: Extract TF-IDF vocabulary for reconstruction\n- For now, models remain in-memory during training session\n\n**Dependencies:**\n- aprender v0.7.1 (RandomForestClassifier, TfidfVectorizer, Matrix)\n- serde/serde_json for TrainedModel metadata\n- anyhow for error handling\n\n**Prepares Foundation for:**\n- NLP-008: Integrate ML classifier into analysis pipeline\n- CLI command: `oip train-classifier --input training-data.json`\n- Real-time inference with <100ms latency (Phase 2 Tier 2)\n\n**Performance Expectations:**\n- Training: O(n_trees * n_samples * log(n_samples) * n_features)\n- Inference: O(n_trees * tree_depth) ≈ O(n_trees * log(n_samples))\n- Target: ≥80% actionable defect categorization (vs 30.8% baseline)\n\nImplements Section 3 ML Classification from nlp-models-techniques-spec.md.\n\nDependencies:\n- training::TrainingDataset (NLP-005)\n- nlp::TfidfFeatureExtractor (NLP-004)\n- classifier::DefectCategory (NLP-002)\n\nIssue: #1 - Improve NLP categorization with ML training capabilities\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "TypeErrors",
+      "confidence": 0.75,
+      "commit_hash": "1290a9d3be2535402f38576655dc0b47e2ce36c3",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1764021513,
+      "lines_added": 556,
+      "lines_removed": 0,
+      "files_changed": 2
+    },
+    {
+      "message": "feat(NLP-004): Add TF-IDF feature extraction with aprender vectorizer\n\nImplement TF-IDF feature extraction for Phase 2 ML classification (Tier 2).\nUnblocked by aprender TfidfVectorizer implementation (aprender#70).\n\nNew Features:\n- TfidfFeatureExtractor struct wrapping aprender::text::vectorize::TfidfVectorizer\n- Configured for commit message analysis (1500 max features, WordTokenizer, lowercase)\n- fit(), transform(), and fit_transform() methods\n- vocabulary_size() for feature inspection\n- Full integration with aprender v0.7.1 text module\n\nAPI:\n```rust\nlet mut extractor = TfidfFeatureExtractor::new(1500);\nextractor.fit(&train_messages)?;\nlet features = extractor.transform(&test_messages)?;\n// Returns Matrix<f64> (n_messages × vocabulary_size)\n```\n\nTesting:\n- 13 comprehensive tests covering:\n  - Basic fit/transform workflows\n  - Train/test split scenarios\n  - Vocabulary size limiting (max_features)\n  - Software engineering terms (null pointer, race condition, etc.)\n  - Transpiler-specific terms (AST, lifetime, trait bounds)\n  - Edge cases (empty, single, duplicate messages)\n- Total NLP tests: 14 → 27 (100% passing)\n\nImplementation Details:\n- Uses aprender::text::tokenize::WordTokenizer for word-level tokenization\n- Lowercase normalization enabled\n- Respects max_features limit for vocabulary size\n- Returns dense Matrix<f64> compatible with aprender ML models\n- Zero unwrap() calls, Result-based error handling\n\nPrepares Foundation for:\n- Phase 2 Tier 2: TF-IDF + Random Forest/XGBoost classifier\n- Feature interpretability (top TF-IDF terms per category)\n- Training data pipeline (NLP-005)\n- Target: ≥80% actionable defect categorization (current: 30.8%)\n\nImplements Section 2.1.2 (TF-IDF) and Section 3 (ML Classification) from\nnlp-models-techniques-spec.md.\n\nDependencies:\n- aprender v0.7.1 with TfidfVectorizer implementation\n- Fixed aprender/src/text/topic.rs doc comment for compilation\n\nIssue: #1 - Improve NLP categorization with ML features\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "ASTTransform",
+      "confidence": 0.90000004,
+      "commit_hash": "7b89ad9b0300831062051fe28de46416024d95f3",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1764019010,
+      "lines_added": 387,
+      "lines_removed": 0,
+      "files_changed": 1
+    },
+    {
+      "message": "feat(NLP-003): Implement multi-label classification with top-N category support\n\nAdd comprehensive multi-label classification for detecting multiple defect\ncategories in a single commit message.\n\nNew Features:\n- MultiLabelClassification struct with top-N category results\n- classify_multi_label() method with configurable parameters:\n  - top_n: Maximum categories to return (default 3)\n  - min_confidence: Confidence threshold filter (default 0.60)\n- Returns sorted categories by confidence (highest first)\n- Primary category tracking (highest confidence match)\n- All matched patterns collection across categories\n\nImplementation Details:\n- Reuses rule-based pattern matching with confidence boosting\n- Filters results by minimum confidence threshold\n- Limits output to top-N highest confidence matches\n- Collects unique patterns across all matched categories\n- Full serialization support for JSON output\n\nTesting:\n- 12 new comprehensive tests (100% passing)\n- Coverage: confidence thresholds, top-N limiting, edge cases\n- Total classifier tests: 24 → 36\n\nImplements Section 5.3 Multi-Label Classification from\nnlp-models-techniques-spec.md to support overlapping defect patterns.\n\nExamples:\n- \"fix: null pointer in ast transform\" → [(MemorySafety, 0.85), (ASTTransform, 0.85)]\n- \"fix: memory leak and security\" → [(SecurityVulnerabilities, 0.90), (MemorySafety, 0.85)]\n\nIssue: #1 - Improve NLP categorization with multi-label support\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "MemorySafety",
+      "confidence": 0.90000004,
+      "commit_hash": "46144ef5e3eb7b7d98610823b9f9a4d7da51fc04",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1764017810,
+      "lines_added": 319,
+      "lines_removed": 0,
+      "files_changed": 1
+    },
+    {
+      "message": "feat(NLP-002): Expand DefectCategory with 8 transpiler-specific categories\n\nAdd comprehensive taxonomy expansion for transpiler defect classification:\n\nNew Categories (8):\n- OperatorPrecedence: Expression parsing/generation bugs\n- TypeAnnotationGaps: Unsupported type hints\n- StdlibMapping: Python→Rust standard library conversions\n- ASTTransform: HIR→Codegen bugs\n- ComprehensionBugs: List/dict/set comprehension generation\n- IteratorChain: .into_iter(), .map(), .filter() issues\n- OwnershipBorrow: Lifetime and borrow checker errors\n- TraitBounds: Generic constraint issues\n\nImplementation:\n- Updated DefectCategory enum (10 → 18 categories)\n- Added pattern rules with 70-85% confidence levels\n- Updated as_str() and Display implementations\n- Comprehensive test coverage: 16 → 24 tests (100% passing)\n\nImplements Phase 1 expanded taxonomy from nlp-models-techniques-spec.md\nSection 5.2 to improve defect classification from 30.8% to ≥80% actionable.\n\nNote: Bypassing flaky config::tests that fail in parallel but pass individually.\n\nIssue: #1 - Improve NLP categorization for transpiler-specific patterns\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "ASTTransform",
+      "confidence": 0.95,
+      "commit_hash": "0afa18c47d6851414aed68f14c3f5c2cce45e6f4",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1764017676,
+      "lines_added": 320,
+      "lines_removed": 5,
+      "files_changed": 1
+    },
+    {
+      "message": "feat(NLP-001): Integrate aprender text processing for enhanced defect classification\n\nAdd comprehensive NLP preprocessing module using aprender's text features:\n\n**New Module: src/nlp.rs**\n- CommitMessageProcessor for standardized text preprocessing\n- Integration with aprender v0.7.1 (tokenization, stemming, stopwords)\n- N-gram extraction (unigrams, bigrams, trigrams)\n- Software-specific preprocessing pipeline\n\n**Features Implemented:**\n- Tokenization: WordTokenizer from aprender (handles punctuation, contractions)\n- Stop words: English stop words with custom support for domain terms\n- Stemming: Porter stemmer for normalization (\"fixing\" -> \"fix\", \"bugs\" -> \"bug\")\n- N-gram generation: Extract multi-word patterns (\"null pointer\", \"race condition\")\n- Combined preprocessing: preprocess_with_ngrams() for feature extraction\n\n**Test Coverage:**\n- 14 comprehensive tests (100% passing)\n- Edge cases: empty messages, whitespace, code tokens\n- Custom stop words, n-gram variations\n- Stemming normalization validation\n\n**Dependencies:**\n- Updated aprender from 0.1 to local path (version 0.7.1)\n- Access to text::tokenize, text::stopwords, text::stem modules\n\n**Next Steps (Phase 1 NLP Spec):**\n- NLP-002: Expand DefectCategory with 8 transpiler-specific categories\n- NLP-003: Multi-label classification support\n- NLP-004: TF-IDF feature extraction\n- NLP-005: Training data pipeline\n\nImplements Phase 1 of nlp-models-techniques-spec.md to improve defect\nclassification from 30.8% actionable (current) to ≥80% target.\n\nIssue: #1 - Improve NLP categorization for transpiler-specific patterns\n\nNote: Bypassed pre-commit hooks due to known flaky env var test\n",
+      "label": "MemorySafety",
+      "confidence": 0.85,
+      "commit_hash": "225da027c13c191ee2a629c2e137ac1e0b31503e",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1764017344,
+      "lines_added": 439,
+      "lines_removed": 6,
+      "files_changed": 4
+    },
+    {
+      "message": "docs: Update coverage metrics to 86.65% and fix broken links\n\n- Update README.md coverage from 58.79% to 86.65% (422 tests) ✅\n- Update Quality Gates section to reflect exceeded 85% target\n- Remove broken GitHub Discussions links (404 errors)\n- Fix documentation validation issues\n\nCoverage achievements:\n- Line coverage: 86.09%\n- Region coverage: 86.65%\n- Function coverage: 90.43%\n- 19 modules at 95%+ coverage\n\nDocumentation improvements following pmat documentation workflow:\n- Updated README.md with latest metrics\n- Removed non-existent Discussions links\n- Verified documentation accuracy\n\nNote: pmat repo and academic paywall links remain as external dependencies\nNote: Bypassed pre-commit hooks due to known flaky env var tests\n",
+      "label": "OwnershipBorrow",
+      "confidence": 0.85,
+      "commit_hash": "e482351ae4ae24bb41033ce65c02b1b2abbecb59",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1764016457,
+      "lines_added": 3,
+      "lines_removed": 8,
+      "files_changed": 3
+    },
+    {
+      "message": "test: Push pmat.rs coverage from 56.33% to 87.50%\n\n- Add 16 comprehensive tests (4 → 20 tests total)\n- Test parse invalid JSON error handling\n- Test single file analysis\n- Test multiple files analysis\n- Test with zero scores edge case\n- Test without grade field (optional)\n- Test FileTdgScore structure, Clone, Debug, serialization\n- Test TdgAnalysis Clone and Debug traits\n- Test get_file_score with nonexistent and empty analysis\n- Test various score ranges (10.5 to 99.9)\n- Test fractional averages\n- Test long file paths\n- Test is_pmat_available function\n\nCoverage improvements:\n- pmat.rs: 56.33% → 87.50% (+31.17%)\n- Overall line coverage: 85.74% → 86.09%\n- Overall region coverage: 86.21% → 86.65%\n\nPHASE2-007 continuous improvement - very close to 90%!\n\nNote: Bypassed pre-commit hooks due to known flaky env var tests\n",
+      "label": "TypeErrors",
+      "confidence": 0.75,
+      "commit_hash": "52cf8fcaaa8dd8717a3bdc00c7a638c848fb20d6",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1764016127,
+      "lines_added": 253,
+      "lines_removed": 0,
+      "files_changed": 1
+    },
+    {
+      "message": "test: Push github.rs coverage from 89.34% to 95.85%\n\n- Add 14 comprehensive tests (12 → 26 tests total)\n- Test RepoInfo Clone and Debug trait implementations\n- Test with empty strings for all fields\n- Test with high star counts (999999)\n- Test different default branches (main, master, develop)\n- Test filter preserves order\n- Test long descriptions (1000 chars)\n- Test filtering with future dates\n- Test deserialization from JSON\n- Test special characters and emojis in fields\n- Test multiple programming languages\n- Test with empty GitHub token\n- Test all old repos filtered out\n\nCoverage improvements:\n- github.rs: 89.34% → 95.85% (+6.51%)\n- Overall line coverage: 85.36% → 85.74%\n- Overall region coverage: 85.77% → 86.21%\n\nPHASE2-007 continuous improvement - approaching 90%!\n\nNote: Bypassed pre-commit hooks due to known flaky env var tests\n",
+      "label": "ASTTransform",
+      "confidence": 0.85,
+      "commit_hash": "c292ddbd28b7226c3318e11c85bbf784e3862e4b",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1764015937,
+      "lines_added": 302,
+      "lines_removed": 0,
+      "files_changed": 1
+    },
+    {
+      "message": "test: Push git.rs coverage from 78.76% to 90.78%\n\n- Add 15 comprehensive tests (11 → 26 non-ignored tests)\n- Test clone repository already exists (cache behavior)\n- Test clone with invalid URL (error handling)\n- Test analyze with zero limit edge case\n- Test commits with modifications (add/remove lines)\n- Test empty repository error case\n- Test large diff commits (1000 lines)\n- Test multiple files in single commit\n- Test commits with deletions\n- Test CommitInfo trait implementations (Clone, Debug)\n- Test analyzer with different Path types (AsRef<Path>)\n- Test serialization/deserialization edge cases\n\nCoverage improvements:\n- git.rs: 78.76% → 90.78% (+12.02%)\n- Overall line coverage: 84.45% → 85.36%\n- Overall region coverage: 85.24% → 85.77%\n\nPHASE2-007 continuous improvement - pushing toward 90%+\n",
+      "label": "OwnershipBorrow",
+      "confidence": 0.85,
+      "commit_hash": "2b009ae345ed717093f5bbe54fff19c323aa00bb",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1764015712,
+      "lines_added": 345,
+      "lines_removed": 0,
+      "files_changed": 1
+    },
+    {
+      "message": "refactor: Extract main.rs logic into testable cli_handlers module\n\nMoved business logic from binary entry point to testable module:\n- main.rs: 361 lines → 54 lines (-307 lines, -85%)\n- cli_handlers.rs: NEW module with 374 testable lines\n- handle_review_pr(): PR review command handler\n- handle_summarize(): Summarization command handler\n- handle_analyze(): Organization analysis command handler\n\nBenefits:\n- main.rs is now a thin entry point (only arg parsing + tracing setup)\n- All business logic is testable without running the binary\n- Initial test coverage: 22.46% (2 error case tests)\n- Can easily add integration tests for all CLI commands\n\nOverall coverage: 79.94% → 80.36% (+0.42%)\n\nToyota Way: Thin entry points, testable business logic\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "OwnershipBorrow",
+      "confidence": 0.85,
+      "commit_hash": "fc440882dc1a846574d8ff93707877b6a3fdb63b",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1764008874,
+      "lines_added": 343,
+      "lines_removed": 262,
+      "files_changed": 3
+    },
+    {
+      "message": "fix: Prevent environment variable test interference\n\nClean up environment variables at the start of tests calling\nConfig::load() to prevent parallel test interference.\n\nFixes flaky test failures in CI where tests would pick up\nenv vars set by other parallel tests.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "ConfigurationErrors",
+      "confidence": 0.75,
+      "commit_hash": "4844a0dd14bec86747d2db54c6d879e91d003dd4",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1764008464,
+      "lines_added": 11,
+      "lines_removed": 0,
+      "files_changed": 1
+    },
+    {
+      "message": "test: Push imbalance.rs coverage to 99.85% (+7.41%)\n\nAdded 13 comprehensive tests for SMOTE, Focal Loss, and AUPRC:\n\nSMOTE tests:\n- Default constructor\n- No samples needed edge case (already balanced)\n- vector_to_features clamping (negative values, hour/day bounds)\n- Deterministic interpolation\n\nFocal Loss tests:\n- with_params constructor\n- Default constructor\n- batch_loss computation\n- compute_weights edge cases (single class, empty weights)\n\nAUPRC tests:\n- Length mismatch error\n- Empty predictions error\n- No positive samples error\n- precision_at_recall length mismatch\n- precision_at_recall no positives\n- precision_at_recall target not reached\n\nOverall coverage: 79.11% → 79.93% (+0.82%)\nimbalance.rs: 92.44% → 99.85% (+7.41%)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "TraitBounds",
+      "confidence": 0.8,
+      "commit_hash": "f038da09653174079c21fffb574051fc25e2f080",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1764008205,
+      "lines_added": 165,
+      "lines_removed": 0,
+      "files_changed": 1
+    },
+    {
+      "message": "test: Push sliding_window.rs coverage to 99.70% (+17.77%)\n\nAdded 14 comprehensive tests covering all edge cases and error paths:\n\nCoverage Improvements:\n- sliding_window.rs: 81.93% → 99.70% (+17.77%)\n- Overall: 73.58% → 74.79% (+1.21%)\n\nNew Tests:\n- Window boundary conditions (inclusive start, exclusive end)\n- Empty store error handling\n- Windows with no features error handling\n- Concept drift detection (no matrices, single matrix, identical, different)\n- Concept drift with multiple windows\n- Custom analyzer creation and validation\n- Window generation edge cases\n- Compute all windows with sparse data\n- Structure validation tests\n- Constants verification\n\nAll 18 tests passing (14 new).\n\nProgress toward 95% coverage goal (like trueno/bashrs).\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "TraitBounds",
+      "confidence": 0.8,
+      "commit_hash": "74047fbb601b651172dbeb453d2c4636dd1a0cc0",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1764006481,
+      "lines_added": 234,
+      "lines_removed": 0,
+      "files_changed": 1
+    },
+    {
+      "message": "test: Increase test coverage from 65.35% to 73.58% (+8.23%)\n\nComprehensive test additions across 6 modules achieving ~95% coverage\nof testable code (excluding binary entry points and GPU hardware tests).\n\nModule Improvements:\n- error.rs: 51.19% → 99.28% (+48%)\n  * Added tests for all constructor functions\n  * Covered recovery hints and error categories\n  * Added context and lazy context tests\n\n- observability.rs: 51.59% → 91.56% (+40%)\n  * Added tests for all LogOps methods\n  * Covered Timer elapsed_us and log_completion\n  * Tested Metrics log_summary\n\n- git.rs: 38.69% → 81.10% (+42%)\n  * Created local test repositories\n  * Tested commit analysis with multiple commits\n  * Validated commit limit enforcement\n\n- config.rs: 82.12% → 98.96% (+17%)\n  * Tested all environment variable overrides\n  * Added validation tests for edge cases\n  * Covered all config struct defaults\n\n- github.rs: 51.32% → 87.55% (+36%)\n  * Added RepoInfo structure tests\n  * Covered filter_by_date scenarios\n  * Tested serialization\n\n- report.rs: 90.00% → 100.00% (+10%)\n  * Added async write_to_file test\n  * Covered all struct defaults\n  * Tested serialization/deserialization\n\nCoverage Analysis:\n- Total lines: 5708\n- Covered: 4200 (73.58%)\n- Untestable (main.rs, gpu_correlation.rs, gpu_main.rs): 1293 lines\n- Testable coverage: ~95%\n\nFixes:\n- tests/cli_integration.rs: Fix oip_gpu_bin() to detect coverage builds\n- src/config.rs: Use apply_env_overrides() for test isolation\n\nDocumentation:\n- docs/PMAT_COMPLEXITY_ANALYSIS.md: Document O(n³) false positives\n  * Confirmed actual complexities: O(n) to O(n²k)\n  * Provided benchmark evidence\n\nQuality Gates:\n✅ 210 tests passing (39 new tests)\n✅ Zero clippy warnings\n✅ Coverage target achieved\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "TypeErrors",
+      "confidence": 0.8,
+      "commit_hash": "328ceb19c65a1cb70c5b57a1749825508482bfe7",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1764005557,
+      "lines_added": 1215,
+      "lines_removed": 0,
+      "files_changed": 9
+    },
+    {
+      "message": "feat(UAT): Add local repository analysis and fix persistence\n\nUser Acceptance Testing revealed two critical issues:\n\n1. No support for local repository analysis\n   - Added --local flag to analyze command\n   - Implemented cmd_analyze_local() for direct git2 analysis\n   - Supports --max-commits parameter\n\n2. Feature storage not persisting\n   - Implemented JSON serialization for FeatureStore\n   - Added Serialize/Deserialize derives to CommitFeatures\n   - save() now writes JSON, load() reads it back\n\nTested on depyler repository:\n- 500 commits analyzed successfully\n- 500 feature vectors extracted\n- Query commands work correctly\n- All 124 tests pass\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "TypeErrors",
+      "confidence": 0.75,
+      "commit_hash": "99c8521e7cf43d0cbe8d8ba348e1eef9f670b05c",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1764000883,
+      "lines_added": 177,
+      "lines_removed": 20,
+      "files_changed": 5
+    },
+    {
+      "message": "docs(PROD-006): Add comprehensive USER_GUIDE.md\n\nComplete user documentation for oip-gpu CLI tool:\n\n**Quick Start:**\n- Installation instructions\n- Basic command examples\n- Common workflows\n\n**Command Reference:**\n- `analyze` - Repository analysis with all options\n- `correlate` - Correlation computation with sliding windows\n- `predict` - ML model training and prediction\n- `cluster` - K-means pattern discovery\n- `query` - Natural language queries\n- `benchmark` - Performance testing\n\n**Configuration:**\n- YAML configuration file format\n- All configuration sections documented\n- Environment variable overrides\n- Global CLI options\n\n**Compute Backends:**\n- Auto backend selection\n- GPU requirements and setup\n- SIMD capabilities and fallback\n\n**Error Handling:**\n- Common error messages\n- Recovery hints\n- Troubleshooting steps\n\n**Examples:**\n- Analyze open source projects\n- Compare multiple repositories\n- Detect concept drift\n- Train prediction models\n\n**Performance Tips:**\n- Backend selection guidance\n- Commit limiting strategies\n- Worker parallelization\n- Caching recommendations\n\n**Troubleshooting:**\n- Slow analysis solutions\n- Memory issues\n- GPU detection problems\n\nPROD-006 (complexity 5) is now COMPLETE!\n\nSprint v0.4.0 Progress: 5/6 tasks (39 complexity delivered)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "ConfigurationErrors",
+      "confidence": 0.8,
+      "commit_hash": "069c6167f4552e6aa23f4c4b0d5169bb57fab5d6",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1763998633,
+      "lines_added": 379,
+      "lines_removed": 0,
+      "files_changed": 1
+    }
+  ],
+  "validation": [
+    {
+      "message": "feat(PROD-003): Add observability module with tracing and metrics\n\nImplements production-ready observability using tracing crate:\n\n**Tracing Initialization:**\n- `init_tracing(verbose, json)` - Configure logging level\n- `init_with_filter(filter)` - Custom filter strings\n- Environment variable support (RUST_LOG)\n- Compact output format\n\n**Structured Logging (LogOps):**\n- `analysis_start/complete` - Repository analysis spans\n- `features_extracted` - Feature extraction counts\n- `correlation_start/complete` - Correlation computation\n- `training_start/complete` - ML model training\n- `prediction` - Prediction logging\n- `clustering_start/complete` - K-means operations\n- `storage_op` - Storage operations\n- `gpu_op` - GPU operations\n- `error_with_context` - Error logging\n- `performance` - Performance metrics\n\n**Timer Utility:**\n- `Timer::new(operation)` - Start timing\n- `elapsed_ms()` / `elapsed_us()` - Get duration\n- `log_completion()` - Log with duration\n\n**Metrics Collector:**\n- Track analyses, features, correlations, predictions, errors\n- `record_*()` methods for each metric type\n- `summary()` - Human-readable summary\n- `log_summary()` - Structured log output\n\n**Instrumentation:**\n- `#[instrument]` macros for automatic span creation\n- Field extraction for structured logging\n- Context propagation through spans\n\n**Test Coverage (6 tests):**\n- Timer creation and elapsed time\n- Metrics initialization and recording\n- Summary generation\n- AnalysisSpan creation\n\n**Status:**\n- ✅ 99 tests passing (6 new)\n- ✅ No warnings\n\nPROD-003 (complexity 8) is now COMPLETE!\n\nSprint v0.4.0 Progress: 3/6 tasks (29 complexity delivered)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "ConfigurationErrors",
+      "confidence": 0.75,
+      "commit_hash": "fa41f8c0b613c3e4f4202e4ef4e5ff403a98ef58",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1763998324,
+      "lines_added": 310,
+      "lines_removed": 0,
+      "files_changed": 2
+    },
+    {
+      "message": "feat(PROD-002): Add centralized error handling with recovery hints\n\nImplements comprehensive error handling system using thiserror:\n\n**Error Categories:**\n- Data errors (NoData, InvalidData, ValidationError)\n- Git/GitHub errors (GitHubError, RepoNotFound, GitError, AuthRequired)\n- ML/Compute errors (ModelNotTrained, InsufficientData, ComputeError, GpuUnavailable)\n- Storage errors (StorageError, FileNotFound, IoError)\n- Config errors (ConfigError, InvalidArgument)\n\n**Features:**\n- Ergonomic constructors: `OipError::no_data(\"context\")`\n- Recovery hints: `error.recovery_hint()` returns user-friendly suggestions\n- Recoverability check: `error.is_recoverable()` for retry logic\n- Error categorization: `error.category()` for logging/metrics\n- Context extension trait: `result.context(\"during X\")`\n\n**Type Aliases:**\n- `OipResult<T>` = `Result<T, OipError>`\n\n**Recovery Hints Examples:**\n- ModelNotTrained → \"Train the model first with predictor.train(features)\"\n- GpuUnavailable → \"Use --backend simd for CPU fallback\"\n- AuthRequired → \"Set GITHUB_TOKEN environment variable\"\n\n**Test Coverage (7 tests):**\n- Error display formatting\n- Recovery hint availability\n- Recoverability classification\n- Error categorization\n- Specific error constructors\n- Result context extension\n\n**Status:**\n- ✅ 93 tests passing (7 new)\n- ✅ No warnings\n\nPROD-002 (complexity 8) is now COMPLETE!\n\nSprint v0.4.0 Progress: 2/6 tasks (21 complexity delivered)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "ConfigurationErrors",
+      "confidence": 0.75,
+      "commit_hash": "8e78af52ec96a8338e35dcf55e3495c9cafa996a",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1763998136,
+      "lines_added": 337,
+      "lines_removed": 0,
+      "files_changed": 2
+    },
+    {
+      "message": "feat: Implement Phase 3 - oip review-pr command (Fast PR reviews)\n\nThis commit implements Phase 3 of the OIP roadmap: fast PR reviews using\nstateful baselines to avoid re-analyzing entire organizations on every PR.\n\nImplementation (EXTREME TDD):\n- src/pr_reviewer.rs (441 lines): Core PR review logic\n  - PrReviewer: Load baseline and review changed files\n  - PrReview: Output format with warnings\n  - PrWarning: Individual file warning structure\n  - File type detection: config, integration, code files\n  - Warning thresholds: frequency >= 10 AND TDG < 60, OR frequency >= 20\n- src/cli.rs: Add ReviewPr command variant\n- src/main.rs: Handle review-pr command with markdown/JSON output\n- src/lib.rs: Export pr_reviewer module\n- src/summarizer.rs: Add find_category() and from_file() methods\n\nQuality Gates:\n- ✅ Tests: 38 total, 38 passing, 6 ignored (network tests)\n- ✅ Performance: 0.125s per review (well under 30s target)\n- ✅ Coverage: 100% of new code tested (11 new unit tests)\n- ✅ Lint: 1 minor clippy warning (wildcard_in_or_patterns)\n- ✅ Compilation: Zero errors\n\nFeatures:\n- Fast baseline loading (<100ms)\n- File-based pattern matching (config, API, code files)\n- Multiple output formats (markdown, JSON)\n- Actionable warnings with frequency and TDG scores\n- Prevention tips from organizational patterns\n\nToyota Way Impact:\n- Eliminates Overburden (Muri): <0.2s vs 10+ minutes\n- Respects developer time: No re-analysis of entire org\n- Actionable feedback: Specific to changed files\n- Stateful design: Weekly baseline, fast PR reviews\n\nDocumentation:\n- Updated design spec to mark Phase 3 as COMPLETE\n- Added implementation results section\n- Updated roadmap and checklists\n\nExample Usage:\n  oip review-pr \\\n    --baseline baseline-summary.yaml \\\n    --files \"src/config.yaml,src/api_client.rs\" \\\n    --format markdown\n\n🎯 Phase 3 Complete!\n   ✅ Fast PR review (<30s, actual: 0.125s)\n   ✅ Stateful baselines (no re-analysis)\n   ✅ Actionable warnings (category + TDG + frequency)\n   ✅ Multiple output formats (markdown, JSON)\n\nGenerated with Claude Code (https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "ASTTransform",
+      "confidence": 0.85,
+      "commit_hash": "5462affb9013a106d9e588bfbba5de2cd56f1676",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1763210894,
+      "lines_added": 603,
+      "lines_removed": 36,
+      "files_changed": 6
+    },
+    {
+      "message": "docs: Add comprehensive pmat plugin integration guide\n\nCreated detailed specification showing how to integrate OIP as a pmat\nplugin and use defect analysis to improve AI prompts in paiml-mcp-agent-toolkit.\n\nGuide includes:\n- Integration architecture (pmat → OIP → AI prompts)\n- Step-by-step setup instructions\n- Privacy-preserving defect pattern extraction (no PII)\n- Prompt template examples (context-aware code generation)\n- Real-world implementation for paiml-mcp-agent-toolkit\n- Rust code examples for DefectAwarePromptGenerator\n- Advanced use cases (code review, onboarding, sprint planning)\n- Prompt templates for features, bug fixes, refactoring\n\nKey Features:\n✅ Generic learnings (no commit hashes, no author names)\n✅ Context-aware prompts with historical defect patterns\n✅ Quality gates integration (TDG, coverage, SATD)\n✅ Actionable prevention strategies\n✅ Measurable impact tracking\n\nExample Enhancement:\nBefore: \"Write a config parser\"\nAfter: \"Write a config parser avoiding these 25 historical patterns:\n        - Missing validation (8x)\n        - Type errors (6x)\n        - Undocumented defaults (5x)\n        Must: TDG >85, Coverage >85%, No SATD markers\"\n\nUse Cases:\n1. AI code generation with organizational context\n2. Automated code review with defect awareness\n3. Developer onboarding guide generation\n4. Sprint planning with data-driven priorities\n\nImplementation: 4 phases (basic → prompt → automation → advanced)\nEstimated effort: 5-15 hours total\nExpected impact: 30-60% defect reduction\n\nThis transforms OIP from a reporting tool into an active quality\nimprovement system by feeding insights back into the development process.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "ASTTransform",
+      "confidence": 0.85,
+      "commit_hash": "a6dcea52690d49d044c3d1fb03de500c3b8ce1b0",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1763209287,
+      "lines_added": 990,
+      "lines_removed": 0,
+      "files_changed": 1
+    }
+  ],
+  "test": [
+    {
+      "message": "fix: Update pmat TDG JSON parsing to match actual schema\n\nFixed the pmat JSON parser to correctly parse the actual JSON schema\nreturned by pmat analyze tdg --format json.\n\nChanges:\n- Update PmatFile struct to use `file_path` instead of `path`\n- Update PmatFile struct to use `total` instead of `score`\n- Remove `average_score` from PmatOutput (not in actual output)\n- Calculate average from total_score / file_count directly\n- Add #[allow(dead_code)] to unused `grade` field\n- Update test_parse_tdg_output to use correct schema\n\nTesting:\n- All 30 tests passing\n- End-to-end test confirms TDG scores now populated\n- Example output: avg_tdg_score: 99.65, max_tdg_score: 100.0\n\nActual pmat JSON schema:\n```json\n{\n  \"files\": [\n    {\n      \"file_path\": \"./src/main.rs\",\n      \"total\": 95.0,\n      \"grade\": \"APLus\",\n      \"structural_complexity\": 25,\n      ...\n    }\n  ]\n}\n```\n\nBefore: TDG scores were null (parse error)\nAfter: TDG scores correctly populated from pmat output\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "OwnershipBorrow",
+      "confidence": 0.85,
+      "commit_hash": "8c21e332e8e90235f2ef0ef576d69aadfd018b87",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1763207525,
+      "lines_added": 18,
+      "lines_removed": 14,
+      "files_changed": 1
+    },
+    {
+      "message": "feat: Add pmat TDG integration to defect analysis\n\nThis commit integrates pmat's Technical Debt Gradient (TDG) analysis\ninto defect pattern reporting, enriching quality signals with codebase\nhealth metrics.\n\nChanges:\n- Add new `pmat` module with TDG analysis integration\n- Implement PmatIntegration wrapper for calling pmat CLI\n- Parse pmat JSON output to extract TDG scores per file\n- Add TdgAnalysis struct to store aggregated TDG results\n- Update OrgAnalyzer to optionally run TDG analysis on cloned repos\n- Enrich DefectPattern quality signals with avg/max TDG scores\n- Gracefully fallback if pmat not available (log debug message)\n- Add comprehensive unit tests for TDG parsing and enrichment\n\nTesting:\n- 30 tests passing (24 passing, 6 ignored)\n- New test: test_parse_tdg_output verifies JSON parsing\n- New test: test_enrich_with_tdg verifies quality signal population\n- Integration test available for real pmat execution (ignored)\n\nQuality Signals Enhanced:\n- avg_tdg_score: Repository average TDG (0-100, higher is better)\n- max_tdg_score: Worst file TDG in repository\n- Enables correlation analysis between TDG and defect frequency\n\nYAML Output Example:\n```yaml\ndefect_patterns:\n- category: ConfigurationErrors\n  quality_signals:\n    avg_tdg_score: 96.4    # ✅ NEW: Repository quality\n    max_tdg_score: 98.0    # ✅ NEW: Worst file quality\n    avg_lines_changed: 45.2\n    avg_files_per_commit: 2.1\n```\n\nPhase 1.5 Progress:\n✅ Data structures (churn metrics)\n✅ pmat TDG integration\n⏳ SATD detection (next)\n⏳ Coverage parsing (next)\n⏳ Insights generation (next)\n\nToyota Way: Integrate existing quality tools (pmat) rather than\nreinventing. Fail gracefully if dependencies unavailable.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "ConfigurationErrors",
+      "confidence": 0.75,
+      "commit_hash": "1c118c636cd22ec6d711b5b96b7aa9f4d2f8f281",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1763206916,
+      "lines_added": 295,
+      "lines_removed": 3,
+      "files_changed": 3
+    },
+    {
+      "message": "fix: Integrate OrgAnalyzer in main.rs and add coverage tooling\n\nSTOP THE LINE: Fixed critical 0% coverage defect in main.rs\n\nFollowing EXTREME TDD \"pmat prompt continue\" workflow:\n1. pmat analyze: Found 0 SATD, 0 dead code\n2. pmat tdg: Score 96.6/100 (A+) - excellent quality\n3. make coverage: Revealed main.rs at 0% coverage ❌\n4. STOP THE LINE: Fixed integration gap\n\nChanges:\n- Updated main.rs to use OrgAnalyzer for actual defect analysis\n- Analyzes top N repositories (configurable via --max-concurrent)\n- Aggregates defect patterns across repositories\n- Added tempfile to main dependencies (needed for TempDir)\n- Copied well-tested coverage design from ../bashrs/Makefile\n- Implemented Toyota Way \"make coverage just works\" pattern\n- Two-phase instrumentation: test with --no-report, then generate HTML/LCOV\n- Added coverage-open, coverage-summary, coverage-ci, coverage-clean targets\n\nCoverage Results (after fix):\n- Total: 60.68% (baseline established)\n- classifier.rs: 93.64% ✅\n- report.rs: 84.93% ✅\n- analyzer.rs: 83.51% ✅\n- github.rs: 57.35% (needs improvement)\n- git.rs: 29.17% (needs improvement)\n- main.rs: 0% → will improve with integration tests\n\nToyota Way Applied:\n- Genchi Genbutsu: Copied proven bashrs coverage pattern\n- Kaizen: Fixed defect immediately upon discovery\n- Jidoka: STOP THE LINE when main.rs had 0% coverage\n- Fast Feedback: make coverage <10min target\n\nQuality Gates: All passed (fmt, clippy, test-fast)\nTests: 25 total (20 passing, 5 ignored network tests)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "ASTTransform",
+      "confidence": 0.85,
+      "commit_hash": "74d459e467a7877daddd94d806d90657fe34a479",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1763204672,
+      "lines_added": 136,
+      "lines_removed": 22,
+      "files_changed": 3
+    },
+    {
+      "message": "feat: Implement rule-based defect classifier with EXTREME TDD\n\nImplemented Phase 1 classifier following EXTREME TDD methodology:\n\nRED-GREEN-REFACTOR Cycle:\n- ✅ Tests written first (11 unit tests)\n- ✅ Implementation with pattern matching\n- ✅ Quality validation and refactoring\n\nFeatures Added:\n- Rule-based classifier module (classifier.rs)\n- 10 defect categories per specification\n- Pattern matching with confidence scoring\n- Multi-pattern confidence boosting\n- Explanations for transparency (Respect for People)\n- Case-insensitive matching\n- 100+ defect keywords across categories\n- Runnable example (classify_defects.rs)\n\nDefect Categories Implemented:\n1. Memory Safety (use-after-free, null pointer, buffer overflow)\n2. Concurrency Bugs (race conditions, deadlocks)\n3. Security Vulnerabilities (SQL injection, XSS)\n4. Logic Errors (off-by-one, incorrect conditions)\n5. API Misuse (parameter errors, missing checks)\n6. Resource Leaks (connection/file leaks)\n7. Type Errors (casting, serialization)\n8. Configuration Errors (env vars, settings)\n9. Performance Issues (slow queries, inefficiency)\n10. Integration Failures (version mismatch, breaking changes)\n\nQuality Gates Passed:\n- ✅ All tests passing (23/23 total)\n- ✅ Pre-commit hooks (<10s)\n- ✅ cargo fmt compliance\n- ✅ cargo clippy (zero warnings)\n- ✅ Comprehensive documentation\n\nToyota Way Principles:\n- Genchi Genbutsu: Real commit patterns validated\n- Kaizen: Incremental classifier evolution planned\n- Respect for People: Explanations for learning\n- Jidoka: Confidence scores enable human review\n\nPhase 1 Progress:\n1. ✅ CLI structure (DONE)\n2. ✅ GitHub API integration (DONE)\n3. ✅ YAML output generation (DONE)\n4. ✅ Rule-based classifier (DONE)\n5. 🔄 Data collection mechanism (NEXT)\n\nExample Usage:\n  cargo run --example classify_defects\n\nReady for Phase 2: User feedback collection for ML training\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "MemorySafety",
+      "confidence": 0.95,
+      "commit_hash": "5fe4d43f0c799ff51685fe58579b178549b17c87",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1763203782,
+      "lines_added": 612,
+      "lines_removed": 2,
+      "files_changed": 5
+    },
+    {
+      "message": "feat: Add YAML report generation with EXTREME TDD\n\nImplemented structured YAML output following EXTREME TDD workflow:\n\nRED-GREEN-REFACTOR Cycle:\n- ✅ Tests written first (7 unit tests)\n- ✅ Implementation with quality validation\n- ✅ Refactoring with clippy fixes\n\nFeatures Added:\n- Report generation module (report.rs)\n- AnalysisReport structure per specification Section 6\n- AnalysisMetadata with org, date, repo count\n- DefectPattern structure (ready for Phase 2 classifier)\n- ReportGenerator with YAML serialization\n- File writing with async I/O\n- CLI integration with --output flag\n- Runnable example (analyze_org.rs)\n\nQuality Gates Passed:\n- ✅ All tests passing (17/17 total)\n- ✅ Pre-commit hooks (<10s)\n- ✅ cargo fmt compliance\n- ✅ cargo clippy (zero warnings)\n- ✅ Documentation with examples\n- ✅ Doc tests passing (5/5)\n\nToyota Way Principles:\n- Genchi Genbutsu: Real YAML output validated\n- Kaizen: Incremental feature delivery\n- Jidoka: Quality gates catch issues\n- PDCA: Plan → Test → Implement → Validate\n\nPhase 1 Progress:\n1. ✅ CLI structure (DONE)\n2. ✅ GitHub API integration (DONE)\n3. ✅ YAML output generation (DONE)\n4. 🔄 Git history analysis (NEXT)\n5. 🔄 Rule-based classifier (NEXT)\n\nExample Usage:\n  cargo run --example analyze_org\n  oip analyze --org rust-lang --output report.yaml\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "ComprehensionBugs",
+      "confidence": 0.8,
+      "commit_hash": "e078fe72677db652a6fbe2df9680f9f2257faf9c",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1763203568,
+      "lines_added": 487,
+      "lines_removed": 5,
+      "files_changed": 7
+    },
+    {
+      "message": "feat: Implement GitHub API integration with EXTREME TDD\n\nImplemented GitHub organization repository fetching following EXTREME TDD:\n\nRED-GREEN-REFACTOR Cycle:\n- ✅ Tests written first (5 unit tests)\n- ✅ Minimal implementation to pass tests\n- ✅ Refactoring with quality gates\n\nFeatures Added:\n- GitHub API client using octocrab\n- Organization repository listing\n- RepoInfo data structure (name, stars, language)\n- Authentication token support (GITHUB_TOKEN env var)\n- Input validation (empty org name)\n- Comprehensive error handling\n\nQuality Gates Passed:\n- ✅ All tests passing (9/9 unit + integration + doc tests)\n- ✅ Pre-commit hooks (<10s)\n- ✅ cargo fmt compliance\n- ✅ cargo clippy (zero warnings)\n- ✅ Documentation with examples\n\nToyota Way Principles:\n- Genchi Genbutsu: Real GitHub API integration tested\n- Kaizen: Incremental feature delivery\n- Jidoka: Automated quality validation\n- Respect for People: Clear error messages, helpful docs\n\nPhase 1 Progress:\n1. ✅ CLI structure\n2. ✅ GitHub API integration (DONE)\n3. 🔄 Git history analysis (NEXT)\n4. 🔄 Rule-based classifier (NEXT)\n\nExample Usage:\n  oip analyze --org rust-lang\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\n",
+      "label": "SecurityVulnerabilities",
+      "confidence": 0.9,
+      "commit_hash": "9fd088dba9828d5188d23dd087b06f44fefba871",
+      "author": "noah.gift@gmail.com",
+      "timestamp": 1763203227,
+      "lines_added": 1691,
+      "lines_removed": 166,
+      "files_changed": 6
+    }
+  ],
+  "metadata": {
+    "total_examples": 31,
+    "train_size": 21,
+    "validation_size": 4,
+    "test_size": 6,
+    "class_distribution": {
+      "TraitBounds": 3,
+      "ComprehensionBugs": 1,
+      "ASTTransform": 9,
+      "TypeErrors": 4,
+      "ConfigurationErrors": 5,
+      "MemorySafety": 3,
+      "SecurityVulnerabilities": 1,
+      "OwnershipBorrow": 5
+    },
+    "avg_confidence": 0.8306452,
+    "min_confidence": 0.75,
+    "repositories": [
+      "unknown-repo"
+    ]
+  }
+}

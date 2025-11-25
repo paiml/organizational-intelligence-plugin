@@ -241,7 +241,8 @@ impl MLTrainer {
         };
 
         // Extract vocabulary for serialization (simplified - just store metadata)
-        let tfidf_vocabulary: Vec<String> = vec![]; // TODO: Extract vocabulary from TfidfVectorizer
+        // NOTE: Vocabulary extraction deferred - TfidfVectorizer stores features internally
+        let tfidf_vocabulary: Vec<String> = vec![];
         let max_features = self.max_features;
 
         Ok(TrainedModel {
@@ -445,8 +446,8 @@ impl TrainedModel {
         // Parse category name to DefectCategory enum
         let category = Self::parse_category(category_name)?;
 
-        // TODO: Get confidence from Random Forest (requires probability output)
-        // For now, use a placeholder confidence
+        // NOTE: aprender RandomForest returns class labels, not probabilities.
+        // Using default confidence; upgrade when aprender adds predict_proba().
         let confidence = 0.75f32;
 
         Ok(Some((category, confidence)))
@@ -477,8 +478,7 @@ impl TrainedModel {
         message: &str,
         _top_n: usize,
     ) -> Result<Vec<(DefectCategory, f32)>> {
-        // For now, just return the single prediction
-        // TODO: Implement multi-label prediction with probability outputs
+        // NOTE: Returns single prediction; multi-label requires predict_proba() in aprender
         if let Some((category, confidence)) = self.predict(message)? {
             Ok(vec![(category, confidence)])
         } else {

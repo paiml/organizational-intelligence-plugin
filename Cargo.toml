@@ -8,6 +8,9 @@ license = "MIT"
 description = "Organizational Intelligence Plugin - Defect pattern analysis for GitHub organizations"
 repository = "https://github.com/paiml/organizational-intelligence-plugin"
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [[bin]]
 name = "oip"
 path = "src/main.rs"
@@ -59,11 +62,21 @@ trueno-db = "0.3.2"
 trueno-graph = "0.1.1"
 aprender = "0.8.0"
 
+# Visualization (optional) - use path for local dev until published
+trueno-viz = { path = "../trueno-viz", optional = true }
+
 # GPU compute (wgpu for cross-platform GPU)
 wgpu = { version = "0.19", features = ["wgsl"] }
 
 # Additional for GPU features
 bytemuck = "1.14"
+
+# WASM support (optional)
+wasm-bindgen = { version = "0.2", optional = true }
+js-sys = { version = "0.3", optional = true }
+web-sys = { version = "0.3", optional = true, features = ["console"] }
+getrandom = { version = "0.2", features = ["js"], optional = true }
+console_error_panic_hook = { version = "0.1", optional = true }
 
 [dev-dependencies]
 criterion = "0.5"
@@ -81,6 +94,8 @@ harness = false
 [features]
 default = []
 gpu = ["wgpu/default"]  # Enable GPU compute (requires GPU hardware)
+viz = ["trueno-viz"]    # Enable visualization output
+wasm = ["dep:wasm-bindgen", "dep:js-sys", "dep:web-sys", "dep:getrandom", "dep:console_error_panic_hook"]  # WebAssembly support
 
 [profile.release]
 opt-level = 3

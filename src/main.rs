@@ -81,6 +81,7 @@ async fn main() -> Result<()> {
             min_confidence,
             max_commits,
             create_splits,
+            viz,
         } => {
             cli_handlers::handle_extract_training_data(
                 repo,
@@ -88,6 +89,7 @@ async fn main() -> Result<()> {
                 min_confidence,
                 max_commits,
                 create_splits,
+                viz,
             )
             .await
         }

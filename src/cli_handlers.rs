@@ -17,6 +17,7 @@ use crate::pr_reviewer::PrReviewer;
 use crate::report::{AnalysisMetadata, AnalysisReport, ReportGenerator};
 use crate::summarizer::{ReportSummarizer, SummaryConfig};
 use crate::training::TrainingDataExtractor;
+use crate::viz::{ConfidenceDistribution, DefectDistribution};
 
 /// Handle the `review-pr` command
 pub async fn handle_review_pr(
@@ -335,6 +336,7 @@ pub async fn handle_extract_training_data(
     min_confidence: f32,
     max_commits: usize,
     create_splits: bool,
+    viz: bool,
 ) -> Result<()> {
     info!("Extracting training data from: {}", repo.display());
     info!("Output file: {}", output.display());
@@ -347,6 +349,7 @@ pub async fn handle_extract_training_data(
     println!("   Min confidence:  {:.2}", min_confidence);
     println!("   Max commits:     {}", max_commits);
     println!("   Create splits:   {}", create_splits);
+    println!("   Visualization:   {}", viz);
 
     // Validate repository path
     if !repo.exists() {
@@ -418,6 +421,32 @@ pub async fn handle_extract_training_data(
 
     println!("\n✅ Training data saved to: {}", output.display());
 
+    // Visualization output
+    if viz {
+        println!("\n📊 Defect Pattern Visualization");
+        println!("{}", "─".repeat(50));
+
+        let defect_dist = DefectDistribution::from_examples(&examples);
+        let confidence_dist = ConfidenceDistribution::from_examples(&examples);
+
+        // ASCII visualization (always available)
+        crate::viz::print_summary_report(repo_name, &defect_dist, &confidence_dist);
+
+        // trueno-viz visualization (if feature enabled)
+        #[cfg(feature = "viz")]
+        {
+            println!("\n📈 Rich Terminal Visualization (trueno-viz):");
+            if let Err(e) = crate::viz::render_confidence_histogram(&confidence_dist) {
+                warn!("Could not render histogram: {}", e);
+            }
+        }
+
+        #[cfg(not(feature = "viz"))]
+        {
+            println!("\n💡 Tip: Build with --features viz for rich terminal visualizations");
+        }
+    }
+
     // Summary
     println!("\n🎯 Phase 2 Training Data Extraction Complete!");
     println!("   ✅ Commit filtering (excludes merges, reverts, WIP)");
@@ -428,6 +457,9 @@ pub async fn handle_extract_training_data(
     );
     if create_splits {
         println!("   ✅ Train/validation/test splits created");
+    }
+    if viz {
+        println!("   ✅ Visualization rendered");
     }
     println!("   ✅ Ready for ML training (RandomForestClassifier)");
 
@@ -883,7 +915,7 @@ defect_patterns:
         let temp_output = NamedTempFile::new().unwrap();
         let output = temp_output.path().to_path_buf();
 
-        let result = handle_extract_training_data(repo, output, 0.75, 100, true).await;
+        let result = handle_extract_training_data(repo, output, 0.75, 100, true, false).await;
         assert!(result.is_err());
     }
 
@@ -896,7 +928,7 @@ defect_patterns:
         let temp_output = NamedTempFile::new().unwrap();
         let output = temp_output.path().to_path_buf();
 
-        let result = handle_extract_training_data(repo, output, 0.75, 100, true).await;
+        let result = handle_extract_training_data(repo, output, 0.75, 100, true, false).await;
         assert!(result.is_err());
         assert!(result
             .unwrap_err()
@@ -912,7 +944,8 @@ defect_patterns:
         let output = temp_output.path().to_path_buf();
 
         // This should succeed as it's a real git repo
-        let result = handle_extract_training_data(repo, output.clone(), 0.70, 50, true).await;
+        let result =
+            handle_extract_training_data(repo, output.clone(), 0.70, 50, true, false).await;
 
         // Should succeed or return Ok with empty results
         match result {
@@ -937,7 +970,8 @@ defect_patterns:
         let temp_output = NamedTempFile::new().unwrap();
         let output = temp_output.path().to_path_buf();
 
-        let result = handle_extract_training_data(repo, output.clone(), 0.70, 50, false).await;
+        let result =
+            handle_extract_training_data(repo, output.clone(), 0.70, 50, false, false).await;
 
         // Should succeed or return Ok with empty results
         match result {
@@ -963,7 +997,8 @@ defect_patterns:
         let output = temp_output.path().to_path_buf();
 
         // High confidence threshold (0.95) should result in fewer/no examples
-        let result = handle_extract_training_data(repo, output.clone(), 0.95, 50, true).await;
+        let result =
+            handle_extract_training_data(repo, output.clone(), 0.95, 50, true, false).await;
 
         // Should succeed (even if no examples found)
         assert!(result.is_ok() || result.unwrap_err().to_string().contains("Git"));
@@ -976,7 +1011,7 @@ defect_patterns:
         let temp_output = NamedTempFile::new().unwrap();
         let output = temp_output.path().to_path_buf();
 
-        let result = handle_extract_training_data(repo, output.clone(), 0.75, 5, true).await;
+        let result = handle_extract_training_data(repo, output.clone(), 0.75, 5, true, false).await;
 
         // Should succeed with limited commits
         assert!(result.is_ok() || result.unwrap_err().to_string().contains("Git"));
