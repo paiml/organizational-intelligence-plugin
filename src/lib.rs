@@ -10,6 +10,7 @@ pub mod analyzer;
 pub mod classifier;
 pub mod cli;
 pub mod cli_handlers;
+pub mod export;
 pub mod git;
 pub mod github;
 pub mod ml_trainer;

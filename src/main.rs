@@ -110,5 +110,13 @@ async fn main() -> Result<()> {
             )
             .await
         }
+
+        Commands::Export {
+            repo,
+            output,
+            format,
+            max_commits,
+            min_confidence,
+        } => cli_handlers::handle_export(repo, output, format, max_commits, min_confidence).await,
     }
 }

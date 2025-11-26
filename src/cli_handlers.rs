@@ -10,6 +10,9 @@ use tempfile::TempDir;
 use tracing::{error, info, warn};
 
 use crate::analyzer::OrgAnalyzer;
+use crate::classifier::{DefectCategory, RuleBasedClassifier};
+use crate::export::{ExportFormat, FeatureExporter};
+use crate::features::{CommitFeatures, FeatureExtractor};
 use crate::git;
 use crate::github::GitHubMiner;
 use crate::ml_trainer::MLTrainer;
@@ -609,6 +612,158 @@ pub async fn handle_train_classifier(
     Ok(())
 }
 
+/// Handle the `export` command (Issue #2)
+///
+/// Exports CommitFeatures to aprender-compatible format for ML training.
+pub async fn handle_export(
+    repo: PathBuf,
+    output: PathBuf,
+    format: String,
+    max_commits: usize,
+    min_confidence: f32,
+) -> Result<()> {
+    info!("Exporting features from: {}", repo.display());
+    info!("Output file: {}", output.display());
+    info!("Format: {}", format);
+    info!("Max commits: {}", max_commits);
+    info!("Min confidence: {}", min_confidence);
+
+    println!("\n📦 Feature Export to aprender Format (Issue #2)");
+    println!("   Repository:     {}", repo.display());
+    println!("   Output:         {}", output.display());
+    println!("   Format:         {}", format);
+    println!("   Max commits:    {}", max_commits);
+    println!("   Min confidence: {:.2}", min_confidence);
+
+    // Validate repository path
+    if !repo.exists() {
+        return Err(anyhow::anyhow!(
+            "Repository path does not exist: {}",
+            repo.display()
+        ));
+    }
+
+    if !repo.join(".git").exists() {
+        return Err(anyhow::anyhow!("Not a Git repository: {}", repo.display()));
+    }
+
+    // Parse export format
+    let export_format: ExportFormat = format
+        .parse()
+        .map_err(|e| anyhow::anyhow!("Invalid format '{}': {}", format, e))?;
+
+    // Extract commit history
+    println!("\n📖 Reading commit history...");
+    let commits = git::analyze_repository_at_path(&repo, max_commits)?;
+    println!("   ✅ Found {} commits", commits.len());
+
+    if commits.is_empty() {
+        return Err(anyhow::anyhow!("No commits found in repository"));
+    }
+
+    // Classify commits and extract features
+    println!("\n🔍 Classifying and extracting features...");
+    let classifier = RuleBasedClassifier::new();
+    let feature_extractor = FeatureExtractor::new();
+
+    let mut features: Vec<CommitFeatures> = Vec::new();
+    let mut categories: Vec<DefectCategory> = Vec::new();
+    let mut skipped = 0;
+
+    for commit in &commits {
+        // Classify the commit message
+        if let Some(classification) = classifier.classify_from_message(&commit.message) {
+            // Only include commits above confidence threshold
+            if classification.confidence >= min_confidence {
+                // Extract features
+                if let Ok(feat) = feature_extractor.extract(
+                    FeatureExporter::encode_label(classification.category),
+                    commit.files_changed,
+                    commit.lines_added,
+                    commit.lines_removed,
+                    commit.timestamp,
+                ) {
+                    features.push(feat);
+                    categories.push(classification.category);
+                } else {
+                    skipped += 1;
+                }
+            } else {
+                skipped += 1;
+            }
+        } else {
+            skipped += 1;
+        }
+    }
+
+    println!("   ✅ Extracted {} samples", features.len());
+    if skipped > 0 {
+        println!(
+            "   ⚠️  Skipped {} commits (below confidence threshold or unclassified)",
+            skipped
+        );
+    }
+
+    if features.is_empty() {
+        return Err(anyhow::anyhow!(
+            "No features extracted. Try lowering --min-confidence (current: {:.2})",
+            min_confidence
+        ));
+    }
+
+    // Export to aprender format
+    println!("\n💾 Exporting to {} format...", export_format);
+    let exporter = FeatureExporter::new(export_format);
+    let dataset = exporter.export(&features, &categories)?;
+
+    // Save to file
+    exporter.save(&dataset, &output)?;
+
+    println!("   ✅ Saved to: {}", output.display());
+
+    // Show statistics
+    println!("\n📊 Export Statistics:");
+    println!("   Samples:    {}", dataset.metadata.n_samples);
+    println!("   Features:   {}", dataset.metadata.n_features);
+    println!("   Classes:    {}", dataset.metadata.n_classes);
+    println!("   Format:     {}", dataset.metadata.format);
+    println!("   Version:    {}", dataset.metadata.version);
+
+    // Show class distribution
+    let mut class_counts: std::collections::HashMap<u8, usize> = std::collections::HashMap::new();
+    for &label in &dataset.labels {
+        *class_counts.entry(label).or_insert(0) += 1;
+    }
+
+    println!("\n📈 Class Distribution:");
+    let mut sorted_counts: Vec<_> = class_counts.iter().collect();
+    sorted_counts.sort_by(|a, b| b.1.cmp(a.1));
+
+    for (label, count) in sorted_counts.iter().take(10) {
+        let category_name = &dataset.category_names[**label as usize];
+        let percentage = (**count as f32 / dataset.metadata.n_samples as f32) * 100.0;
+        println!("   {}: {} ({:.1}%)", category_name, count, percentage);
+    }
+
+    // Summary
+    println!("\n🎯 Export Complete!");
+    println!("   ✅ CommitFeatures exported as Matrix<f32>");
+    println!("   ✅ Labels exported as Vec<u8>");
+    println!("   ✅ 18-category taxonomy mapping included");
+    println!("   ✅ Ready for aprender training (RandomForest, K-Means)");
+
+    println!("\n💡 Next Steps:");
+    println!(
+        "   1. Load with: FeatureExporter::load(\"{}\", ExportFormat::{})",
+        output.display(),
+        format.to_uppercase()
+    );
+    println!("   2. Convert to Matrix: FeatureExporter::to_aprender_matrix(&dataset)");
+    println!("   3. Train classifier: RandomForestClassifier::fit(&matrix, &labels)");
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1067,6 +1222,179 @@ defect_patterns:
                 let msg = e.to_string();
                 assert!(
                     msg.contains("empty") || msg.contains("training") || msg.contains("TF-IDF"),
+                    "Unexpected error: {}",
+                    msg
+                );
+            }
+        }
+    }
+
+    // ===== Export Handler Tests (Issue #2) =====
+
+    #[tokio::test]
+    async fn test_handle_export_invalid_path() {
+        let repo = PathBuf::from("/nonexistent/repo/path");
+        let temp_output = NamedTempFile::new().unwrap();
+        let output = temp_output.path().to_path_buf();
+
+        let result = handle_export(repo, output, "json".to_string(), 100, 0.70).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("does not exist"));
+    }
+
+    #[tokio::test]
+    async fn test_handle_export_not_git_repo() {
+        let temp_dir = tempfile::TempDir::new().unwrap();
+        let repo = temp_dir.path().to_path_buf();
+        let temp_output = NamedTempFile::new().unwrap();
+        let output = temp_output.path().to_path_buf();
+
+        let result = handle_export(repo, output, "json".to_string(), 100, 0.70).await;
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Not a Git repository"));
+    }
+
+    #[tokio::test]
+    async fn test_handle_export_invalid_format() {
+        // Skip if not in a git repo (e.g., during mutation testing)
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        if !repo.join(".git").exists() {
+            return;
+        }
+
+        let temp_output = NamedTempFile::new().unwrap();
+        let output = temp_output.path().to_path_buf();
+
+        let result = handle_export(repo, output, "invalid_format".to_string(), 100, 0.70).await;
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        // Either invalid format error or not a git repo error
+        assert!(err_msg.contains("Invalid format") || err_msg.contains("Not a Git"));
+    }
+
+    #[tokio::test]
+    async fn test_handle_export_json_format() {
+        // Skip if not in a git repo (e.g., during mutation testing)
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        if !repo.join(".git").exists() {
+            return;
+        }
+
+        let temp_output = NamedTempFile::new().unwrap();
+        let output = temp_output.path().to_path_buf();
+
+        // Use low confidence threshold to get more samples
+        let result = handle_export(repo, output.clone(), "json".to_string(), 100, 0.60).await;
+
+        // May succeed or fail depending on commit messages - both are acceptable
+        match result {
+            Ok(_) => {
+                assert!(output.exists());
+                let content = std::fs::read_to_string(&output).unwrap();
+                assert!(content.contains("features"));
+                assert!(content.contains("labels"));
+            }
+            Err(e) => {
+                // Acceptable errors
+                let msg = e.to_string();
+                assert!(
+                    msg.contains("No features")
+                        || msg.contains("No commits")
+                        || msg.contains("Git"),
+                    "Unexpected error: {}",
+                    msg
+                );
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_handle_export_binary_format() {
+        // Skip if not in a git repo
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        if !repo.join(".git").exists() {
+            return;
+        }
+
+        let temp_output = NamedTempFile::new().unwrap();
+        let output = temp_output.path().to_path_buf();
+
+        let result = handle_export(repo, output.clone(), "binary".to_string(), 100, 0.60).await;
+
+        match result {
+            Ok(_) => {
+                assert!(output.exists());
+                let content = std::fs::read(&output).unwrap();
+                assert!(!content.is_empty());
+            }
+            Err(e) => {
+                let msg = e.to_string();
+                assert!(
+                    msg.contains("No features") || msg.contains("Git"),
+                    "Unexpected error: {}",
+                    msg
+                );
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_handle_export_high_confidence_threshold() {
+        // Skip if not in a git repo
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        if !repo.join(".git").exists() {
+            return;
+        }
+
+        let temp_output = NamedTempFile::new().unwrap();
+        let output = temp_output.path().to_path_buf();
+
+        // Very high confidence threshold - may find no features
+        let result = handle_export(repo, output.clone(), "json".to_string(), 50, 0.99).await;
+
+        // Both success and "no features" error are acceptable
+        match result {
+            Ok(_) => {
+                assert!(output.exists());
+            }
+            Err(e) => {
+                let msg = e.to_string();
+                assert!(
+                    msg.contains("No features") || msg.contains("Git"),
+                    "Unexpected error: {}",
+                    msg
+                );
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_handle_export_low_max_commits() {
+        // Skip if not in a git repo
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        if !repo.join(".git").exists() {
+            return;
+        }
+
+        let temp_output = NamedTempFile::new().unwrap();
+        let output = temp_output.path().to_path_buf();
+
+        let result = handle_export(repo, output.clone(), "json".to_string(), 10, 0.60).await;
+
+        // Should work with limited commits
+        match result {
+            Ok(_) => {
+                assert!(output.exists());
+            }
+            Err(e) => {
+                let msg = e.to_string();
+                assert!(
+                    msg.contains("No features")
+                        || msg.contains("No commits")
+                        || msg.contains("Git"),
                     "Unexpected error: {}",
                     msg
                 );

@@ -2134,6 +2134,7 @@ dependencies = [
  "anyhow",
  "aprender 0.9.1",
  "async-trait",
+ "bincode",
  "bytemuck",
  "chrono",
  "clap",

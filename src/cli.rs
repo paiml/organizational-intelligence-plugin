@@ -141,6 +141,29 @@ pub enum Commands {
         #[arg(long, default_value = "1500")]
         max_features: usize,
     },
+
+    /// Export CommitFeatures to aprender-compatible format (Issue #2)
+    Export {
+        /// Path to Git repository to analyze
+        #[arg(long, short, required = true)]
+        repo: PathBuf,
+
+        /// Output file path
+        #[arg(long, short, default_value = "features.json")]
+        output: PathBuf,
+
+        /// Export format: json, binary, parquet
+        #[arg(long, short, default_value = "json")]
+        format: String,
+
+        /// Maximum commits to analyze
+        #[arg(long, default_value = "1000")]
+        max_commits: usize,
+
+        /// Minimum confidence threshold for classification (0.0-1.0)
+        #[arg(long, default_value = "0.70")]
+        min_confidence: f32,
+    },
 }
 
 #[cfg(test)]
