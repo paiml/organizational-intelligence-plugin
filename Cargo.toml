@@ -113,6 +113,10 @@ path = "examples/full_analysis.rs"
 name = "citl_import"
 path = "examples/citl_import.rs"
 
+[[example]]
+name = "explore_data"
+path = "examples/explore_data.rs"
+
 [features]
 default = []
 gpu = ["wgpu/default"]  # Enable GPU compute (requires GPU hardware)
