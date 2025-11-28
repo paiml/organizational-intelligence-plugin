@@ -63,6 +63,11 @@ trueno-db = "0.3.2"
 trueno-graph = "0.1.1"
 aprender = "0.9.1"
 
+# Data loading (alimentar - paiml stack)
+alimentar = { path = "../alimentar", default-features = false, features = ["local", "mmap", "shuffle"] }
+arrow = "53"  # Match alimentar's arrow version
+parquet = "53"  # For Parquet file I/O
+
 # Visualization (optional)
 trueno-viz = { version = "0.1.1", optional = true }
 

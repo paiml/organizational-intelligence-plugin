@@ -373,6 +373,338 @@ fn parse_defect_category(s: &str) -> Option<DefectCategory> {
     }
 }
 
+// ==================== Alimentar DataLoader Integration ====================
+
+/// Merge strategy for combining CITL data with existing training data
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum MergeStrategy {
+    /// Append CITL examples to existing data
+    #[default]
+    Append,
+    /// Replace existing data with CITL examples
+    Replace,
+    /// Weight CITL examples higher (multiplier applied)
+    Weighted(u32),
+}
+
+/// Configuration for CITL DataLoader
+#[derive(Debug, Clone)]
+pub struct CitlLoaderConfig {
+    /// Batch size for data loading
+    pub batch_size: usize,
+    /// Whether to shuffle the data
+    pub shuffle: bool,
+    /// Minimum confidence threshold
+    pub min_confidence: f32,
+    /// Merge strategy for combining with existing data
+    pub merge_strategy: MergeStrategy,
+    /// Weight multiplier for CITL examples (used with Weighted strategy)
+    pub weight: f32,
+}
+
+impl Default for CitlLoaderConfig {
+    fn default() -> Self {
+        Self {
+            batch_size: 128,
+            shuffle: true,
+            min_confidence: 0.75,
+            merge_strategy: MergeStrategy::Append,
+            weight: 1.0,
+        }
+    }
+}
+
+/// CITL DataLoader using alimentar for efficient data loading
+pub struct CitlDataLoader {
+    config: CitlLoaderConfig,
+}
+
+impl CitlDataLoader {
+    /// Create a new CITL DataLoader with default configuration
+    pub fn new() -> Self {
+        Self {
+            config: CitlLoaderConfig::default(),
+        }
+    }
+
+    /// Create a new CITL DataLoader with custom configuration
+    pub fn with_config(config: CitlLoaderConfig) -> Self {
+        Self { config }
+    }
+
+    /// Set batch size
+    pub fn batch_size(mut self, size: usize) -> Self {
+        self.config.batch_size = size;
+        self
+    }
+
+    /// Enable/disable shuffling
+    pub fn shuffle(mut self, shuffle: bool) -> Self {
+        self.config.shuffle = shuffle;
+        self
+    }
+
+    /// Set minimum confidence threshold
+    pub fn min_confidence(mut self, confidence: f32) -> Self {
+        self.config.min_confidence = confidence;
+        self
+    }
+
+    /// Set merge strategy
+    pub fn merge_strategy(mut self, strategy: MergeStrategy) -> Self {
+        self.config.merge_strategy = strategy;
+        self
+    }
+
+    /// Load CITL corpus from Parquet file using alimentar
+    ///
+    /// Returns an iterator over batches of TrainingExamples
+    pub fn load_parquet<P: AsRef<Path>>(&self, path: P) -> Result<CitlBatchIterator> {
+        use alimentar::{ArrowDataset, DataLoader};
+
+        let dataset = ArrowDataset::from_parquet(path.as_ref())
+            .map_err(|e| anyhow!("Failed to load Parquet: {}", e))?;
+
+        let mut loader = DataLoader::new(dataset).batch_size(self.config.batch_size);
+
+        if self.config.shuffle {
+            loader = loader.shuffle(true);
+        }
+
+        Ok(CitlBatchIterator {
+            inner: Box::new(loader.into_iter()),
+            min_confidence: self.config.min_confidence,
+        })
+    }
+
+    /// Load CITL corpus from JSONL file (streaming)
+    pub fn load_jsonl<P: AsRef<Path>>(
+        &self,
+        path: P,
+    ) -> Result<(Vec<crate::training::TrainingExample>, ImportStats)> {
+        let (exports, stats) = import_depyler_corpus(path, self.config.min_confidence)?;
+        let examples = convert_to_training_examples(&exports);
+        Ok((examples, stats))
+    }
+
+    /// Get the configuration
+    pub fn config(&self) -> &CitlLoaderConfig {
+        &self.config
+    }
+}
+
+impl Default for CitlDataLoader {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Iterator over batches of training examples from alimentar
+pub struct CitlBatchIterator {
+    inner: Box<dyn Iterator<Item = arrow::array::RecordBatch> + Send>,
+    min_confidence: f32,
+}
+
+impl Iterator for CitlBatchIterator {
+    type Item = Vec<crate::training::TrainingExample>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next().map(|batch| {
+            // Convert Arrow RecordBatch to TrainingExamples
+            convert_batch_to_examples(&batch, self.min_confidence)
+        })
+    }
+}
+
+/// Convert an Arrow RecordBatch to TrainingExamples
+fn convert_batch_to_examples(
+    batch: &arrow::array::RecordBatch,
+    min_confidence: f32,
+) -> Vec<crate::training::TrainingExample> {
+    use arrow::array::{Array, Float32Array, Int64Array, StringArray};
+
+    let num_rows = batch.num_rows();
+    let mut examples = Vec::with_capacity(num_rows);
+
+    // Downcast columns upfront for efficiency
+    let message_arr = batch
+        .column_by_name("message")
+        .and_then(|c| c.as_any().downcast_ref::<StringArray>());
+    let error_code_arr = batch
+        .column_by_name("error_code")
+        .and_then(|c| c.as_any().downcast_ref::<StringArray>());
+    let clippy_lint_arr = batch
+        .column_by_name("clippy_lint")
+        .and_then(|c| c.as_any().downcast_ref::<StringArray>());
+    let confidence_arr = batch
+        .column_by_name("confidence")
+        .and_then(|c| c.as_any().downcast_ref::<Float32Array>());
+    let timestamp_arr = batch
+        .column_by_name("timestamp")
+        .and_then(|c| c.as_any().downcast_ref::<Int64Array>());
+    let oip_category_arr = batch
+        .column_by_name("oip_category")
+        .and_then(|c| c.as_any().downcast_ref::<StringArray>());
+
+    for i in 0..num_rows {
+        // Extract confidence
+        let confidence = confidence_arr.map(|a| a.value(i)).unwrap_or(0.0);
+
+        if confidence < min_confidence {
+            continue;
+        }
+
+        // Extract message
+        let message = message_arr
+            .and_then(|a| {
+                if a.is_null(i) {
+                    None
+                } else {
+                    Some(a.value(i).to_string())
+                }
+            })
+            .unwrap_or_default();
+
+        // Extract error_code
+        let error_code = error_code_arr.and_then(|a| {
+            if a.is_null(i) {
+                None
+            } else {
+                Some(a.value(i).to_string())
+            }
+        });
+
+        // Extract clippy_lint
+        let clippy_lint = clippy_lint_arr.and_then(|a| {
+            if a.is_null(i) {
+                None
+            } else {
+                Some(a.value(i).to_string())
+            }
+        });
+
+        // Extract timestamp
+        let timestamp = timestamp_arr.map(|a| a.value(i)).unwrap_or(0);
+
+        // Resolve category
+        let oip_category =
+            oip_category_arr.and_then(|a| if a.is_null(i) { None } else { Some(a.value(i)) });
+
+        let category = oip_category
+            .and_then(parse_defect_category)
+            .or_else(|| error_code.as_deref().and_then(rustc_to_defect_category))
+            .or_else(|| clippy_lint.as_deref().and_then(clippy_to_defect_category));
+
+        if let Some(label) = category {
+            examples.push(crate::training::TrainingExample {
+                message,
+                label,
+                confidence,
+                commit_hash: String::new(),
+                author: "depyler".to_string(),
+                timestamp,
+                lines_added: 0,
+                lines_removed: 0,
+                files_changed: 1,
+                error_code,
+                clippy_lint,
+                has_suggestion: false,
+                suggestion_applicability: None,
+                source: TrainingSource::DepylerCitl,
+            });
+        }
+    }
+
+    examples
+}
+
+/// Validate CITL export schema (FR-8)
+pub fn validate_citl_schema<P: AsRef<Path>>(path: P) -> Result<SchemaValidation> {
+    use alimentar::{ArrowDataset, Dataset};
+    use arrow::datatypes::FieldRef;
+
+    let ext = path.as_ref().extension().and_then(|e| e.to_str());
+
+    let schema = match ext {
+        Some("parquet") => {
+            let dataset = ArrowDataset::from_parquet(path.as_ref())
+                .map_err(|e| anyhow!("Failed to load Parquet: {}", e))?;
+            dataset.schema()
+        }
+        Some("jsonl") | Some("json") => {
+            // For JSONL, we validate the first line
+            let content = std::fs::read_to_string(path.as_ref())?;
+            let first_line = content
+                .lines()
+                .next()
+                .ok_or_else(|| anyhow!("Empty file"))?;
+            let _: DepylerExport = serde_json::from_str(first_line)
+                .map_err(|e| anyhow!("Invalid JSONL schema: {}", e))?;
+            return Ok(SchemaValidation {
+                is_valid: true,
+                missing_fields: vec![],
+                extra_fields: vec![],
+                format: "jsonl".to_string(),
+            });
+        }
+        _ => return Err(anyhow!("Unsupported file format: {:?}", ext)),
+    };
+
+    // Required fields for CITL schema
+    let required_fields = ["message", "confidence", "timestamp"];
+    let optional_fields = [
+        "error_code",
+        "clippy_lint",
+        "oip_category",
+        "suggestion",
+        "span",
+    ];
+
+    let schema_fields: Vec<&str> = schema
+        .fields()
+        .iter()
+        .map(|f: &FieldRef| f.name().as_str())
+        .collect();
+
+    let missing: Vec<String> = required_fields
+        .iter()
+        .filter(|f| !schema_fields.contains(*f))
+        .map(|s: &&str| (*s).to_string())
+        .collect();
+
+    let known_fields: Vec<&str> = required_fields
+        .iter()
+        .chain(optional_fields.iter())
+        .copied()
+        .collect();
+
+    let extra: Vec<String> = schema_fields
+        .iter()
+        .filter(|f| !known_fields.contains(*f))
+        .map(|s: &&str| (*s).to_string())
+        .collect();
+
+    Ok(SchemaValidation {
+        is_valid: missing.is_empty(),
+        missing_fields: missing,
+        extra_fields: extra,
+        format: "parquet".to_string(),
+    })
+}
+
+/// Schema validation result
+#[derive(Debug, Clone)]
+pub struct SchemaValidation {
+    /// Whether the schema is valid
+    pub is_valid: bool,
+    /// Missing required fields
+    pub missing_fields: Vec<String>,
+    /// Extra fields not in the expected schema
+    pub extra_fields: Vec<String>,
+    /// Detected format
+    pub format: String,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -986,5 +1318,318 @@ mod tests {
         let examples = convert_to_training_examples(&exports);
         assert_eq!(examples.len(), 1);
         assert_eq!(examples[0].message, "known error");
+    }
+
+    // ==================== MergeStrategy tests ====================
+
+    #[test]
+    fn test_merge_strategy_default() {
+        let strategy = MergeStrategy::default();
+        assert!(matches!(strategy, MergeStrategy::Append));
+    }
+
+    #[test]
+    fn test_merge_strategy_append() {
+        let strategy = MergeStrategy::Append;
+        assert!(matches!(strategy, MergeStrategy::Append));
+    }
+
+    #[test]
+    fn test_merge_strategy_replace() {
+        let strategy = MergeStrategy::Replace;
+        assert!(matches!(strategy, MergeStrategy::Replace));
+    }
+
+    #[test]
+    fn test_merge_strategy_weighted() {
+        let strategy = MergeStrategy::Weighted(2);
+        if let MergeStrategy::Weighted(multiplier) = strategy {
+            assert_eq!(multiplier, 2);
+        } else {
+            panic!("Expected MergeStrategy::Weighted");
+        }
+    }
+
+    // ==================== CitlLoaderConfig tests ====================
+
+    #[test]
+    fn test_citl_loader_config_default() {
+        let config = CitlLoaderConfig::default();
+        assert_eq!(config.batch_size, 128);
+        assert!((config.min_confidence - 0.75).abs() < 0.001);
+        assert!(matches!(config.merge_strategy, MergeStrategy::Append));
+        assert!(config.shuffle);
+        assert!((config.weight - 1.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_citl_loader_config_custom() {
+        let config = CitlLoaderConfig {
+            batch_size: 512,
+            min_confidence: 0.9,
+            merge_strategy: MergeStrategy::Replace,
+            shuffle: false,
+            weight: 2.0,
+        };
+        assert_eq!(config.batch_size, 512);
+        assert!((config.min_confidence - 0.9).abs() < 0.001);
+        assert!(!config.shuffle);
+        assert!((config.weight - 2.0).abs() < 0.001);
+    }
+
+    // ==================== CitlDataLoader tests ====================
+
+    #[test]
+    fn test_citl_data_loader_new() {
+        let loader = CitlDataLoader::new();
+        assert_eq!(loader.config().batch_size, 128);
+    }
+
+    #[test]
+    fn test_citl_data_loader_with_config() {
+        let config = CitlLoaderConfig {
+            batch_size: 256,
+            min_confidence: 0.8,
+            ..CitlLoaderConfig::default()
+        };
+        let loader = CitlDataLoader::with_config(config);
+        assert_eq!(loader.config().batch_size, 256);
+        assert!((loader.config().min_confidence - 0.8).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_citl_data_loader_default() {
+        let loader = CitlDataLoader::default();
+        assert_eq!(loader.config().batch_size, 128);
+    }
+
+    #[test]
+    fn test_citl_data_loader_load_jsonl_not_found() {
+        let loader = CitlDataLoader::new();
+        let result = loader.load_jsonl("nonexistent.jsonl");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_citl_data_loader_load_parquet_not_found() {
+        let loader = CitlDataLoader::new();
+        let result = loader.load_parquet("nonexistent.parquet");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_citl_data_loader_load_jsonl_valid() {
+        use std::io::Write;
+        let temp_dir = tempfile::tempdir().unwrap();
+        let file_path = temp_dir.path().join("valid.jsonl");
+        let mut file = std::fs::File::create(&file_path).unwrap();
+
+        // Write valid CITL entries
+        writeln!(file, r#"{{"source_file":"test.py","error_code":"E0308","clippy_lint":null,"level":"error","message":"type mismatch","oip_category":null,"confidence":0.95,"span":null,"suggestion":null,"timestamp":1732752000,"depyler_version":"1.0"}}"#).unwrap();
+        writeln!(file, r#"{{"source_file":"test.py","error_code":null,"clippy_lint":"clippy::unwrap_used","level":"warning","message":"unwrap used","oip_category":null,"confidence":0.85,"span":null,"suggestion":null,"timestamp":1732752001,"depyler_version":"1.0"}}"#).unwrap();
+
+        let loader = CitlDataLoader::new();
+        let result = loader.load_jsonl(&file_path);
+        assert!(result.is_ok());
+
+        let (examples, stats) = result.unwrap();
+        assert_eq!(examples.len(), 2);
+        assert_eq!(stats.total_records, 2);
+        assert_eq!(stats.imported, 2);
+    }
+
+    #[test]
+    fn test_citl_data_loader_load_parquet_valid() {
+        use arrow::array::{Float32Array, Int64Array, StringArray};
+        use arrow::datatypes::{DataType, Field, Schema};
+        use parquet::arrow::ArrowWriter;
+        use std::fs::File;
+        use std::sync::Arc;
+
+        let temp_dir = tempfile::tempdir().unwrap();
+        let file_path = temp_dir.path().join("valid.parquet");
+
+        // Create schema
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("message", DataType::Utf8, false),
+            Field::new("confidence", DataType::Float32, false),
+            Field::new("error_code", DataType::Utf8, true),
+            Field::new("timestamp", DataType::Int64, false),
+        ]));
+
+        // Create data
+        let message_arr = StringArray::from(vec!["type mismatch", "api misuse"]);
+        let confidence_arr = Float32Array::from(vec![0.95, 0.88]);
+        let error_code_arr = StringArray::from(vec![Some("E0308"), None]);
+        let timestamp_arr = Int64Array::from(vec![1732752000, 1732752001]);
+
+        let batch = arrow::array::RecordBatch::try_new(
+            schema.clone(),
+            vec![
+                Arc::new(message_arr),
+                Arc::new(confidence_arr),
+                Arc::new(error_code_arr),
+                Arc::new(timestamp_arr),
+            ],
+        )
+        .unwrap();
+
+        // Write parquet file
+        let file = File::create(&file_path).unwrap();
+        let mut writer = ArrowWriter::try_new(file, schema, None).unwrap();
+        writer.write(&batch).unwrap();
+        writer.close().unwrap();
+
+        // Load using CitlDataLoader (returns iterator)
+        let loader = CitlDataLoader::new();
+        let result = loader.load_parquet(&file_path);
+        assert!(result.is_ok());
+
+        // Collect examples from iterator
+        let iter = result.unwrap();
+        let all_examples: Vec<_> = iter.flatten().collect();
+        // Only 1 example should be valid (E0308 maps to TypeErrors, the other has no error_code mapping)
+        assert_eq!(all_examples.len(), 1);
+        assert_eq!(all_examples[0].label, DefectCategory::TypeErrors);
+    }
+
+    // ==================== SchemaValidation tests ====================
+
+    #[test]
+    fn test_schema_validation_valid() {
+        let validation = SchemaValidation {
+            is_valid: true,
+            missing_fields: vec![],
+            extra_fields: vec![],
+            format: "parquet".to_string(),
+        };
+        assert!(validation.is_valid);
+        assert!(validation.missing_fields.is_empty());
+    }
+
+    #[test]
+    fn test_schema_validation_invalid() {
+        let validation = SchemaValidation {
+            is_valid: false,
+            missing_fields: vec!["message".to_string(), "confidence".to_string()],
+            extra_fields: vec![],
+            format: "parquet".to_string(),
+        };
+        assert!(!validation.is_valid);
+        assert_eq!(validation.missing_fields.len(), 2);
+    }
+
+    #[test]
+    fn test_validate_citl_schema_unsupported_format() {
+        let result = validate_citl_schema("test.csv");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_citl_schema_jsonl_valid() {
+        use std::io::Write;
+        let temp_dir = tempfile::tempdir().unwrap();
+        let file_path = temp_dir.path().join("test.jsonl");
+        let mut file = std::fs::File::create(&file_path).unwrap();
+        writeln!(file, r#"{{"source_file":"test.py","error_code":"E0308","clippy_lint":null,"level":"error","message":"test","oip_category":null,"confidence":0.9,"span":null,"suggestion":null,"timestamp":0,"depyler_version":"1.0"}}"#).unwrap();
+
+        let result = validate_citl_schema(&file_path).unwrap();
+        assert!(result.is_valid);
+        assert_eq!(result.format, "jsonl");
+    }
+
+    #[test]
+    fn test_validate_citl_schema_empty_file() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let file_path = temp_dir.path().join("empty.jsonl");
+        let _file = std::fs::File::create(&file_path).unwrap();
+
+        let result = validate_citl_schema(&file_path);
+        assert!(result.is_err());
+    }
+
+    // ==================== convert_batch_to_examples tests ====================
+
+    #[test]
+    fn test_convert_batch_empty() {
+        use arrow::array::RecordBatch;
+        use arrow::datatypes::{DataType, Field, Schema};
+        use std::sync::Arc;
+
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("message", DataType::Utf8, false),
+            Field::new("confidence", DataType::Float32, false),
+        ]));
+
+        let batch = RecordBatch::new_empty(schema);
+        let examples = convert_batch_to_examples(&batch, 0.0);
+        assert!(examples.is_empty());
+    }
+
+    #[test]
+    fn test_convert_batch_with_data() {
+        use arrow::array::{Float32Array, RecordBatch, StringArray};
+        use arrow::datatypes::{DataType, Field, Schema};
+        use std::sync::Arc;
+
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("message", DataType::Utf8, false),
+            Field::new("confidence", DataType::Float32, false),
+            Field::new("error_code", DataType::Utf8, true),
+            Field::new("timestamp", DataType::Int64, false),
+        ]));
+
+        let message_arr = StringArray::from(vec!["type mismatch"]);
+        let confidence_arr = Float32Array::from(vec![0.95]);
+        let error_code_arr = StringArray::from(vec![Some("E0308")]);
+        let timestamp_arr = arrow::array::Int64Array::from(vec![1732752000]);
+
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![
+                Arc::new(message_arr),
+                Arc::new(confidence_arr),
+                Arc::new(error_code_arr),
+                Arc::new(timestamp_arr),
+            ],
+        )
+        .unwrap();
+
+        let examples = convert_batch_to_examples(&batch, 0.5);
+        assert_eq!(examples.len(), 1);
+        assert_eq!(examples[0].message, "type mismatch");
+        assert_eq!(examples[0].label, DefectCategory::TypeErrors);
+        assert!((examples[0].confidence - 0.95).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_convert_batch_filters_low_confidence() {
+        use arrow::array::{Float32Array, RecordBatch, StringArray};
+        use arrow::datatypes::{DataType, Field, Schema};
+        use std::sync::Arc;
+
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("message", DataType::Utf8, false),
+            Field::new("confidence", DataType::Float32, false),
+            Field::new("error_code", DataType::Utf8, true),
+        ]));
+
+        let message_arr = StringArray::from(vec!["low conf", "high conf"]);
+        let confidence_arr = Float32Array::from(vec![0.3, 0.9]);
+        let error_code_arr = StringArray::from(vec![Some("E0308"), Some("E0308")]);
+
+        let batch = RecordBatch::try_new(
+            schema,
+            vec![
+                Arc::new(message_arr),
+                Arc::new(confidence_arr),
+                Arc::new(error_code_arr),
+            ],
+        )
+        .unwrap();
+
+        let examples = convert_batch_to_examples(&batch, 0.5);
+        assert_eq!(examples.len(), 1);
+        assert_eq!(examples[0].message, "high conf");
     }
 }
