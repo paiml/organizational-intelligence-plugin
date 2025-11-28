@@ -54,6 +54,7 @@
 # ML Classification Pipeline
 
 - [Overview](./ml-pipeline/overview.md)
+- [Exploratory Data Analysis](./ml-pipeline/exploratory-data-analysis.md)
 - [TF-IDF Feature Extraction](./ml-pipeline/tfidf-features.md)
 - [Random Forest Classifier](./ml-pipeline/random-forest.md)
 - [Training Data Extraction](./ml-pipeline/training-data-extraction.md)
@@ -90,6 +91,7 @@
 - [Example: Analyze Organization](./examples/analyze-organization.md)
 - [Example: Classify Defects](./examples/classify-defects.md)
 - [Example: CITL Import](./examples/citl-import.md)
+- [Example: Explore Training Data](./examples/explore-data.md)
 - [Example: Full Analysis Pipeline](./examples/full-analysis.md)
 - [Example: Train Custom Model](./examples/train-custom-model.md)
 - [Example: depyler Validation](./examples/depyler-validation.md)
