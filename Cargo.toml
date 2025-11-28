@@ -97,6 +97,22 @@ harness = false
 name = "nlp_benchmarks"
 harness = false
 
+[[example]]
+name = "classify_defects"
+path = "examples/classify_defects.rs"
+
+[[example]]
+name = "analyze_org"
+path = "examples/analyze_org.rs"
+
+[[example]]
+name = "full_analysis"
+path = "examples/full_analysis.rs"
+
+[[example]]
+name = "citl_import"
+path = "examples/citl_import.rs"
+
 [features]
 default = []
 gpu = ["wgpu/default"]  # Enable GPU compute (requires GPU hardware)

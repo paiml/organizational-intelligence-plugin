@@ -46,6 +46,7 @@
 
 - [Analyze Command](./cli/analyze.md)
 - [Extract Training Data](./cli/extract-training-data.md)
+- [Import Depyler (CITL)](./cli/import-depyler.md)
 - [Train Classifier](./cli/train-classifier.md)
 - [Summarize Reports](./cli/summarize.md)
 - [Review Pull Requests](./cli/review-pr.md)
@@ -88,6 +89,7 @@
 
 - [Example: Analyze Organization](./examples/analyze-organization.md)
 - [Example: Classify Defects](./examples/classify-defects.md)
+- [Example: CITL Import](./examples/citl-import.md)
 - [Example: Full Analysis Pipeline](./examples/full-analysis.md)
 - [Example: Train Custom Model](./examples/train-custom-model.md)
 - [Example: depyler Validation](./examples/depyler-validation.md)
@@ -95,6 +97,7 @@
 # Validation Results
 
 - [NLP-011: depyler Repository](./validation/nlp-011-depyler.md)
+- [NLP-014: CITL Integration](./validation/nlp-014-citl.md)
 - [Performance Metrics](./validation/performance-metrics.md)
 - [Accuracy Analysis](./validation/accuracy-analysis.md)
 - [Class Imbalance](./validation/class-imbalance.md)
