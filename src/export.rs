@@ -22,7 +22,8 @@ use std::path::Path;
 pub const NUM_CATEGORIES: usize = 18;
 
 /// Feature dimension for CommitFeatures (matches CommitFeatures::DIMENSION)
-pub const FEATURE_DIMENSION: usize = 8;
+/// NLP-014: Extended from 8 to 14 dimensions for CITL integration
+pub const FEATURE_DIMENSION: usize = 14;
 
 /// Export format for aprender integration
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -134,12 +135,13 @@ impl FeatureExporter {
     ///         timestamp: 1700000000.0,
     ///         hour_of_day: 14,
     ///         day_of_week: 2,
+    ///         ..Default::default()
     ///     },
     /// ];
     ///
     /// let matrix = FeatureExporter::to_matrix(&features).unwrap();
     /// assert_eq!(matrix.n_rows(), 1);
-    /// assert_eq!(matrix.n_cols(), 8);
+    /// assert_eq!(matrix.n_cols(), 14);  // NLP-014: 14 dimensions
     /// ```
     pub fn to_matrix(features: &[CommitFeatures]) -> Result<Matrix<f32>> {
         if features.is_empty() {
@@ -488,6 +490,7 @@ mod tests {
             timestamp: 1700000000.0,
             hour_of_day: 14,
             day_of_week: 2,
+            ..Default::default()
         }];
 
         let matrix = FeatureExporter::to_matrix(&features).unwrap();
@@ -510,6 +513,7 @@ mod tests {
                 timestamp: 1700000000.0,
                 hour_of_day: 10,
                 day_of_week: 1,
+                ..Default::default()
             },
             CommitFeatures {
                 defect_category: 5,
@@ -520,6 +524,7 @@ mod tests {
                 timestamp: 1700000001.0,
                 hour_of_day: 11,
                 day_of_week: 2,
+                ..Default::default()
             },
         ];
 
@@ -684,6 +689,7 @@ mod tests {
             timestamp: 1700000000.0,
             hour_of_day: 14,
             day_of_week: 2,
+            ..Default::default()
         }];
 
         let categories = vec![DefectCategory::MemorySafety];
@@ -719,6 +725,7 @@ mod tests {
             timestamp: 1700000000.0,
             hour_of_day: 14,
             day_of_week: 2,
+            ..Default::default()
         }];
 
         let categories = vec![
@@ -745,6 +752,7 @@ mod tests {
                 timestamp: 1700000000.0,
                 hour_of_day: 10,
                 day_of_week: 1,
+                ..Default::default()
             },
             CommitFeatures {
                 defect_category: 7,
@@ -755,6 +763,7 @@ mod tests {
                 timestamp: 1700000001.0,
                 hour_of_day: 11,
                 day_of_week: 2,
+                ..Default::default()
             },
         ];
 
@@ -806,6 +815,7 @@ mod tests {
             timestamp: 1700000000.0,
             hour_of_day: 9,
             day_of_week: 0,
+            ..Default::default()
         }];
 
         let categories = vec![DefectCategory::TypeErrors];
@@ -837,6 +847,7 @@ mod tests {
             timestamp: 1700000000.0,
             hour_of_day: 15,
             day_of_week: 4,
+            ..Default::default()
         }];
 
         let categories = vec![DefectCategory::OperatorPrecedence];
@@ -895,6 +906,7 @@ mod tests {
                     timestamp: 1700000000.0,
                     hour_of_day: 12,
                     day_of_week: 3,
+                    ..Default::default()
                 })
                 .collect();
 
@@ -918,6 +930,7 @@ mod tests {
                     timestamp: 1700000000.0,
                     hour_of_day: 12,
                     day_of_week: 3,
+                    ..Default::default()
                 })
                 .collect();
 
@@ -956,6 +969,7 @@ mod tests {
                 timestamp: 1700000000.0,
                 hour_of_day: 12,
                 day_of_week: 3,
+                ..Default::default()
             }];
 
             let matrix = FeatureExporter::to_matrix(&features).unwrap();
@@ -980,6 +994,7 @@ mod tests {
                     timestamp: 1700000000.0,
                     hour_of_day: 12,
                     day_of_week: 3,
+                    ..Default::default()
                 })
                 .collect();
 
@@ -1020,6 +1035,7 @@ mod integration_tests {
                 timestamp: 1700000000.0,
                 hour_of_day: 14,
                 day_of_week: 2,
+                ..Default::default()
             },
             CommitFeatures {
                 defect_category: 7,
@@ -1030,6 +1046,7 @@ mod integration_tests {
                 timestamp: 1700000001.0,
                 hour_of_day: 15,
                 day_of_week: 2,
+                ..Default::default()
             },
             CommitFeatures {
                 defect_category: 13,
@@ -1040,6 +1057,7 @@ mod integration_tests {
                 timestamp: 1700000002.0,
                 hour_of_day: 16,
                 day_of_week: 2,
+                ..Default::default()
             },
         ];
 
@@ -1096,6 +1114,7 @@ mod integration_tests {
                 timestamp: (1700000000 + i) as f64,
                 hour_of_day: (9 + i % 8) as u8,
                 day_of_week: (i % 5) as u8,
+                ..Default::default()
             });
 
             categories.push(match i % 3 {

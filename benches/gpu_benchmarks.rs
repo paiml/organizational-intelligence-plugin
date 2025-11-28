@@ -72,6 +72,7 @@ fn bench_storage_bulk_insert(c: &mut Criterion) {
                 timestamp: 1700000000.0 + i as f64,
                 hour_of_day: (i % 24) as u8,
                 day_of_week: (i % 7) as u8,
+                ..Default::default()
             })
             .collect();
 
@@ -102,6 +103,7 @@ fn bench_storage_query(c: &mut Criterion) {
             timestamp: 1700000000.0 + i as f64,
             hour_of_day: (i % 24) as u8,
             day_of_week: (i % 7) as u8,
+            ..Default::default()
         })
         .collect();
     store.bulk_insert(features).unwrap();
@@ -129,6 +131,7 @@ fn bench_to_vectors(c: &mut Criterion) {
                 timestamp: 1700000000.0 + i as f64,
                 hour_of_day: (i % 24) as u8,
                 day_of_week: (i % 7) as u8,
+                ..Default::default()
             })
             .collect();
         store.bulk_insert(features).unwrap();

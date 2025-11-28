@@ -164,6 +164,29 @@ pub enum Commands {
         #[arg(long, default_value = "0.70")]
         min_confidence: f32,
     },
+
+    /// Import Depyler CITL corpus for ground-truth training labels (NLP-014)
+    ImportDepyler {
+        /// Path to Depyler JSONL export file
+        #[arg(long, short, required = true)]
+        input: PathBuf,
+
+        /// Output training data JSON file
+        #[arg(long, short, default_value = "citl-training.json")]
+        output: PathBuf,
+
+        /// Minimum confidence threshold (0.0-1.0)
+        #[arg(long, default_value = "0.75")]
+        min_confidence: f32,
+
+        /// Merge with existing training data file (optional)
+        #[arg(long, short)]
+        merge: Option<PathBuf>,
+
+        /// Create train/validation/test splits
+        #[arg(long, default_value = "true")]
+        create_splits: bool,
+    },
 }
 
 #[cfg(test)]

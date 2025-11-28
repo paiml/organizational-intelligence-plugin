@@ -7,6 +7,7 @@ pub mod observability;
 pub mod perf;
 
 pub mod analyzer;
+pub mod citl;
 pub mod classifier;
 pub mod cli;
 pub mod cli_handlers;

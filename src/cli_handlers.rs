@@ -764,6 +764,134 @@ pub async fn handle_export(
     Ok(())
 }
 
+/// Handle the `import-depyler` command (NLP-014)
+///
+/// Imports Depyler CITL corpus as ground-truth training labels.
+pub async fn handle_import_depyler(
+    input: PathBuf,
+    output: PathBuf,
+    min_confidence: f32,
+    merge: Option<PathBuf>,
+    create_splits: bool,
+) -> Result<()> {
+    use crate::citl::{convert_to_training_examples, import_depyler_corpus};
+    use crate::training::{TrainingDataExtractor, TrainingDataset};
+
+    info!("Importing Depyler CITL corpus from: {}", input.display());
+    info!("Output file: {}", output.display());
+    info!("Min confidence: {}", min_confidence);
+    info!("Merge: {:?}", merge);
+    info!("Create splits: {}", create_splits);
+
+    println!("\n🔬 CITL Import: Depyler Ground-Truth Labels (NLP-014)");
+    println!("   Input:          {}", input.display());
+    println!("   Output:         {}", output.display());
+    println!("   Min confidence: {:.2}", min_confidence);
+
+    // Validate input path
+    if !input.exists() {
+        return Err(anyhow::anyhow!(
+            "Input file does not exist: {}",
+            input.display()
+        ));
+    }
+
+    // Import CITL corpus
+    println!("\n📖 Reading CITL corpus...");
+    let (exports, stats) = import_depyler_corpus(&input, min_confidence)?;
+
+    println!("   ✅ Total records:  {}", stats.total_records);
+    println!("   ✅ Imported:       {}", stats.imported);
+    println!("   ⚠️  Low confidence: {}", stats.skipped_low_confidence);
+    println!("   ⚠️  Unknown cat:    {}", stats.skipped_unknown_category);
+    println!("   📊 Avg confidence: {:.2}", stats.avg_confidence);
+
+    if exports.is_empty() {
+        return Err(anyhow::anyhow!(
+            "No records imported. Try lowering --min-confidence (current: {:.2})",
+            min_confidence
+        ));
+    }
+
+    // Convert to TrainingExamples
+    println!("\n🔄 Converting to training examples...");
+    let mut examples = convert_to_training_examples(&exports);
+    println!("   ✅ Converted {} examples", examples.len());
+
+    // Merge with existing training data if specified
+    if let Some(merge_path) = &merge {
+        if merge_path.exists() {
+            println!("\n🔗 Merging with existing training data...");
+            let content = std::fs::read_to_string(merge_path)?;
+            let existing: TrainingDataset = serde_json::from_str(&content)?;
+            let existing_count =
+                existing.train.len() + existing.validation.len() + existing.test.len();
+            println!("   📖 Loaded {} existing examples", existing_count);
+
+            // Add existing examples
+            examples.extend(existing.train);
+            examples.extend(existing.validation);
+            examples.extend(existing.test);
+            println!("   ✅ Total: {} examples", examples.len());
+        } else {
+            warn!("Merge file not found: {}", merge_path.display());
+        }
+    }
+
+    // Create splits or save raw examples
+    if create_splits {
+        println!("\n📊 Creating train/validation/test splits (70/15/15)...");
+        let extractor = TrainingDataExtractor::new(min_confidence);
+        let dataset = extractor.create_splits(&examples, &["depyler-citl".to_string()])?;
+
+        println!("   Train:      {} examples", dataset.train.len());
+        println!("   Validation: {} examples", dataset.validation.len());
+        println!("   Test:       {} examples", dataset.test.len());
+
+        // Save dataset
+        let json = serde_json::to_string_pretty(&dataset)?;
+        std::fs::write(&output, json)?;
+    } else {
+        // Save raw examples
+        let json = serde_json::to_string_pretty(&examples)?;
+        std::fs::write(&output, json)?;
+    }
+
+    println!("\n💾 Saved to: {}", output.display());
+
+    // Show category distribution
+    let mut category_counts: std::collections::HashMap<String, usize> =
+        std::collections::HashMap::new();
+    for ex in &examples {
+        *category_counts.entry(format!("{}", ex.label)).or_insert(0) += 1;
+    }
+
+    println!("\n📈 Category Distribution:");
+    let mut sorted_counts: Vec<_> = category_counts.iter().collect();
+    sorted_counts.sort_by(|a, b| b.1.cmp(a.1));
+
+    for (category, count) in sorted_counts.iter().take(10) {
+        let percentage = (**count as f32 / examples.len() as f32) * 100.0;
+        println!("   {}: {} ({:.1}%)", category, count, percentage);
+    }
+
+    // Summary
+    println!("\n🎯 Import Complete!");
+    println!("   ✅ Ground-truth labels from CITL integrated");
+    println!("   ✅ TrainingSource::DepylerCitl marked");
+    println!("   ✅ Error codes and clippy lints preserved");
+
+    println!("\n💡 Next Steps:");
+    println!(
+        "   1. Train classifier: oip train-classifier --input {}",
+        output.display()
+    );
+    println!("   2. Evaluate model performance on test split");
+    println!("   3. Compare accuracy with NLP-011 baseline (54%)");
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

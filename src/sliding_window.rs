@@ -272,6 +272,7 @@ mod tests {
                 timestamp: (i * 1000) as f64,
                 hour_of_day: 10,
                 day_of_week: 1,
+                ..Default::default()
             };
             store.insert(f).unwrap();
         }
@@ -337,6 +338,7 @@ mod tests {
             timestamp: 10000.0, // Way outside window
             hour_of_day: 10,
             day_of_week: 1,
+            ..Default::default()
         };
         store.insert(f).unwrap();
 
@@ -478,6 +480,7 @@ mod tests {
                 timestamp: (i * 1000) as f64, // 0-4000
                 hour_of_day: 10,
                 day_of_week: 1,
+                ..Default::default()
             };
             store.insert(f).unwrap();
         }

@@ -9,6 +9,7 @@
 //!
 //! Implements Section 5.4 Training Data Pipeline from nlp-models-techniques-spec.md
 
+use crate::citl::{SuggestionApplicability, TrainingSource};
 use crate::classifier::{DefectCategory, RuleBasedClassifier};
 use crate::git::CommitInfo;
 use anyhow::{anyhow, Result};
@@ -16,6 +17,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Training example with features and label
+///
+/// NLP-014: Extended with CITL fields for ground-truth training labels
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TrainingExample {
     /// Commit message text
@@ -36,6 +39,23 @@ pub struct TrainingExample {
     pub lines_removed: usize,
     /// Number of files changed
     pub files_changed: usize,
+
+    // NLP-014: CITL fields
+    /// Rustc error code (e.g., "E0308")
+    #[serde(default)]
+    pub error_code: Option<String>,
+    /// Clippy lint name (e.g., "clippy::unwrap_used")
+    #[serde(default)]
+    pub clippy_lint: Option<String>,
+    /// Whether a suggestion was provided
+    #[serde(default)]
+    pub has_suggestion: bool,
+    /// Suggestion applicability level
+    #[serde(default)]
+    pub suggestion_applicability: Option<SuggestionApplicability>,
+    /// Source of the training example
+    #[serde(default)]
+    pub source: TrainingSource,
 }
 
 /// Training dataset with train/test/validation splits
@@ -162,6 +182,12 @@ impl TrainingDataExtractor {
                         lines_added: commit.lines_added,
                         lines_removed: commit.lines_removed,
                         files_changed: commit.files_changed,
+                        // NLP-014: Default CITL fields for commit message source
+                        error_code: None,
+                        clippy_lint: None,
+                        has_suggestion: false,
+                        suggestion_applicability: None,
+                        source: TrainingSource::CommitMessage,
                     });
                 }
             }
@@ -232,6 +258,11 @@ impl TrainingDataExtractor {
     ///         lines_added: 5,
     ///         lines_removed: 2,
     ///         files_changed: 1,
+    ///         error_code: None,
+    ///         clippy_lint: None,
+    ///         has_suggestion: false,
+    ///         suggestion_applicability: None,
+    ///         source: organizational_intelligence_plugin::citl::TrainingSource::CommitMessage,
     ///     },
     /// ];
     ///
@@ -435,6 +466,11 @@ mod tests {
                 lines_added: 5,
                 lines_removed: 2,
                 files_changed: 1,
+                error_code: None,
+                clippy_lint: None,
+                has_suggestion: false,
+                suggestion_applicability: None,
+                source: TrainingSource::CommitMessage,
             });
         }
 
@@ -474,6 +510,11 @@ mod tests {
                 lines_added: 5,
                 lines_removed: 2,
                 files_changed: 1,
+                error_code: None,
+                clippy_lint: None,
+                has_suggestion: false,
+                suggestion_applicability: None,
+                source: TrainingSource::CommitMessage,
             },
             TrainingExample {
                 message: "fix: bug 2".to_string(),
@@ -485,6 +526,11 @@ mod tests {
                 lines_added: 3,
                 lines_removed: 1,
                 files_changed: 1,
+                error_code: None,
+                clippy_lint: None,
+                has_suggestion: false,
+                suggestion_applicability: None,
+                source: TrainingSource::CommitMessage,
             },
         ];
 

@@ -123,6 +123,7 @@ mod tests {
             timestamp: 1700000000.0,
             hour_of_day: 14,
             day_of_week: 2,
+            ..Default::default()
         }
     }
 

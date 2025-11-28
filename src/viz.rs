@@ -7,6 +7,8 @@ use trueno_viz::output::{TerminalEncoder, TerminalMode};
 #[cfg(feature = "viz")]
 use trueno_viz::plots::{BinStrategy, Heatmap, Histogram};
 
+#[cfg(test)]
+use crate::citl::TrainingSource;
 use crate::training::TrainingExample;
 
 /// Defect distribution data for visualization
@@ -291,6 +293,11 @@ mod tests {
             lines_added: 10,
             lines_removed: 5,
             files_changed: 1,
+            error_code: None,
+            clippy_lint: None,
+            has_suggestion: false,
+            suggestion_applicability: None,
+            source: TrainingSource::CommitMessage,
         }
     }
 

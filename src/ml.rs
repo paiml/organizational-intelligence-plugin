@@ -468,6 +468,7 @@ mod tests {
             timestamp: 1700000000.0 + files as f64,
             hour_of_day: 10,
             day_of_week: 1,
+            ..Default::default()
         }
     }
 

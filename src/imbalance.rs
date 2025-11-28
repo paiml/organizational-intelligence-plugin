@@ -136,6 +136,8 @@ impl Smote {
     }
 
     /// Convert vector back to CommitFeatures
+    ///
+    /// NLP-014: Extended to support 14-dimensional feature vectors
     fn vector_to_features(&self, vec: &[f32], category: u8) -> CommitFeatures {
         CommitFeatures {
             defect_category: category,
@@ -146,6 +148,13 @@ impl Smote {
             timestamp: vec[5] as f64,
             hour_of_day: (vec[6] as u8).min(23),
             day_of_week: (vec[7] as u8).min(6),
+            // NLP-014: CITL features (synthesize from vector if available)
+            error_code_class: if vec.len() > 8 { vec[8] as u8 } else { 4 },
+            has_suggestion: if vec.len() > 9 { vec[9] as u8 } else { 0 },
+            suggestion_applicability: if vec.len() > 10 { vec[10] as u8 } else { 0 },
+            clippy_lint_count: if vec.len() > 11 { vec[11] as u8 } else { 0 },
+            span_line_delta: if vec.len() > 12 { vec[12] } else { 0.0 },
+            diagnostic_confidence: if vec.len() > 13 { vec[13] } else { 0.0 },
         }
     }
 }
@@ -350,6 +359,7 @@ mod tests {
             timestamp: 1700000000.0,
             hour_of_day: 10,
             day_of_week: 1,
+            ..Default::default()
         }
     }
 

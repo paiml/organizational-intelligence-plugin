@@ -118,5 +118,16 @@ async fn main() -> Result<()> {
             max_commits,
             min_confidence,
         } => cli_handlers::handle_export(repo, output, format, max_commits, min_confidence).await,
+
+        Commands::ImportDepyler {
+            input,
+            output,
+            min_confidence,
+            merge,
+            create_splits,
+        } => {
+            cli_handlers::handle_import_depyler(input, output, min_confidence, merge, create_splits)
+                .await
+        }
     }
 }

@@ -196,6 +196,7 @@ mod modules {
             timestamp,
             hour_of_day: 10,
             day_of_week: 1,
+            ..Default::default()
         }
     }
 
@@ -335,10 +336,10 @@ mod modules {
         // Should have multiple windows
         assert!(!matrices.is_empty());
 
-        // Each matrix should be 8x8
+        // Each matrix should be DIMENSION x DIMENSION (NLP-014: 14x14)
         for matrix in &matrices {
-            assert_eq!(matrix.matrix.len(), 8);
-            assert_eq!(matrix.matrix[0].len(), 8);
+            assert_eq!(matrix.matrix.len(), CommitFeatures::DIMENSION);
+            assert_eq!(matrix.matrix[0].len(), CommitFeatures::DIMENSION);
         }
     }
 

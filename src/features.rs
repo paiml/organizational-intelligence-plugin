@@ -5,6 +5,7 @@
 //!
 //! OPT-001: Integrated BatchProcessor for efficient bulk extraction
 
+use crate::citl::{ErrorCodeClass, SuggestionApplicability};
 use crate::perf::{BatchProcessor, PerfStats};
 use anyhow::Result;
 use chrono::{Datelike, Timelike};
@@ -12,10 +13,12 @@ use serde::{Deserialize, Serialize};
 use std::time::Instant;
 
 /// Commit features optimized for GPU processing
+///
+/// NLP-014: Extended from 8 to 14 dimensions for CITL integration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommitFeatures {
     // Categorical (one-hot encoded for GPU)
-    pub defect_category: u8, // 0-9 (10 categories from OIP)
+    pub defect_category: u8, // 0-17 (18 categories from OIP)
 
     // Numerical (GPU-native f32)
     pub files_changed: f32,
@@ -27,12 +30,33 @@ pub struct CommitFeatures {
     pub timestamp: f64,  // Unix epoch
     pub hour_of_day: u8, // 0-23 (circadian patterns)
     pub day_of_week: u8, // 0-6
+
+    // NLP-014: CITL features (6 new dims)
+    /// Error code class: 0=type, 1=borrow, 2=name, 3=trait, 4=other
+    #[serde(default)]
+    pub error_code_class: u8,
+    /// Whether a suggestion was provided: 0 or 1
+    #[serde(default)]
+    pub has_suggestion: u8,
+    /// Suggestion applicability: 0=none, 1=machine, 2=maybe, 3=placeholder
+    #[serde(default)]
+    pub suggestion_applicability: u8,
+    /// Count of clippy lints (0-255)
+    #[serde(default)]
+    pub clippy_lint_count: u8,
+    /// Distance from function start (normalized span line delta)
+    #[serde(default)]
+    pub span_line_delta: f32,
+    /// Diagnostic confidence from taxonomy mapping
+    #[serde(default)]
+    pub diagnostic_confidence: f32,
 }
 
 impl CommitFeatures {
     /// Convert to flat vector for GPU processing
     ///
     /// Fixed-size vector enables efficient GPU batching
+    /// NLP-014: Extended to 14 dimensions
     pub fn to_vector(&self) -> Vec<f32> {
         vec![
             self.defect_category as f32,
@@ -43,11 +67,40 @@ impl CommitFeatures {
             self.timestamp as f32,
             self.hour_of_day as f32,
             self.day_of_week as f32,
+            // NLP-014: CITL features
+            self.error_code_class as f32,
+            self.has_suggestion as f32,
+            self.suggestion_applicability as f32,
+            self.clippy_lint_count as f32,
+            self.span_line_delta,
+            self.diagnostic_confidence,
         ]
     }
 
     /// Vector dimension count (for GPU buffer allocation)
-    pub const DIMENSION: usize = 8;
+    /// NLP-014: Extended from 8 to 14 dimensions
+    pub const DIMENSION: usize = 14;
+}
+
+impl Default for CommitFeatures {
+    fn default() -> Self {
+        Self {
+            defect_category: 0,
+            files_changed: 0.0,
+            lines_added: 0.0,
+            lines_deleted: 0.0,
+            complexity_delta: 0.0,
+            timestamp: 0.0,
+            hour_of_day: 0,
+            day_of_week: 0,
+            error_code_class: ErrorCodeClass::Other.as_u8(),
+            has_suggestion: 0,
+            suggestion_applicability: SuggestionApplicability::None.as_u8(),
+            clippy_lint_count: 0,
+            span_line_delta: 0.0,
+            diagnostic_confidence: 0.0,
+        }
+    }
 }
 
 /// Extract features from OIP defect record
@@ -59,6 +112,8 @@ impl FeatureExtractor {
     }
 
     /// Extract features from defect category and metadata
+    ///
+    /// Uses default values for CITL fields (backwards compatible)
     pub fn extract(
         &self,
         category: u8,
@@ -66,6 +121,37 @@ impl FeatureExtractor {
         lines_added: usize,
         lines_deleted: usize,
         timestamp: i64,
+    ) -> Result<CommitFeatures> {
+        self.extract_with_citl(
+            category,
+            files_changed,
+            lines_added,
+            lines_deleted,
+            timestamp,
+            ErrorCodeClass::Other,
+            false,
+            SuggestionApplicability::None,
+            0,
+            0.0,
+            0.0,
+        )
+    }
+
+    /// Extract features with CITL diagnostic information (NLP-014)
+    #[allow(clippy::too_many_arguments)]
+    pub fn extract_with_citl(
+        &self,
+        category: u8,
+        files_changed: usize,
+        lines_added: usize,
+        lines_deleted: usize,
+        timestamp: i64,
+        error_code_class: ErrorCodeClass,
+        has_suggestion: bool,
+        suggestion_applicability: SuggestionApplicability,
+        clippy_lint_count: u8,
+        span_line_delta: f32,
+        diagnostic_confidence: f32,
     ) -> Result<CommitFeatures> {
         // Convert timestamp to hour/day
         let datetime = chrono::DateTime::from_timestamp(timestamp, 0)
@@ -83,6 +169,13 @@ impl FeatureExtractor {
             timestamp: timestamp as f64,
             hour_of_day,
             day_of_week,
+            // NLP-014: CITL features
+            error_code_class: error_code_class.as_u8(),
+            has_suggestion: u8::from(has_suggestion),
+            suggestion_applicability: suggestion_applicability.as_u8(),
+            clippy_lint_count,
+            span_line_delta,
+            diagnostic_confidence,
         })
     }
 }
@@ -249,13 +342,28 @@ mod tests {
             timestamp: 1700000000.0,
             hour_of_day: 14,
             day_of_week: 2,
+            // NLP-014: CITL fields
+            error_code_class: 0,
+            has_suggestion: 1,
+            suggestion_applicability: 2,
+            clippy_lint_count: 3,
+            span_line_delta: 4.5,
+            diagnostic_confidence: 0.95,
         };
 
         let vec = features.to_vector();
         assert_eq!(vec.len(), CommitFeatures::DIMENSION);
+        assert_eq!(vec.len(), 14); // NLP-014: 14 dimensions
         assert_eq!(vec[0], 1.0); // category
         assert_eq!(vec[1], 2.0); // files
         assert_eq!(vec[2], 10.0); // lines added
+                                  // NLP-014: CITL features
+        assert_eq!(vec[8], 0.0); // error_code_class
+        assert_eq!(vec[9], 1.0); // has_suggestion
+        assert_eq!(vec[10], 2.0); // suggestion_applicability
+        assert_eq!(vec[11], 3.0); // clippy_lint_count
+        assert!((vec[12] - 4.5).abs() < 0.001); // span_line_delta
+        assert!((vec[13] - 0.95).abs() < 0.001); // diagnostic_confidence
     }
 
     #[test]
