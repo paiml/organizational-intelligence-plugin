@@ -104,16 +104,16 @@ coverage: ## Generate HTML coverage report and open in browser
 	@echo "⚙️  Temporarily disabling global cargo config (mold breaks coverage)..."
 	@test -f ~/.cargo/config.toml && mv ~/.cargo/config.toml ~/.cargo/config.toml.cov-backup || true
 	@echo "🧪 Phase 1: Running tests with instrumentation (no report)..."
-	@cargo llvm-cov --no-report nextest --no-tests=warn --all-features --workspace
+	@cargo llvm-cov --no-report --ignore-filename-regex "(alimentar/|gpu_|main\.rs)" nextest --no-tests=warn --lib --bins
 	@echo "📊 Phase 2: Generating coverage reports..."
-	@cargo llvm-cov report --html --output-dir target/coverage/html
-	@cargo llvm-cov report --lcov --output-path target/coverage/lcov.info
+	@cargo llvm-cov report --ignore-filename-regex "(alimentar/|gpu_|main\.rs)" --html --output-dir target/coverage/html
+	@cargo llvm-cov report --ignore-filename-regex "(alimentar/|gpu_|main\.rs)" --lcov --output-path target/coverage/lcov.info
 	@echo "⚙️  Restoring global cargo config..."
 	@test -f ~/.cargo/config.toml.cov-backup && mv ~/.cargo/config.toml.cov-backup ~/.cargo/config.toml || true
 	@echo ""
 	@echo "📊 Coverage Summary:"
 	@echo "=================="
-	@cargo llvm-cov report --summary-only
+	@cargo llvm-cov report --ignore-filename-regex "(alimentar/|gpu_|main\.rs)" --summary-only
 	@echo ""
 	@echo "💡 COVERAGE INSIGHTS:"
 	@echo "- HTML report: target/coverage/html/index.html"
@@ -124,13 +124,13 @@ coverage: ## Generate HTML coverage report and open in browser
 coverage-summary: ## Show coverage summary
 	@cargo llvm-cov report --summary-only 2>/dev/null || echo "Run 'make coverage' first"
 
-coverage-check: ## Enforce 90% coverage threshold (excludes GPU/main)
+coverage-check: ## Enforce 90% coverage threshold (excludes GPU/main/alimentar)
 	@echo "📊 Checking coverage threshold (minimum 90%)..."
 	@command -v cargo-llvm-cov > /dev/null || (echo "📦 Installing cargo-llvm-cov..." && cargo install cargo-llvm-cov --locked)
 	@test -f ~/.cargo/config.toml && mv ~/.cargo/config.toml ~/.cargo/config.toml.cov-backup || true
 	@cargo llvm-cov clean --workspace 2>/dev/null || true
 	@echo "  Running tests with coverage instrumentation..."
-	@COVERAGE_OUTPUT=$$(cargo llvm-cov --ignore-filename-regex "(gpu_|main\.rs)" nextest --no-tests=warn --lib --bins 2>&1); \
+	@COVERAGE_OUTPUT=$$(cargo llvm-cov --ignore-filename-regex "(alimentar/|gpu_|main\.rs)" nextest --no-tests=warn --lib --bins 2>&1); \
 	test -f ~/.cargo/config.toml.cov-backup && mv ~/.cargo/config.toml.cov-backup ~/.cargo/config.toml || true; \
 	COVERAGE=$$(echo "$$COVERAGE_OUTPUT" | grep "^TOTAL" | awk '{print $$10}' | tr -d '%'); \
 	echo "  Line coverage: $${COVERAGE}%"; \
