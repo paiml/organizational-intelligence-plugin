@@ -129,5 +129,52 @@ async fn main() -> Result<()> {
             cli_handlers::handle_import_depyler(input, output, min_confidence, merge, create_splits)
                 .await
         }
+
+        Commands::Localize {
+            passed_coverage,
+            failed_coverage,
+            passed_count,
+            failed_count,
+            formula,
+            top_n,
+            output,
+            format,
+            enrich_tdg,
+            repo,
+            rag,
+            knowledge_base,
+            fusion,
+            similar_bugs,
+            ensemble,
+            ensemble_model,
+            include_churn,
+            calibrated,
+            calibration_model,
+            confidence_threshold,
+        } => {
+            cli_handlers::handle_localize(
+                passed_coverage,
+                failed_coverage,
+                passed_count,
+                failed_count,
+                formula,
+                top_n,
+                output,
+                format,
+                enrich_tdg,
+                repo,
+                rag,
+                knowledge_base,
+                fusion,
+                similar_bugs,
+                ensemble,
+                ensemble_model,
+                include_churn,
+                calibrated,
+                calibration_model,
+                confidence_threshold,
+            )
+            .await
+        }
     }
 }

@@ -11,6 +11,7 @@ pub mod citl;
 pub mod classifier;
 pub mod cli;
 pub mod cli_handlers;
+pub mod ensemble_predictor;
 pub mod export;
 pub mod git;
 pub mod github;
@@ -18,8 +19,10 @@ pub mod ml_trainer;
 pub mod nlp;
 pub mod pmat;
 pub mod pr_reviewer;
+pub mod rag_localization;
 pub mod report;
 pub mod summarizer;
+pub mod tarantula;
 pub mod training;
 
 // GPU acceleration modules

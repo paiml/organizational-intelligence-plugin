@@ -621,7 +621,6 @@ fn convert_batch_to_examples(
 /// Validate CITL export schema (FR-8)
 pub fn validate_citl_schema<P: AsRef<Path>>(path: P) -> Result<SchemaValidation> {
     use alimentar::{ArrowDataset, Dataset};
-    use arrow::datatypes::FieldRef;
 
     let ext = path.as_ref().extension().and_then(|e| e.to_str());
 
@@ -660,11 +659,7 @@ pub fn validate_citl_schema<P: AsRef<Path>>(path: P) -> Result<SchemaValidation>
         "span",
     ];
 
-    let schema_fields: Vec<&str> = schema
-        .fields()
-        .iter()
-        .map(|f: &FieldRef| f.name().as_str())
-        .collect();
+    let schema_fields: Vec<&str> = schema.fields().iter().map(|f| f.name().as_str()).collect();
 
     let missing: Vec<String> = required_fields
         .iter()

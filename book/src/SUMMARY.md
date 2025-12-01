@@ -50,6 +50,7 @@
 - [Train Classifier](./cli/train-classifier.md)
 - [Summarize Reports](./cli/summarize.md)
 - [Review Pull Requests](./cli/review-pr.md)
+- [Fault Localization (Tarantula)](./cli/localize.md)
 
 # ML Classification Pipeline
 
@@ -92,6 +93,7 @@
 - [Example: Classify Defects](./examples/classify-defects.md)
 - [Example: CITL Import](./examples/citl-import.md)
 - [Example: Explore Training Data](./examples/explore-data.md)
+- [Example: Fault Localization](./examples/fault-localization.md)
 - [Example: Full Analysis Pipeline](./examples/full-analysis.md)
 - [Example: Train Custom Model](./examples/train-custom-model.md)
 - [Example: depyler Validation](./examples/depyler-validation.md)

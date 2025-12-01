@@ -16,9 +16,13 @@ use crate::features::{CommitFeatures, FeatureExtractor};
 use crate::git;
 use crate::github::GitHubMiner;
 use crate::ml_trainer::MLTrainer;
+use crate::pmat::PmatIntegration;
 use crate::pr_reviewer::PrReviewer;
 use crate::report::{AnalysisMetadata, AnalysisReport, ReportGenerator};
 use crate::summarizer::{ReportSummarizer, SummaryConfig};
+use crate::tarantula::{
+    LcovParser, LocalizationConfig, ReportFormat, SbflFormula, TarantulaIntegration,
+};
 use crate::training::TrainingDataExtractor;
 use crate::viz::{ConfidenceDistribution, DefectDistribution};
 
@@ -892,6 +896,395 @@ pub async fn handle_import_depyler(
     Ok(())
 }
 
+/// Handle the `localize` command - Tarantula SBFL fault localization
+///
+/// Toyota Way: Muda (eliminate waste) - only run expensive TDG enrichment when requested
+#[allow(clippy::too_many_arguments)]
+pub async fn handle_localize(
+    passed_coverage: PathBuf,
+    failed_coverage: PathBuf,
+    passed_count: usize,
+    failed_count: usize,
+    formula: String,
+    top_n: usize,
+    output: PathBuf,
+    format: String,
+    enrich_tdg: bool,
+    repo: Option<PathBuf>,
+    rag: bool,
+    knowledge_base: Option<PathBuf>,
+    fusion: String,
+    similar_bugs: usize,
+    // Phase 6: Ensemble
+    ensemble: bool,
+    ensemble_model: Option<PathBuf>,
+    include_churn: bool,
+    // Phase 7: Calibrated
+    calibrated: bool,
+    calibration_model: Option<PathBuf>,
+    confidence_threshold: f32,
+) -> Result<()> {
+    use crate::ensemble_predictor::{
+        CalibratedDefectPredictor, FileFeatures, WeightedEnsembleModel,
+    };
+    use crate::rag_localization::{
+        BugKnowledgeBase, LocalizationFusion, RagFaultLocalizer, RagLocalizationConfig,
+        RagReportGenerator,
+    };
+
+    info!("Running Tarantula fault localization");
+    info!("Passed coverage: {}", passed_coverage.display());
+    info!("Failed coverage: {}", failed_coverage.display());
+
+    if rag {
+        println!("\n🔍 RAG-Enhanced Fault Localization (trueno-rag)");
+    } else {
+        println!("\n🔍 Tarantula Fault Localization");
+    }
+    println!("   Formula: {}", formula);
+    println!("   Top N:   {}", top_n);
+    if rag {
+        println!("   RAG:     enabled");
+        println!("   Fusion:  {}", fusion);
+    }
+
+    // Check if coverage tool is available
+    if !TarantulaIntegration::is_coverage_tool_available() {
+        warn!("cargo-llvm-cov not found - using provided coverage files");
+    }
+
+    // Parse formula
+    let sbfl_formula = match formula.to_lowercase().as_str() {
+        "tarantula" => SbflFormula::Tarantula,
+        "ochiai" => SbflFormula::Ochiai,
+        "dstar2" => SbflFormula::DStar { exponent: 2 },
+        "dstar3" => SbflFormula::DStar { exponent: 3 },
+        _ => {
+            warn!("Unknown formula '{}', defaulting to Tarantula", formula);
+            SbflFormula::Tarantula
+        }
+    };
+
+    // Parse output format
+    let report_format = match format.to_lowercase().as_str() {
+        "json" => ReportFormat::Json,
+        "terminal" => ReportFormat::Terminal,
+        _ => ReportFormat::Yaml,
+    };
+
+    // Read coverage files
+    let passed_content = std::fs::read_to_string(&passed_coverage)
+        .map_err(|e| anyhow::anyhow!("Failed to read passed coverage file: {}", e))?;
+    let failed_content = std::fs::read_to_string(&failed_coverage)
+        .map_err(|e| anyhow::anyhow!("Failed to read failed coverage file: {}", e))?;
+
+    // Parse coverage data
+    let passed_cov = TarantulaIntegration::parse_lcov_output(&passed_content)?;
+    let failed_cov = TarantulaIntegration::parse_lcov_output(&failed_content)?;
+
+    println!(
+        "   Parsed: {} passed, {} failed coverage entries",
+        passed_cov.len(),
+        failed_cov.len()
+    );
+
+    // Configure localization
+    let config = LocalizationConfig::new()
+        .with_formula(sbfl_formula)
+        .with_top_n(top_n)
+        .with_explanations(true);
+
+    // Run fault localization
+    let mut result = TarantulaIntegration::run_localization(
+        &passed_cov,
+        &failed_cov,
+        passed_count,
+        failed_count,
+        &config,
+    );
+
+    println!("   Found {} suspicious statements", result.rankings.len());
+    println!("   Confidence: {:.2}", result.confidence);
+
+    // RAG-enhanced localization
+    if rag {
+        println!("\n🤖 Applying RAG enhancement...");
+
+        // Load or create knowledge base
+        let kb = if let Some(kb_path) = &knowledge_base {
+            println!("   Loading knowledge base: {}", kb_path.display());
+            match BugKnowledgeBase::import_from_yaml(kb_path) {
+                Ok(kb) => {
+                    println!("   ✅ Loaded {} bugs from knowledge base", kb.len());
+                    kb
+                }
+                Err(e) => {
+                    warn!("Failed to load knowledge base: {}", e);
+                    println!("   ⚠️  Using empty knowledge base");
+                    BugKnowledgeBase::new()
+                }
+            }
+        } else {
+            println!("   Using empty knowledge base (no --knowledge-base specified)");
+            BugKnowledgeBase::new()
+        };
+
+        // Parse fusion strategy
+        let fusion_strategy = match fusion.to_lowercase().as_str() {
+            "linear" => LocalizationFusion::Linear { sbfl_weight: 0.7 },
+            "dbsf" => LocalizationFusion::DBSF,
+            "sbfl-only" => LocalizationFusion::SbflOnly,
+            _ => LocalizationFusion::RRF { k: 60.0 },
+        };
+
+        // Build RAG configuration
+        let rag_config = RagLocalizationConfig::new()
+            .with_formula(sbfl_formula)
+            .with_top_n(top_n)
+            .with_similar_bugs(similar_bugs)
+            .with_fusion(fusion_strategy)
+            .with_explanations(true);
+
+        // Build coverage data for RAG localizer
+        let coverage = LcovParser::combine_coverage(&passed_cov, &failed_cov);
+
+        // Run RAG-enhanced localization
+        let rag_localizer = RagFaultLocalizer::new(kb, rag_config);
+        let rag_result = rag_localizer.localize(&coverage, passed_count, failed_count);
+
+        println!("   ✅ RAG enhancement complete");
+        println!("   Knowledge base: {} bugs", rag_result.knowledge_base_size);
+        println!("   Fusion: {}", rag_result.fusion_strategy);
+
+        // Generate RAG-enhanced report
+        let rag_report = match format.to_lowercase().as_str() {
+            "json" => RagReportGenerator::to_json(&rag_result)?,
+            "terminal" => RagReportGenerator::to_terminal(&rag_result),
+            _ => RagReportGenerator::to_yaml(&rag_result)?,
+        };
+
+        // Output
+        if format.to_lowercase() == "terminal" {
+            println!("\n{}", rag_report);
+        } else {
+            std::fs::write(&output, &rag_report)?;
+            println!("\n✅ RAG-enhanced report saved to: {}", output.display());
+        }
+
+        // Summary
+        println!("\n📈 Top RAG-Enhanced Rankings:");
+        for ranking in rag_result.rankings.iter().take(5) {
+            let similar_count = ranking.similar_bugs.len();
+            println!(
+                "   #{} {}:{} - {:.3} ({} similar bugs)",
+                ranking.sbfl_ranking.rank,
+                ranking.sbfl_ranking.statement.file.display(),
+                ranking.sbfl_ranking.statement.line,
+                ranking.combined_score,
+                similar_count
+            );
+            if !ranking.similar_bugs.is_empty() {
+                println!("      → Similar: {}", ranking.similar_bugs[0].summary);
+            }
+        }
+
+        println!("\n🎯 RAG-Enhanced Fault Localization Complete!");
+        println!("   ✅ SBFL + RAG fusion applied");
+        println!("   ✅ Fusion strategy: {}", rag_result.fusion_strategy);
+        if rag_result.knowledge_base_size > 0 {
+            println!(
+                "   ✅ Bug knowledge base: {} bugs",
+                rag_result.knowledge_base_size
+            );
+        }
+
+        return Ok(());
+    }
+
+    // Optionally enrich with TDG scores (Muda: only if requested)
+    let mut tdg_scores: std::collections::HashMap<String, f32> = std::collections::HashMap::new();
+    if enrich_tdg || ensemble || calibrated {
+        if let Some(ref repo_path) = repo {
+            println!("\n📊 Enriching with TDG scores from pmat...");
+            match PmatIntegration::analyze_tdg(repo_path) {
+                Ok(tdg_analysis) => {
+                    TarantulaIntegration::enrich_with_tdg(&mut result, &tdg_analysis.file_scores);
+                    tdg_scores = tdg_analysis.file_scores;
+                    println!("   ✅ TDG scores added for {} files", tdg_scores.len());
+                }
+                Err(e) => {
+                    warn!("TDG enrichment failed: {}", e);
+                    println!("   ⚠️  TDG enrichment skipped: {}", e);
+                }
+            }
+        } else if enrich_tdg {
+            warn!("--enrich-tdg requires --repo path");
+            println!("   ⚠️  TDG enrichment skipped: --repo not specified");
+        }
+    }
+
+    // Phase 6: Weighted Ensemble Model
+    if ensemble {
+        println!("\n🔮 Running Weighted Ensemble Model (Phase 6)...");
+
+        let mut model = WeightedEnsembleModel::new();
+
+        // Load pre-trained model if provided
+        if let Some(ref model_path) = ensemble_model {
+            match model.load(model_path) {
+                Ok(()) => println!("   ✅ Loaded ensemble model from {}", model_path.display()),
+                Err(e) => {
+                    warn!("Failed to load ensemble model: {}", e);
+                    println!("   ⚠️  Using default model weights");
+                }
+            }
+        }
+
+        // Create FileFeatures from SBFL results
+        let file_features: Vec<FileFeatures> = result
+            .rankings
+            .iter()
+            .take(top_n)
+            .map(|r| {
+                let file_path = r.statement.file.to_string_lossy().to_string();
+                FileFeatures::new(r.statement.file.clone())
+                    .with_sbfl(r.suspiciousness)
+                    .with_tdg(tdg_scores.get(&file_path).copied().unwrap_or(0.5))
+                    .with_churn(if include_churn { 0.5 } else { 0.0 }) // Placeholder
+                    .with_complexity(0.5) // Placeholder
+                    .with_rag_similarity(0.0)
+            })
+            .collect();
+
+        // If model not fitted, fit on current data (unsupervised)
+        if !model.is_fitted() && !file_features.is_empty() {
+            match model.fit(&file_features) {
+                Ok(()) => println!(
+                    "   ✅ Ensemble model fitted on {} files",
+                    file_features.len()
+                ),
+                Err(e) => warn!("Ensemble model fitting failed: {}", e),
+            }
+        }
+
+        // Print ensemble predictions
+        println!("\n   Ensemble Risk Predictions:");
+        for (i, features) in file_features.iter().take(5).enumerate() {
+            let prob = model.predict(features);
+            println!(
+                "   #{} {} - Risk: {:.1}%",
+                i + 1,
+                features.path.display(),
+                prob * 100.0
+            );
+        }
+
+        // Print learned weights if available
+        if let Some(weights) = model.get_weights() {
+            println!("\n   Learned Signal Weights:");
+            for (name, weight) in weights.names.iter().zip(weights.weights.iter()) {
+                println!("      {}: {:.1}%", name, weight * 100.0);
+            }
+        }
+    }
+
+    // Phase 7: Calibrated Defect Probability
+    if calibrated {
+        println!("\n📊 Running Calibrated Defect Prediction (Phase 7)...");
+        println!(
+            "   Confidence threshold: {:.0}%",
+            confidence_threshold * 100.0
+        );
+
+        let predictor = CalibratedDefectPredictor::new();
+
+        // Load pre-trained calibration model if provided
+        if let Some(ref _model_path) = calibration_model {
+            // Note: Full calibration requires labeled training data
+            // For now, we use uncalibrated ensemble predictions
+            println!("   ⚠️  Calibration model loading not yet implemented");
+            println!("   Using uncalibrated probability estimates");
+        }
+
+        // Create predictions for top suspicious files
+        println!(
+            "\n   Calibrated Predictions (above {:.0}% threshold):",
+            confidence_threshold * 100.0
+        );
+        for ranking in result.rankings.iter().take(top_n) {
+            let file_path = ranking.statement.file.to_string_lossy().to_string();
+            let features = FileFeatures::new(ranking.statement.file.clone())
+                .with_sbfl(ranking.suspiciousness)
+                .with_tdg(tdg_scores.get(&file_path).copied().unwrap_or(0.5));
+
+            let prediction = predictor.predict(&features);
+
+            if prediction.probability >= confidence_threshold {
+                println!(
+                    "   #{} {}:{} - P(defect) = {:.0}% ± {:.0}% [{}]",
+                    ranking.rank,
+                    ranking.statement.file.display(),
+                    ranking.statement.line,
+                    prediction.probability * 100.0,
+                    (prediction.confidence_interval.1 - prediction.confidence_interval.0) * 50.0,
+                    prediction.confidence_level
+                );
+
+                // Show top contributing factors
+                let top_factors: Vec<_> = prediction
+                    .contributing_factors
+                    .iter()
+                    .filter(|f| f.contribution_pct > 10.0)
+                    .take(3)
+                    .collect();
+                for factor in top_factors {
+                    println!(
+                        "      ├─ {}: {:.1}%",
+                        factor.factor_name, factor.contribution_pct
+                    );
+                }
+            }
+        }
+    }
+
+    // Generate report
+    let report = TarantulaIntegration::generate_report(&result, report_format)?;
+
+    // Output
+    if report_format == ReportFormat::Terminal {
+        println!("\n{}", report);
+    } else {
+        std::fs::write(&output, &report)?;
+        println!("\n✅ Report saved to: {}", output.display());
+    }
+
+    // Summary
+    println!("\n📈 Top Suspicious Statements:");
+    for ranking in result.rankings.iter().take(5) {
+        println!(
+            "   #{} {}:{} - {:.3}",
+            ranking.rank,
+            ranking.statement.file.display(),
+            ranking.statement.line,
+            ranking.suspiciousness
+        );
+    }
+
+    println!("\n🎯 Fault Localization Complete!");
+    println!("   ✅ Spectrum-Based Fault Localization (SBFL)");
+    println!("   ✅ {:?} formula applied", sbfl_formula);
+    if enrich_tdg {
+        println!("   ✅ TDG technical debt scores integrated");
+    }
+
+    println!("\n💡 Next Steps:");
+    println!("   1. Investigate top suspicious statements");
+    println!("   2. Check test coverage for false positives");
+    println!("   3. Use --formula ochiai for alternative ranking");
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1528,5 +1921,183 @@ defect_patterns:
                 );
             }
         }
+    }
+
+    // ============== Localize Handler Tests ==============
+
+    fn create_test_lcov_file(dir: &std::path::Path, name: &str, content: &str) -> PathBuf {
+        let path = dir.join(name);
+        std::fs::write(&path, content).unwrap();
+        path
+    }
+
+    #[tokio::test]
+    async fn test_handle_localize_basic() {
+        let temp_dir = tempfile::tempdir().unwrap();
+
+        // Create test LCOV files
+        let passed_lcov = r#"SF:src/main.rs
+DA:10,5
+DA:20,10
+DA:30,8
+end_of_record
+"#;
+        let failed_lcov = r#"SF:src/main.rs
+DA:10,3
+DA:20,0
+DA:40,5
+end_of_record
+"#;
+
+        let passed_path = create_test_lcov_file(temp_dir.path(), "passed.lcov", passed_lcov);
+        let failed_path = create_test_lcov_file(temp_dir.path(), "failed.lcov", failed_lcov);
+        let output_path = temp_dir.path().join("output.yaml");
+
+        let result = handle_localize(
+            passed_path,
+            failed_path,
+            1,
+            1,
+            "tarantula".to_string(),
+            10,
+            output_path.clone(),
+            "yaml".to_string(),
+            false,
+            None,
+            false,             // rag
+            None,              // knowledge_base
+            "rrf".to_string(), // fusion
+            5,                 // similar_bugs
+            false,             // ensemble
+            None,              // ensemble_model
+            false,             // include_churn
+            false,             // calibrated
+            None,              // calibration_model
+            0.5,               // confidence_threshold
+        )
+        .await;
+
+        assert!(result.is_ok());
+        assert!(output_path.exists());
+
+        // Verify output contains expected content
+        let output_content = std::fs::read_to_string(&output_path).unwrap();
+        assert!(output_content.contains("rankings"));
+    }
+
+    #[tokio::test]
+    async fn test_handle_localize_json_format() {
+        let temp_dir = tempfile::tempdir().unwrap();
+
+        let passed_lcov = "SF:src/lib.rs\nDA:100,10\nend_of_record\n";
+        let failed_lcov = "SF:src/lib.rs\nDA:100,5\nend_of_record\n";
+
+        let passed_path = create_test_lcov_file(temp_dir.path(), "passed.lcov", passed_lcov);
+        let failed_path = create_test_lcov_file(temp_dir.path(), "failed.lcov", failed_lcov);
+        let output_path = temp_dir.path().join("output.json");
+
+        let result = handle_localize(
+            passed_path,
+            failed_path,
+            1,
+            1,
+            "ochiai".to_string(),
+            5,
+            output_path.clone(),
+            "json".to_string(),
+            false,
+            None,
+            false,             // rag
+            None,              // knowledge_base
+            "rrf".to_string(), // fusion
+            5,                 // similar_bugs
+            false,             // ensemble
+            None,              // ensemble_model
+            false,             // include_churn
+            false,             // calibrated
+            None,              // calibration_model
+            0.5,               // confidence_threshold
+        )
+        .await;
+
+        assert!(result.is_ok());
+        assert!(output_path.exists());
+
+        // Verify it's valid JSON
+        let content = std::fs::read_to_string(&output_path).unwrap();
+        let _: serde_json::Value = serde_json::from_str(&content).unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_handle_localize_dstar_formula() {
+        let temp_dir = tempfile::tempdir().unwrap();
+
+        let passed_lcov = "SF:src/bug.rs\nDA:50,2\nend_of_record\n";
+        let failed_lcov = "SF:src/bug.rs\nDA:50,10\nend_of_record\n";
+
+        let passed_path = create_test_lcov_file(temp_dir.path(), "passed.lcov", passed_lcov);
+        let failed_path = create_test_lcov_file(temp_dir.path(), "failed.lcov", failed_lcov);
+        let output_path = temp_dir.path().join("output.yaml");
+
+        let result = handle_localize(
+            passed_path,
+            failed_path,
+            10,
+            5,
+            "dstar2".to_string(),
+            10,
+            output_path.clone(),
+            "yaml".to_string(),
+            false,
+            None,
+            false,             // rag
+            None,              // knowledge_base
+            "rrf".to_string(), // fusion
+            5,                 // similar_bugs
+            false,             // ensemble
+            None,              // ensemble_model
+            false,             // include_churn
+            false,             // calibrated
+            None,              // calibration_model
+            0.5,               // confidence_threshold
+        )
+        .await;
+
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_handle_localize_invalid_coverage_file() {
+        let temp_dir = tempfile::tempdir().unwrap();
+
+        let nonexistent = temp_dir.path().join("nonexistent.lcov");
+        let output_path = temp_dir.path().join("output.yaml");
+
+        let result = handle_localize(
+            nonexistent.clone(),
+            nonexistent,
+            1,
+            1,
+            "tarantula".to_string(),
+            10,
+            output_path,
+            "yaml".to_string(),
+            false,
+            None,
+            false,             // rag
+            None,              // knowledge_base
+            "rrf".to_string(), // fusion
+            5,                 // similar_bugs
+            false,             // ensemble
+            None,              // ensemble_model
+            false,             // include_churn
+            false,             // calibrated
+            None,              // calibration_model
+            0.5,               // confidence_threshold
+        )
+        .await;
+
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Failed to read"));
     }
 }

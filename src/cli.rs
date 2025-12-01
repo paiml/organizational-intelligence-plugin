@@ -187,6 +187,89 @@ pub enum Commands {
         #[arg(long, default_value = "true")]
         create_splits: bool,
     },
+
+    /// Localize faults using Tarantula SBFL (Spectrum-Based Fault Localization)
+    Localize {
+        /// Path to LCOV coverage file from passing tests
+        #[arg(long, required = true)]
+        passed_coverage: PathBuf,
+
+        /// Path to LCOV coverage file from failing tests
+        #[arg(long, required = true)]
+        failed_coverage: PathBuf,
+
+        /// Number of passing tests
+        #[arg(long, default_value = "1")]
+        passed_count: usize,
+
+        /// Number of failing tests
+        #[arg(long, default_value = "1")]
+        failed_count: usize,
+
+        /// SBFL formula: tarantula, ochiai, dstar2, dstar3
+        #[arg(long, default_value = "tarantula")]
+        formula: String,
+
+        /// Top N suspicious statements to report
+        #[arg(long, default_value = "10")]
+        top_n: usize,
+
+        /// Output file path
+        #[arg(long, short, default_value = "fault-localization.yaml")]
+        output: PathBuf,
+
+        /// Output format: yaml, json, terminal
+        #[arg(long, short, default_value = "yaml")]
+        format: String,
+
+        /// Include TDG scores from pmat (requires pmat)
+        #[arg(long, default_value = "false")]
+        enrich_tdg: bool,
+
+        /// Repository path for TDG enrichment
+        #[arg(long)]
+        repo: Option<PathBuf>,
+
+        /// Enable RAG-enhanced localization with trueno-rag
+        #[arg(long, default_value = "false")]
+        rag: bool,
+
+        /// Path to bug knowledge base YAML file (for RAG)
+        #[arg(long)]
+        knowledge_base: Option<PathBuf>,
+
+        /// Fusion strategy for RAG: rrf, linear, dbsf, sbfl-only
+        #[arg(long, default_value = "rrf")]
+        fusion: String,
+
+        /// Number of similar bugs to retrieve (for RAG)
+        #[arg(long, default_value = "5")]
+        similar_bugs: usize,
+
+        /// Enable weighted ensemble model (Phase 6)
+        #[arg(long, default_value = "false")]
+        ensemble: bool,
+
+        /// Path to trained ensemble model file
+        #[arg(long)]
+        ensemble_model: Option<PathBuf>,
+
+        /// Include churn metrics from git history (for ensemble)
+        #[arg(long, default_value = "false")]
+        include_churn: bool,
+
+        /// Enable calibrated probability output (Phase 7)
+        #[arg(long, default_value = "false")]
+        calibrated: bool,
+
+        /// Path to trained calibration model file
+        #[arg(long)]
+        calibration_model: Option<PathBuf>,
+
+        /// Confidence threshold for calibrated predictions (0.0-1.0)
+        #[arg(long, default_value = "0.5")]
+        confidence_threshold: f32,
+    },
 }
 
 #[cfg(test)]

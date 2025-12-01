@@ -61,12 +61,13 @@ tempfile = "3.10"
 trueno = "0.7.3"
 trueno-db = "0.3.2"
 trueno-graph = "0.1.1"
-aprender = "0.9.1"
+trueno-rag = "0.1.2"
+aprender = "0.14.0"
 
 # Data loading (alimentar - paiml stack)
 alimentar = { path = "../alimentar", default-features = false, features = ["local", "mmap", "shuffle"] }
-arrow = "53"  # Match alimentar's arrow version
-parquet = "53"  # For Parquet file I/O
+arrow = "54"  # Match alimentar's arrow version
+parquet = "54"  # For Parquet file I/O
 
 # Visualization (optional)
 trueno-viz = { version = "0.1.1", optional = true }
@@ -116,6 +117,10 @@ path = "examples/citl_import.rs"
 [[example]]
 name = "explore_data"
 path = "examples/explore_data.rs"
+
+[[example]]
+name = "fault_localization"
+path = "examples/fault_localization.rs"
 
 [features]
 default = []
