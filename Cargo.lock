@@ -34,6 +34,8 @@ dependencies = [
 [[package]]
 name = "alimentar"
 version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fb38b589457ad7cba76776f650966320806d97ad7cd63643bf4041c6ea514cac"
 dependencies = [
  "arrow 54.2.1",
  "arrow-csv 54.2.1",
@@ -2378,7 +2380,7 @@ dependencies = [
 
 [[package]]
 name = "organizational-intelligence-plugin"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "alimentar",
  "anyhow",
