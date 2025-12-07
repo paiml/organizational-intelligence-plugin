@@ -54,6 +54,13 @@ Organizational Intelligence Plugin (OIP) mines Git history and integrates with p
 - Complete GitHub → Features → Storage pipeline
 - See: [GPU Quick Start](docs/GPU_QUICKSTART.md) | [Full Spec](docs/specifications/GPU-correlation-predictions-spec.md)
 
+🔌 **First-Class pmat Plugin** - **NEW!**
+- Enabled by default in `pmat demo-score --with-oip`
+- Tarantula SBFL fault localization for test failures
+- SZZ bug-introducing commit analysis
+- Historical quality trend tracking
+- See: [pmat Demo/Book Scoring Spec](https://github.com/paiml/paiml-mcp-agent-toolkit/blob/master/docs/specifications/demo-and-book-scoring.md)
+
 ### Toyota Way Principles
 
 This tool is built following Toyota Production System principles:
@@ -261,6 +268,42 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
+### pmat Demo/Book Scoring Integration
+
+OIP integrates as a **first-class plugin** with pmat's demo-score command for educational repositories:
+
+```bash
+# Score a demo/book repository with OIP analysis (default when OIP installed)
+pmat demo-score --with-oip
+
+# OIP provides additional insights:
+# - Tarantula SBFL: Fault localization for failing example tests
+# - SZZ Analysis: Trace bug-introducing commits in examples
+# - Historical Trends: Quality score evolution over time
+# - Defect Classification: Pattern detection in example code
+
+# Disable OIP integration
+pmat demo-score --no-oip
+
+# OIP-specific analysis modes
+pmat demo-score --oip-analysis fault-localization
+pmat demo-score --oip-analysis defect-patterns
+pmat demo-score --oip-analysis historical-trends
+```
+
+**Configuration** (`~/.config/pmat/config.toml`):
+
+```toml
+[oip]
+enabled = true                    # Auto-enable when oip binary found in PATH
+binary_path = "oip"              # Custom path to OIP binary
+fault_localization = true         # Enable Tarantula SBFL
+szz_analysis = true              # Enable bug origin tracing
+trend_tracking = true            # Enable historical analysis
+```
+
+See the [Demo/Book Scoring Specification](https://github.com/paiml/paiml-mcp-agent-toolkit/blob/master/docs/specifications/demo-and-book-scoring.md) for full details.
+
 ## Configuration
 
 ### Makefile Targets
@@ -343,6 +386,8 @@ make coverage-open  # Opens in browser
 - ✅ Phase 1: Core analysis with pmat TDG integration
 - ✅ Phase 2: Automated summarization with PII stripping
 - ✅ Phase 3: Fast PR reviews using stateful baselines
+- ✅ Phase 1 GPU: GPU-accelerated correlation analysis
+- ✅ **First-Class pmat Plugin**: Integrated with `pmat demo-score`
 
 ### Proposed (Phase 4)
 
