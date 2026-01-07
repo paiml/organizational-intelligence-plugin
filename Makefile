@@ -99,17 +99,12 @@ coverage: ## Generate HTML coverage report and open in browser
 	@which cargo-llvm-cov > /dev/null 2>&1 || (echo "📦 Installing cargo-llvm-cov..." && cargo install cargo-llvm-cov --locked)
 	@which cargo-nextest > /dev/null 2>&1 || (echo "📦 Installing cargo-nextest..." && cargo install cargo-nextest --locked)
 	@echo "🧹 Cleaning old coverage data..."
-	@cargo llvm-cov clean --workspace
 	@mkdir -p target/coverage
-	@echo "⚙️  Temporarily disabling global cargo config (mold breaks coverage)..."
-	@test -f ~/.cargo/config.toml && mv ~/.cargo/config.toml ~/.cargo/config.toml.cov-backup || true
 	@echo "🧪 Phase 1: Running tests with instrumentation (no report)..."
 	@cargo llvm-cov --no-report --ignore-filename-regex "(alimentar/|gpu_|main\.rs)" nextest --no-tests=warn --lib --bins
 	@echo "📊 Phase 2: Generating coverage reports..."
 	@cargo llvm-cov report --ignore-filename-regex "(alimentar/|gpu_|main\.rs)" --html --output-dir target/coverage/html
 	@cargo llvm-cov report --ignore-filename-regex "(alimentar/|gpu_|main\.rs)" --lcov --output-path target/coverage/lcov.info
-	@echo "⚙️  Restoring global cargo config..."
-	@test -f ~/.cargo/config.toml.cov-backup && mv ~/.cargo/config.toml.cov-backup ~/.cargo/config.toml || true
 	@echo ""
 	@echo "📊 Coverage Summary:"
 	@echo "=================="
@@ -127,11 +122,8 @@ coverage-summary: ## Show coverage summary
 coverage-check: ## Enforce 90% coverage threshold (excludes GPU/main/alimentar)
 	@echo "📊 Checking coverage threshold (minimum 90%)..."
 	@command -v cargo-llvm-cov > /dev/null || (echo "📦 Installing cargo-llvm-cov..." && cargo install cargo-llvm-cov --locked)
-	@test -f ~/.cargo/config.toml && mv ~/.cargo/config.toml ~/.cargo/config.toml.cov-backup || true
-	@cargo llvm-cov clean --workspace 2>/dev/null || true
 	@echo "  Running tests with coverage instrumentation..."
 	@COVERAGE_OUTPUT=$$(cargo llvm-cov --ignore-filename-regex "(alimentar/|gpu_|main\.rs)" nextest --no-tests=warn --lib --bins 2>&1); \
-	test -f ~/.cargo/config.toml.cov-backup && mv ~/.cargo/config.toml.cov-backup ~/.cargo/config.toml || true; \
 	COVERAGE=$$(echo "$$COVERAGE_OUTPUT" | grep "^TOTAL" | awk '{print $$10}' | tr -d '%'); \
 	echo "  Line coverage: $${COVERAGE}%"; \
 	if [ "$$(echo "$${COVERAGE} < 90" | bc -l)" -eq 1 ]; then \
@@ -153,14 +145,12 @@ coverage-open: ## Open HTML coverage report in browser
 coverage-ci: ## Generate LCOV report for CI/CD (fast mode)
 	@echo "=== Code Coverage for CI/CD ==="
 	@echo "Phase 1: Running tests with instrumentation..."
-	@cargo llvm-cov clean --workspace
 	@cargo llvm-cov --no-report nextest --no-tests=warn --all-features --workspace
 	@echo "Phase 2: Generating LCOV report..."
 	@cargo llvm-cov report --lcov --output-path lcov.info
 	@echo "✓ Coverage report generated: lcov.info"
 
 coverage-clean: ## Clean coverage artifacts
-	@cargo llvm-cov clean --workspace
 	@rm -f lcov.info coverage.xml target/coverage/lcov.info
 	@rm -rf target/llvm-cov target/coverage
 	@find . -name "*.profraw" -delete
