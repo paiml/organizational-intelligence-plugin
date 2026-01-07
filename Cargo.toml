@@ -58,11 +58,11 @@ git2 = "0.20"
 tempfile = "3.10"
 
 # GPU acceleration stack
-trueno = "0.7.3"
-trueno-db = "0.3.2"
-trueno-graph = "0.1.1"
-trueno-rag = "0.1.2"
-aprender = "0.14.0"
+trueno = "0.11"
+trueno-db = "0.3"
+trueno-graph = "0.1"
+trueno-rag = "0.1"
+aprender = "0.23"
 
 # Data loading (alimentar - paiml stack)
 alimentar = { version = "0.2.2", default-features = false, features = ["local", "mmap", "shuffle"] }
@@ -70,7 +70,7 @@ arrow = "54"  # Match alimentar's arrow version
 parquet = "54"  # For Parquet file I/O
 
 # Visualization (optional)
-trueno-viz = { version = "0.1.1", optional = true }
+trueno-viz = { version = "0.1", optional = true }
 
 # GPU compute (wgpu for cross-platform GPU)
 wgpu = { version = "0.19", features = ["wgsl"] }
