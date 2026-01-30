@@ -1,6 +1,6 @@
 [package]
 name = "organizational-intelligence-plugin"
-version = "0.3.2"
+version = "0.3.3"
 edition = "2021"
 rust-version = "1.75.0"
 authors = ["OIP Team"]
@@ -58,10 +58,10 @@ git2 = "0.20"
 tempfile = "3.10"
 
 # GPU acceleration stack
-trueno = "0.11"
-trueno-db = "0.3"
-trueno-graph = "0.1"
-trueno-rag = "0.1"
+trueno = "0.14"
+trueno-db = "0.3.13"
+trueno-graph = "0.1.13"
+trueno-rag = "0.1.12"
 aprender = "0.24"
 
 # Data loading (alimentar - paiml stack)

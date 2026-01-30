@@ -1,0 +1,36 @@
+{
+  "category_to_label": {
+    "ConfigurationErrors": 2,
+    "SecurityVulnerabilities": 4,
+    "StdlibMapping": 5,
+    "TypeErrors": 7,
+    "OwnershipBorrow": 3,
+    "ASTTransform": 0,
+    "ConcurrencyBugs": 1,
+    "TraitBounds": 6
+  },
+  "label_to_category": {
+    "2": "ConfigurationErrors",
+    "3": "OwnershipBorrow",
+    "6": "TraitBounds",
+    "4": "SecurityVulnerabilities",
+    "0": "ASTTransform",
+    "5": "StdlibMapping",
+    "7": "TypeErrors",
+    "1": "ConcurrencyBugs"
+  },
+  "metadata": {
+    "n_train": 37,
+    "n_validation": 8,
+    "n_test": 9,
+    "n_estimators": 100,
+    "max_depth": 20,
+    "n_features": 1474,
+    "n_classes": 8,
+    "train_accuracy": 1.0,
+    "validation_accuracy": 0.375,
+    "test_accuracy": null
+  },
+  "tfidf_vocabulary": [],
+  "max_features": 1500
+}
