@@ -1,6 +1,6 @@
 [package]
 name = "organizational-intelligence-plugin"
-version = "0.3.3"
+version = "0.3.4"
 edition = "2021"
 rust-version = "1.75.0"
 authors = ["OIP Team"]
@@ -62,12 +62,12 @@ trueno = "0.14"
 trueno-db = "0.3.13"
 trueno-graph = "0.1.13"
 trueno-rag = "0.1.12"
-aprender = "0.24"
+aprender = "0.25"
 
 # Data loading (alimentar - paiml stack)
-alimentar = { version = "0.2.2", default-features = false, features = ["local", "mmap", "shuffle"] }
-arrow = "54"  # Match alimentar's arrow version
-parquet = "54"  # For Parquet file I/O
+alimentar = { version = "0.2.5", default-features = false, features = ["local", "mmap", "shuffle"] }
+arrow = "57"  # Match alimentar's arrow version
+parquet = "57"  # For Parquet file I/O
 
 # Visualization (optional)
 trueno-viz = { version = "0.1", optional = true }
