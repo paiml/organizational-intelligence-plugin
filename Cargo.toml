@@ -58,11 +58,11 @@ git2 = "0.20"
 tempfile = "3.10"
 
 # GPU acceleration stack
-trueno = "0.14"
+trueno = "0.15"
 trueno-db = "0.3.13"
 trueno-graph = "0.1.13"
-trueno-rag = "0.1.12"
-aprender = "0.25"
+trueno-rag = "0.2"
+aprender = "0.26"
 
 # Data loading (alimentar - paiml stack)
 alimentar = { version = "0.2.5", default-features = false, features = ["local", "mmap", "shuffle"] }
