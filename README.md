@@ -1,4 +1,6 @@
 <div align="center">
+[![CI](https://github.com/paiml/organizational-intelligence-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/paiml/organizational-intelligence-plugin/actions/workflows/ci.yml)
+[![Crates.io](https://img.shields.io/crates/v/organizational-intelligence-plugin.svg)](https://crates.io/crates/organizational-intelligence-plugin)
 
 <img src="logo.png" alt="OIP Logo" width="128" height="128">
 
