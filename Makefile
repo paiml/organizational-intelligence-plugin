@@ -54,7 +54,7 @@ help:
 # Fast pre-commit hook (<30 seconds) - Toyota Way: Don't overburden developers
 pre-commit: fmt-check lint-fast
 	@echo "🧪 Running fast tests..."
-	@cargo test --lib --bins --quiet
+	@PROPTEST_CASES=10 cargo test --lib --bins --quiet
 	@echo "✅ Pre-commit checks passed (fast feedback)"
 
 # Comprehensive CI validation - Run in CI, not locally
@@ -125,7 +125,7 @@ coverage-check: ## Enforce 90% coverage threshold (excludes GPU/main/alimentar)
 	@echo "📊 Checking coverage threshold (minimum 90%)..."
 	@command -v cargo-llvm-cov > /dev/null || (echo "📦 Installing cargo-llvm-cov..." && cargo install cargo-llvm-cov --locked)
 	@echo "  Running tests with coverage instrumentation..."
-	@COVERAGE_OUTPUT=$$(cargo llvm-cov --ignore-filename-regex "(alimentar/|gpu_|main\.rs)" nextest --no-tests=warn --lib --bins 2>&1); \
+	@COVERAGE_OUTPUT=$$(PROPTEST_CASES=10 cargo llvm-cov test --ignore-filename-regex "(alimentar/|gpu_|main\.rs)" --lib --bins 2>&1); \
 	COVERAGE=$$(echo "$$COVERAGE_OUTPUT" | grep "^TOTAL" | awk '{print $$10}' | tr -d '%'); \
 	echo "  Line coverage: $${COVERAGE}%"; \
 	if [ "$$(echo "$${COVERAGE} < 90" | bc -l)" -eq 1 ]; then \
@@ -147,7 +147,7 @@ coverage-open: ## Open HTML coverage report in browser
 coverage-ci: ## Generate LCOV report for CI/CD (fast mode)
 	@echo "=== Code Coverage for CI/CD ==="
 	@echo "Phase 1: Running tests with instrumentation..."
-	@cargo llvm-cov --no-report nextest --no-tests=warn --all-features --workspace
+	@PROPTEST_CASES=10 cargo llvm-cov test --no-report --lib --all-features --workspace
 	@echo "Phase 2: Generating LCOV report..."
 	@cargo llvm-cov report --lcov --output-path lcov.info
 	@echo "✓ Coverage report generated: lcov.info"
