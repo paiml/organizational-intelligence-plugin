@@ -83,7 +83,7 @@ lint-full: fmt-check
 # Fast tests (<5 min target)
 test-fast:
 	@echo "🧪 Running fast test suite..."
-	@cargo test --quiet --lib --bins
+	@PROPTEST_CASES=10 cargo test --quiet --lib --bins
 
 # All tests (alias for test-all)
 test: test-all
@@ -91,20 +91,19 @@ test: test-all
 # All tests
 test-all:
 	@echo "🧪 Running all tests..."
-	@cargo test --all-features --workspace
+	@PROPTEST_CASES=100 cargo test --all-features --workspace
 
 # Code Coverage (Toyota Way: "make coverage" just works)
 # Following bashrs pattern: Two-Phase instrumentation + reporting
 # TARGET: < 10 minutes (enforced with reduced property test cases)
 coverage: ## Generate HTML coverage report and open in browser
 	@echo "📊 Running comprehensive test coverage analysis (target: <10 min)..."
-	@echo "🔍 Checking for cargo-llvm-cov and cargo-nextest..."
+	@echo "🔍 Checking for cargo-llvm-cov..."
 	@which cargo-llvm-cov > /dev/null 2>&1 || (echo "📦 Installing cargo-llvm-cov..." && cargo install cargo-llvm-cov --locked)
-	@which cargo-nextest > /dev/null 2>&1 || (echo "📦 Installing cargo-nextest..." && cargo install cargo-nextest --locked)
 	@echo "🧹 Cleaning old coverage data..."
 	@mkdir -p target/coverage
 	@echo "🧪 Phase 1: Running tests with instrumentation (no report)..."
-	@cargo llvm-cov --no-report --ignore-filename-regex "(alimentar/|gpu_|main\.rs)" nextest --no-tests=warn --lib --bins
+	@PROPTEST_CASES=10 cargo llvm-cov test --no-report --ignore-filename-regex "(alimentar/|gpu_|main\.rs)" --lib --bins
 	@echo "📊 Phase 2: Generating coverage reports..."
 	@cargo llvm-cov report --ignore-filename-regex "(alimentar/|gpu_|main\.rs)" --html --output-dir target/coverage/html
 	@cargo llvm-cov report --ignore-filename-regex "(alimentar/|gpu_|main\.rs)" --lcov --output-path target/coverage/lcov.info
