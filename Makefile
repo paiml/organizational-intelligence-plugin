@@ -1,7 +1,7 @@
 # Organizational Intelligence Plugin - Makefile
 # Toyota Way: Fast feedback loops, outcome-focused quality
 
-.PHONY: help pre-commit ci-validate test-fast test-all lint lint-fast lint-full build run clean
+.PHONY: help pre-commit ci-validate test-fast test test-all lint lint-fast lint-full build run clean
 .PHONY: coverage coverage-summary coverage-check coverage-open coverage-ci coverage-clean coverage-report
 .PHONY: wasm wasm-build wasm-test wasm-serve wasm-clean viz viz-test
 .PHONY: e2e e2e-install e2e-test e2e-headed e2e-ui e2e-report
@@ -84,6 +84,9 @@ lint-full: fmt-check
 test-fast:
 	@echo "🧪 Running fast test suite..."
 	@cargo test --quiet --lib --bins
+
+# All tests (alias for test-all)
+test: test-all
 
 # All tests
 test-all:

@@ -1,20 +1,24 @@
 <div align="center">
-  <img src="logo.png" alt="OIP Logo" width="128" height="128">
 
-  # Organizational Intelligence Plugin (OIP)
+<img src="logo.png" alt="OIP Logo" width="128" height="128">
 
-  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-  [![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org/)
-  [![Grade: A](https://img.shields.io/badge/pmat_repo--score-A_(90%2F100)-success.svg)](https://github.com/paiml/pmat)
-  [![TDG Score](https://img.shields.io/badge/TDG-94.1%2F100_(A)-brightgreen.svg)](https://github.com/paiml/pmat)
-  [![Tests](https://img.shields.io/badge/tests-472_passing-brightgreen.svg)](https://github.com/paiml/organizational-intelligence-plugin)
+<h1 align="center">Organizational Intelligence Plugin (OIP)</h1>
 
-  A plugin for [pmat](https://github.com/paiml/pmat) that analyzes GitHub organizations to detect defect patterns, measure code quality, and generate actionable intelligence for software development teams.
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/rust-1.70%2B-orange.svg" alt="Rust"></a>
+  <a href="https://github.com/paiml/pmat"><img src="https://img.shields.io/badge/pmat_repo--score-A%2B_(95%2F100)-success.svg" alt="Grade: A+"></a>
+  <a href="https://github.com/paiml/pmat"><img src="https://img.shields.io/badge/TDG-94.1%2F100_(A)-brightgreen.svg" alt="TDG Score"></a>
+  <a href="https://github.com/paiml/organizational-intelligence-plugin"><img src="https://img.shields.io/badge/tests-472_passing-brightgreen.svg" alt="Tests"></a>
+</p>
 
-  [Installation](#installation) •
-  [Quick Start](#usage) •
-  [Documentation](#development) •
-  [Contributing](#contributing)
+A plugin for [pmat](https://github.com/paiml/pmat) that analyzes GitHub organizations to detect defect patterns, measure code quality, and generate actionable intelligence for software development teams.
+
+[Features](#features) |
+[Installation](#installation) |
+[Quick Start](#usage) |
+[Documentation](#development) |
+[Contributing](#contributing)
 
 </div>
 
@@ -30,7 +34,7 @@ Organizational Intelligence Plugin (OIP) mines Git history and integrates with p
 - **Provide fast PR reviews** using stateful baselines (<30s vs 10+ minutes)
 - **Enable data-driven decisions** for technical debt prioritization
 
-### Key Features
+## Features
 
 ✅ **Phase 1 - Core Analysis** (`oip analyze`)
 - Analyze GitHub organizations for defect patterns
