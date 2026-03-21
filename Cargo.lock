@@ -2495,6 +2495,7 @@ dependencies = [
  "octocrab",
  "parquet 57.3.0",
  "proptest",
+ "provable-contracts-macros",
  "serde",
  "serde_json",
  "serde_yaml",

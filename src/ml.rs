@@ -34,6 +34,7 @@ impl DefectPredictor {
     }
 
     /// Create predictor with custom parameters
+    #[provable_contracts_macros::contract("oip-defect-predictor-v1", equation = "with-params")]
     pub fn with_params(n_trees: usize, max_depth: usize) -> Self {
         Self {
             n_trees,
