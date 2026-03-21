@@ -1101,150 +1101,14 @@ pub async fn handle_localize(
         return Ok(());
     }
 
-    // Optionally enrich with TDG scores (Muda: only if requested)
-    let mut tdg_scores: std::collections::HashMap<String, f32> = std::collections::HashMap::new();
-    if enrich_tdg || ensemble || calibrated {
-        if let Some(ref repo_path) = repo {
-            println!("\n📊 Enriching with TDG scores from pmat...");
-            match PmatIntegration::analyze_tdg(repo_path) {
-                Ok(tdg_analysis) => {
-                    TarantulaIntegration::enrich_with_tdg(&mut result, &tdg_analysis.file_scores);
-                    tdg_scores = tdg_analysis.file_scores;
-                    println!("   ✅ TDG scores added for {} files", tdg_scores.len());
-                }
-                Err(e) => {
-                    warn!("TDG enrichment failed: {}", e);
-                    println!("   ⚠️  TDG enrichment skipped: {}", e);
-                }
-            }
-        } else if enrich_tdg {
-            warn!("--enrich-tdg requires --repo path");
-            println!("   ⚠️  TDG enrichment skipped: --repo not specified");
-        }
-    }
+    let tdg_scores = enrich_tdg_scores(&mut result, enrich_tdg || ensemble || calibrated, enrich_tdg, repo.as_ref());
 
-    // Phase 6: Weighted Ensemble Model
     if ensemble {
-        println!("\n🔮 Running Weighted Ensemble Model (Phase 6)...");
-
-        let mut model = WeightedEnsembleModel::new();
-
-        // Load pre-trained model if provided
-        if let Some(ref model_path) = ensemble_model {
-            match model.load(model_path) {
-                Ok(()) => println!("   ✅ Loaded ensemble model from {}", model_path.display()),
-                Err(e) => {
-                    warn!("Failed to load ensemble model: {}", e);
-                    println!("   ⚠️  Using default model weights");
-                }
-            }
-        }
-
-        // Create FileFeatures from SBFL results
-        let file_features: Vec<FileFeatures> = result
-            .rankings
-            .iter()
-            .take(top_n)
-            .map(|r| {
-                let file_path = r.statement.file.to_string_lossy().to_string();
-                FileFeatures::new(r.statement.file.clone())
-                    .with_sbfl(r.suspiciousness)
-                    .with_tdg(tdg_scores.get(&file_path).copied().unwrap_or(0.5))
-                    .with_churn(if include_churn { 0.5 } else { 0.0 }) // Placeholder
-                    .with_complexity(0.5) // Placeholder
-                    .with_rag_similarity(0.0)
-            })
-            .collect();
-
-        // If model not fitted, fit on current data (unsupervised)
-        if !model.is_fitted() && !file_features.is_empty() {
-            match model.fit(&file_features) {
-                Ok(()) => println!(
-                    "   ✅ Ensemble model fitted on {} files",
-                    file_features.len()
-                ),
-                Err(e) => warn!("Ensemble model fitting failed: {}", e),
-            }
-        }
-
-        // Print ensemble predictions
-        println!("\n   Ensemble Risk Predictions:");
-        for (i, features) in file_features.iter().take(5).enumerate() {
-            let prob = model.predict(features);
-            println!(
-                "   #{} {} - Risk: {:.1}%",
-                i + 1,
-                features.path.display(),
-                prob * 100.0
-            );
-        }
-
-        // Print learned weights if available
-        if let Some(weights) = model.get_weights() {
-            println!("\n   Learned Signal Weights:");
-            for (name, weight) in weights.names.iter().zip(weights.weights.iter()) {
-                println!("      {}: {:.1}%", name, weight * 100.0);
-            }
-        }
+        run_ensemble_prediction(&result, top_n, &tdg_scores, include_churn, ensemble_model.as_ref());
     }
 
-    // Phase 7: Calibrated Defect Probability
     if calibrated {
-        println!("\n📊 Running Calibrated Defect Prediction (Phase 7)...");
-        println!(
-            "   Confidence threshold: {:.0}%",
-            confidence_threshold * 100.0
-        );
-
-        let predictor = CalibratedDefectPredictor::new();
-
-        // Load pre-trained calibration model if provided
-        if let Some(ref _model_path) = calibration_model {
-            // Note: Full calibration requires labeled training data
-            // For now, we use uncalibrated ensemble predictions
-            println!("   ⚠️  Calibration model loading not yet implemented");
-            println!("   Using uncalibrated probability estimates");
-        }
-
-        // Create predictions for top suspicious files
-        println!(
-            "\n   Calibrated Predictions (above {:.0}% threshold):",
-            confidence_threshold * 100.0
-        );
-        for ranking in result.rankings.iter().take(top_n) {
-            let file_path = ranking.statement.file.to_string_lossy().to_string();
-            let features = FileFeatures::new(ranking.statement.file.clone())
-                .with_sbfl(ranking.suspiciousness)
-                .with_tdg(tdg_scores.get(&file_path).copied().unwrap_or(0.5));
-
-            let prediction = predictor.predict(&features);
-
-            if prediction.probability >= confidence_threshold {
-                println!(
-                    "   #{} {}:{} - P(defect) = {:.0}% ± {:.0}% [{}]",
-                    ranking.rank,
-                    ranking.statement.file.display(),
-                    ranking.statement.line,
-                    prediction.probability * 100.0,
-                    (prediction.confidence_interval.1 - prediction.confidence_interval.0) * 50.0,
-                    prediction.confidence_level
-                );
-
-                // Show top contributing factors
-                let top_factors: Vec<_> = prediction
-                    .contributing_factors
-                    .iter()
-                    .filter(|f| f.contribution_pct > 10.0)
-                    .take(3)
-                    .collect();
-                for factor in top_factors {
-                    println!(
-                        "      ├─ {}: {:.1}%",
-                        factor.factor_name, factor.contribution_pct
-                    );
-                }
-            }
-        }
+        run_calibrated_prediction(&result, top_n, &tdg_scores, confidence_threshold, calibration_model.as_ref());
     }
 
     // Generate report
@@ -1285,6 +1149,100 @@ pub async fn handle_localize(
     Ok(())
 }
 
+fn run_calibrated_prediction(
+    result: &crate::tarantula::FaultLocalizationResult,
+    top_n: usize,
+    tdg_scores: &std::collections::HashMap<String, f32>,
+    confidence_threshold: f32,
+    _calibration_model: Option<&PathBuf>,
+) {
+    use crate::ensemble_predictor::{CalibratedDefectPredictor, FileFeatures};
+    println!("\n📊 Running Calibrated Defect Prediction (Phase 7)...");
+    println!("   Confidence threshold: {:.0}%", confidence_threshold * 100.0);
+    let predictor = CalibratedDefectPredictor::new();
+    println!("\n   Calibrated Predictions (above {:.0}% threshold):", confidence_threshold * 100.0);
+    for ranking in result.rankings.iter().take(top_n) {
+        let file_path = ranking.statement.file.to_string_lossy().to_string();
+        let features = FileFeatures::new(ranking.statement.file.clone())
+            .with_sbfl(ranking.suspiciousness)
+            .with_tdg(tdg_scores.get(&file_path).copied().unwrap_or(0.5));
+        let prediction = predictor.predict(&features);
+        if prediction.probability >= confidence_threshold {
+            println!("   #{} {}:{} - P(defect) = {:.0}% ± {:.0}% [{}]",
+                ranking.rank, ranking.statement.file.display(), ranking.statement.line,
+                prediction.probability * 100.0,
+                (prediction.confidence_interval.1 - prediction.confidence_interval.0) * 50.0,
+                prediction.confidence_level);
+            for factor in prediction.contributing_factors.iter().filter(|f| f.contribution_pct > 10.0).take(3) {
+                println!("      ├─ {}: {:.1}%", factor.factor_name, factor.contribution_pct);
+            }
+        }
+    }
+}
+
+fn enrich_tdg_scores(
+    result: &mut crate::tarantula::FaultLocalizationResult,
+    should_enrich: bool,
+    explicit_tdg: bool,
+    repo: Option<&PathBuf>,
+) -> std::collections::HashMap<String, f32> {
+    let mut tdg_scores = std::collections::HashMap::new();
+    if !should_enrich { return tdg_scores; }
+    if let Some(repo_path) = repo {
+        println!("\n📊 Enriching with TDG scores from pmat...");
+        match PmatIntegration::analyze_tdg(repo_path) {
+            Ok(tdg_analysis) => {
+                TarantulaIntegration::enrich_with_tdg(result, &tdg_analysis.file_scores);
+                tdg_scores = tdg_analysis.file_scores;
+                println!("   ✅ TDG scores added for {} files", tdg_scores.len());
+            }
+            Err(e) => { warn!("TDG enrichment failed: {}", e); }
+        }
+    } else if explicit_tdg {
+        warn!("--enrich-tdg requires --repo path");
+    }
+    tdg_scores
+}
+
+fn run_ensemble_prediction(
+    result: &crate::tarantula::FaultLocalizationResult,
+    top_n: usize,
+    tdg_scores: &std::collections::HashMap<String, f32>,
+    include_churn: bool,
+    ensemble_model_path: Option<&PathBuf>,
+) {
+    use crate::ensemble_predictor::{FileFeatures, WeightedEnsembleModel};
+
+    println!("\n🔮 Running Weighted Ensemble Model (Phase 6)...");
+    let mut model = WeightedEnsembleModel::new();
+    if let Some(model_path) = ensemble_model_path {
+        match model.load(model_path) {
+            Ok(()) => println!("   ✅ Loaded ensemble model from {}", model_path.display()),
+            Err(e) => { warn!("Failed to load ensemble model: {}", e); }
+        }
+    }
+    let file_features: Vec<FileFeatures> = result.rankings.iter().take(top_n).map(|r| {
+        let file_path = r.statement.file.to_string_lossy().to_string();
+        FileFeatures::new(r.statement.file.clone())
+            .with_sbfl(r.suspiciousness)
+            .with_tdg(tdg_scores.get(&file_path).copied().unwrap_or(0.5))
+            .with_churn(if include_churn { 0.5 } else { 0.0 })
+            .with_complexity(0.5)
+            .with_rag_similarity(0.0)
+    }).collect();
+    if !model.is_fitted() && !file_features.is_empty() {
+        if let Err(e) = model.fit(&file_features) { warn!("Ensemble fitting failed: {}", e); }
+    }
+    for (i, features) in file_features.iter().take(5).enumerate() {
+        println!("   #{} {} - Risk: {:.1}%", i + 1, features.path.display(), model.predict(features) * 100.0);
+    }
+    if let Some(weights) = model.get_weights() {
+        println!("\n   Learned Signal Weights:");
+        for (name, weight) in weights.names.iter().zip(weights.weights.iter()) {
+            println!("      {}: {:.1}%", name, weight * 100.0);
+        }
+    }
+}
 
 #[cfg(test)]
 #[path = "tests.rs"]
