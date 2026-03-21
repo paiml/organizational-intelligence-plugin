@@ -16,11 +16,12 @@
 
 A plugin for [pmat](https://github.com/paiml/pmat) that analyzes GitHub organizations to detect defect patterns, measure code quality, and generate actionable intelligence for software development teams.
 
-[Features](#features) |
-[Installation](#installation) |
-[Quick Start](#usage) |
-[Documentation](#development) |
-[Contributing](#contributing)
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Contributing](#contributing)
 
 </div>
 
