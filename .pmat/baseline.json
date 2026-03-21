@@ -1,984 +1,56 @@
 {
   "version": "3.7.1",
-  "created_at": "2026-03-21T12:24:09.885310901Z",
+  "created_at": "2026-03-21T13:26:03.720762468Z",
   "git_context": null,
   "files": {
-    "./src/error.rs": {
+    "./src/config.rs": {
       "content_hash": [
-        51,
-        37,
-        130,
-        214,
-        42,
-        85,
-        74,
-        134,
-        121,
-        93,
-        75,
-        112,
-        58,
-        56,
-        197,
-        61,
-        122,
-        64,
-        227,
-        94,
-        150,
-        225,
-        82,
-        94,
-        39,
-        202,
-        234,
-        24,
-        110,
-        239,
-        69,
-        156
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 20.0,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 95.454544,
-        "grade": "APLus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./src/error.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 26 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./e2e/playwright.config.ts": {
-      "content_hash": [
-        3,
-        202,
-        131,
-        232,
-        27,
-        36,
-        176,
-        211,
-        28,
-        36,
-        246,
-        74,
-        116,
-        2,
-        73,
-        151,
-        246,
-        43,
-        39,
-        241,
-        36,
-        163,
-        186,
-        18,
-        248,
-        142,
-        255,
-        55,
-        128,
-        217,
-        11,
-        184
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 20.0,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 8.5,
-        "total": 98.63637,
-        "grade": "APLus",
-        "confidence": 0.9,
-        "language": "TypeScript",
-        "file_path": "./e2e/playwright.config.ts",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 1.5,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 3 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./src/gpu_main.rs": {
-      "content_hash": [
-        52,
-        192,
-        231,
-        181,
         249,
-        101,
-        152,
-        21,
-        42,
-        54,
-        22,
-        96,
-        142,
-        120,
-        198,
-        203,
-        214,
-        39,
-        204,
-        210,
-        195,
-        43,
-        183,
-        2,
-        83,
-        99,
-        169,
-        40,
-        146,
-        252,
-        204,
-        188
-      ],
-      "score": {
-        "structural_complexity": 0.5,
-        "semantic_complexity": 18.0,
-        "duplication_ratio": 16.4375,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 74.9375,
-        "grade": "BMinus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./src/gpu_main.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 14.5,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cyclomatic complexity: 59"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 78 duplicate code patterns"
-          },
-          {
-            "source_metric": "SemanticComplexity",
-            "amount": 2.0,
-            "applied_to": [
-              "SemanticComplexity"
-            ],
-            "issue": "Too many parameters: 9"
-          },
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 10.0,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cognitive complexity: 62"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 3.5625,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 17.8%"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./src/storage.rs": {
-      "content_hash": [
-        169,
-        20,
-        170,
-        169,
-        237,
-        228,
-        203,
-        33,
-        224,
-        12,
-        109,
-        123,
-        50,
-        65,
-        115,
-        67,
-        3,
-        214,
-        211,
-        182,
-        102,
-        212,
-        65,
-        53,
-        138,
-        83,
-        200,
-        128,
-        2,
-        230,
-        114,
-        27
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 20.0,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 95.454544,
-        "grade": "APLus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./src/storage.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 13 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./src/cli_handlers/tests.rs": {
-      "content_hash": [
-        77,
-        161,
-        100,
-        21,
-        69,
-        234,
-        213,
-        155,
-        182,
-        252,
-        146,
-        160,
-        68,
-        24,
-        143,
-        64,
-        178,
-        71,
-        188,
-        244,
-        193,
-        143,
-        169,
-        204,
-        237,
-        204,
-        87,
-        139,
-        76,
-        178,
-        239,
-        221
-      ],
-      "score": {
-        "structural_complexity": 24.4,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 11.392,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 95.792,
-        "grade": "APLus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./src/cli_handlers/tests.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 87 duplicate code patterns"
-          },
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 0.6,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cognitive complexity: 17"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 8.608,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 43.0%"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./tests/cli_tests.rs": {
-      "content_hash": [
-        132,
-        228,
-        162,
-        243,
-        94,
-        217,
-        65,
-        211,
-        174,
-        141,
-        206,
-        61,
-        123,
-        21,
-        180,
-        223,
-        111,
-        211,
-        171,
-        43,
-        122,
-        109,
-        120,
-        217,
-        120,
-        35,
-        33,
-        223,
-        234,
-        18,
-        16,
-        242
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 16.290323,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 92.082115,
-        "grade": "A",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./tests/cli_tests.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 3.7096775,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 18.5%"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 14 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./tests/unit/github_miner_test.rs": {
-      "content_hash": [
-        106,
-        13,
-        49,
-        94,
-        235,
-        227,
-        0,
-        31,
-        233,
-        38,
-        121,
-        150,
-        243,
-        163,
-        23,
-        196,
-        109,
-        168,
+        107,
         62,
-        121,
-        84,
-        55,
-        181,
-        140,
-        216,
-        115,
-        25,
-        187,
-        214,
-        83,
-        2,
-        114
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 20.0,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 8.0,
-        "total": 98.18182,
-        "grade": "APLus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./tests/unit/github_miner_test.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 2.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 4 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./tests/ml_trainer_coverage.rs": {
-      "content_hash": [
-        64,
-        83,
-        15,
-        248,
-        243,
-        215,
-        83,
-        249,
-        182,
-        56,
-        210,
-        205,
-        4,
-        97,
-        185,
-        187,
-        26,
-        117,
-        123,
-        49,
-        139,
-        11,
-        240,
-        102,
-        97,
-        222,
-        102,
-        198,
-        50,
-        242,
-        72,
-        80
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 15.219513,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 91.10865,
-        "grade": "A",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./tests/ml_trainer_coverage.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 18 duplicate code patterns"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 4.7804875,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 23.9%"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./examples/explore_data.rs": {
-      "content_hash": [
-        48,
-        19,
-        197,
-        99,
-        82,
-        69,
-        47,
-        28,
-        56,
-        23,
-        200,
-        203,
-        22,
-        198,
-        133,
-        170,
-        66,
-        90,
-        49,
-        17,
-        251,
-        148,
-        238,
-        96,
-        103,
-        40,
-        43,
-        144,
-        226,
-        11,
-        176,
-        163
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 16.28483,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 92.07712,
-        "grade": "A",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./examples/explore_data.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 3.7151704,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 18.6%"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 18 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./src/gpu_store.rs": {
-      "content_hash": [
-        38,
-        193,
-        110,
-        92,
-        134,
-        212,
-        253,
-        64,
-        98,
-        185,
-        223,
-        130,
-        2,
-        140,
-        98,
-        33,
-        63,
-        243,
-        68,
-        106,
-        57,
-        208,
-        21,
+        42,
         125,
-        63,
-        128,
-        215,
-        103,
-        153,
-        175,
-        227,
-        13
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 20.0,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 9.0,
-        "total": 99.09091,
-        "grade": "APLus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./src/gpu_store.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 1.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 2 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./wasm-pkg/pkg/oip_wasm.d.ts": {
-      "content_hash": [
-        224,
-        40,
-        73,
-        196,
-        21,
-        72,
-        212,
-        199,
-        209,
-        244,
-        144,
-        153,
-        210,
-        53,
-        81,
-        225,
-        214,
-        191,
-        245,
-        198,
-        67,
-        103,
-        59,
-        228,
-        165,
-        159,
-        111,
-        47,
-        204,
-        40,
-        79,
-        134
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 17.872341,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 93.52032,
-        "grade": "A",
-        "confidence": 0.9,
-        "language": "TypeScript",
-        "file_path": "./wasm-pkg/pkg/oip_wasm.d.ts",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 2.1276596,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 10.6%"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 13 duplicate code patterns"
-          },
-          {
-            "source_metric": "Consistency",
-            "amount": 10.0,
-            "applied_to": [
-              "Consistency"
-            ],
-            "issue": "Inconsistent semicolon usage detected"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./tests/cli_integration.rs": {
-      "content_hash": [
-        78,
-        206,
-        60,
-        226,
-        182,
-        147,
-        127,
-        135,
-        255,
-        241,
-        40,
-        150,
-        0,
-        217,
-        49,
-        36,
-        182,
-        53,
-        162,
-        127,
-        155,
-        155,
-        118,
-        97,
-        150,
-        141,
-        201,
-        131,
-        131,
-        36,
-        254,
-        32
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 20.0,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 95.454544,
-        "grade": "APLus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./tests/cli_integration.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 15 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./src/git.rs": {
-      "content_hash": [
-        93,
-        117,
-        69,
-        209,
-        102,
-        48,
-        141,
-        24,
-        47,
-        52,
-        24,
-        251,
-        121,
-        13,
-        243,
-        49,
         27,
-        94,
-        224,
-        157,
-        59,
-        87,
-        200,
-        19,
-        4,
-        109,
-        236,
-        254,
-        185,
-        14,
+        153,
+        81,
+        74,
+        104,
+        53,
+        82,
+        98,
+        248,
+        47,
+        134,
         12,
-        84
+        76,
+        175,
+        26,
+        114,
+        116,
+        180,
+        150,
+        110,
+        205,
+        139,
+        139,
+        1,
+        93,
+        142,
+        46
       ],
       "score": {
-        "structural_complexity": 23.5,
+        "structural_complexity": 21.7,
         "semantic_complexity": 20.0,
-        "duplication_ratio": 13.701842,
+        "duplication_ratio": 16.194895,
         "coupling_score": 15.0,
         "doc_coverage": 10.0,
         "consistency_score": 10.0,
         "entropy_score": 5.0,
-        "total": 97.20184,
+        "total": 97.8949,
         "grade": "APLus",
         "confidence": 1.0,
         "language": "Rust",
-        "file_path": "./src/git.rs",
+        "file_path": "./src/config.rs",
         "penalties_applied": [
           {
             "source_metric": "Duplication",
@@ -986,23 +58,93 @@
             "applied_to": [
               "Duplication"
             ],
-            "issue": "Found 93 duplicate code patterns"
+            "issue": "Found 27 duplicate code patterns"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 3.8051045,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 19.0%"
           },
           {
             "source_metric": "StructuralComplexity",
-            "amount": 1.5,
+            "amount": 3.3000002,
             "applied_to": [
               "StructuralComplexity"
             ],
-            "issue": "High cognitive complexity: 20"
-          },
+            "issue": "High cognitive complexity: 26"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./src/query.rs": {
+      "content_hash": [
+        59,
+        139,
+        12,
+        203,
+        197,
+        218,
+        22,
+        65,
+        82,
+        48,
+        242,
+        63,
+        64,
+        159,
+        238,
+        138,
+        235,
+        47,
+        37,
+        96,
+        161,
+        252,
+        180,
+        204,
+        226,
+        138,
+        195,
+        58,
+        111,
+        130,
+        46,
+        95
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 20.0,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 6.5,
+        "total": 96.81818,
+        "grade": "APLus",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/query.rs",
+        "penalties_applied": [
           {
             "source_metric": "Duplication",
-            "amount": 6.2981577,
+            "amount": 3.5,
             "applied_to": [
               "Duplication"
             ],
-            "issue": "Code duplication: 31.5%"
+            "issue": "Found 7 duplicate code patterns"
           }
         ],
         "critical_defects_count": 0,
@@ -1095,84 +237,6 @@
       },
       "git_context": null
     },
-    "./src/cli.rs": {
-      "content_hash": [
-        122,
-        180,
-        81,
-        142,
-        70,
-        205,
-        197,
-        178,
-        82,
-        242,
-        61,
-        182,
-        211,
-        96,
-        215,
-        110,
-        252,
-        107,
-        39,
-        98,
-        107,
-        80,
-        240,
-        71,
-        138,
-        180,
-        31,
-        37,
-        42,
-        32,
-        255,
-        20
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 14.025974,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 99.02597,
-        "grade": "APLus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./src/cli.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 5.9740257,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 29.9%"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 23 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
     "./src/rag_localization.rs": {
       "content_hash": [
         108,
@@ -1224,6 +288,14 @@
         "penalties_applied": [
           {
             "source_metric": "StructuralComplexity",
+            "amount": 3.5,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cyclomatic complexity: 37"
+          },
+          {
+            "source_metric": "StructuralComplexity",
             "amount": 0.6,
             "applied_to": [
               "StructuralComplexity"
@@ -1237,14 +309,6 @@
               "Duplication"
             ],
             "issue": "Found 56 duplicate code patterns"
-          },
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 3.5,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cyclomatic complexity: 37"
           }
         ],
         "critical_defects_count": 0,
@@ -1259,970 +323,40 @@
       },
       "git_context": null
     },
-    "./e2e/tests/02-defect-classification.spec.ts": {
+    "./src/error.rs": {
       "content_hash": [
-        3,
-        181,
-        235,
-        115,
-        222,
-        137,
-        2,
-        166,
-        177,
-        81,
-        136,
-        250,
         51,
-        211,
-        92,
-        176,
-        250,
-        64,
-        150,
-        255,
-        169,
-        237,
-        180,
-        130,
-        201,
-        145,
-        210,
-        249,
-        73,
-        227,
-        188,
-        200
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 16.862745,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 7.5,
-        "total": 94.87522,
-        "grade": "A",
-        "confidence": 0.9,
-        "language": "TypeScript",
-        "file_path": "./e2e/tests/02-defect-classification.spec.ts",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 2.5,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 5 duplicate code patterns"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 3.137255,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 15.7%"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./src/classifier.rs": {
-      "content_hash": [
-        2,
-        98,
-        209,
-        72,
-        143,
-        19,
-        54,
-        136,
-        68,
-        169,
-        227,
-        202,
-        248,
-        107,
-        13,
-        144,
-        206,
-        83,
-        39,
-        52,
-        237,
-        196,
-        229,
-        95,
-        49,
-        181,
-        160,
-        6,
-        138,
-        22,
-        212,
-        149
-      ],
-      "score": {
-        "structural_complexity": 0.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 16.583565,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 76.583565,
-        "grade": "B",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./src/classifier.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 15.0,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cyclomatic complexity: 70"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 80 duplicate code patterns"
-          },
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 10.0,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cognitive complexity: 53"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 3.4164357,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 17.1%"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./src/training.rs": {
-      "content_hash": [
-        206,
-        248,
-        142,
-        88,
-        217,
-        229,
-        117,
-        158,
-        191,
-        217,
-        188,
-        172,
-        146,
-        105,
-        18,
-        214,
-        117,
-        161,
-        220,
-        135,
-        175,
-        160,
-        31,
-        32,
-        125,
-        194,
-        171,
-        110,
-        59,
-        78,
-        41,
-        32
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 17.077364,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 92.7976,
-        "grade": "A",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./src/training.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 2.922636,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 14.6%"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 33 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./wasm-pkg/src/lib.rs": {
-      "content_hash": [
-        60,
-        81,
-        5,
-        50,
-        201,
-        27,
-        9,
-        21,
-        166,
-        16,
-        87,
         37,
-        19,
-        242,
-        49,
-        83,
-        135,
-        255,
-        43,
-        190,
-        79,
-        222,
-        153,
-        188,
-        193,
-        8,
-        66,
-        129,
-        104,
-        98,
-        186,
-        36
-      ],
-      "score": {
-        "structural_complexity": 17.8,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 20.0,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 97.8,
-        "grade": "APLus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./wasm-pkg/src/lib.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 45 duplicate code patterns"
-          },
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 7.2000003,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cognitive complexity: 39"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./src/tarantula.rs": {
-      "content_hash": [
-        66,
-        213,
-        2,
-        224,
-        28,
-        9,
-        210,
+        130,
         214,
-        115,
-        253,
-        115,
-        213,
-        147,
-        50,
-        124,
-        200,
-        123,
-        119,
-        123,
-        234,
-        242,
-        128,
-        201,
-        35,
-        144,
-        205,
-        34,
-        101,
-        46,
-        28,
-        123,
-        55
-      ],
-      "score": {
-        "structural_complexity": 4.5,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 17.732117,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 82.23212,
-        "grade": "BPlus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./src/tarantula.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 2.0,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "Deep nesting: 6 levels"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 2.2678843,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 11.3%"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 123 duplicate code patterns"
-          },
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 8.5,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cyclomatic complexity: 47"
-          },
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 10.0,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cognitive complexity: 74"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./benches/nlp_benchmarks.rs": {
-      "content_hash": [
-        68,
-        34,
-        207,
-        155,
-        109,
-        227,
-        212,
-        188,
-        31,
-        48,
-        249,
-        39,
-        47,
-        241,
-        158,
-        232,
-        30,
-        108,
-        154,
-        240,
-        191,
-        26,
-        34,
-        50,
-        206,
-        203,
-        60,
-        174,
-        234,
-        38,
-        170,
-        155
-      ],
-      "score": {
-        "structural_complexity": 23.5,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 15.555555,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 99.05556,
-        "grade": "APLus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./benches/nlp_benchmarks.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 1.5,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cognitive complexity: 20"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 4.4444447,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 22.2%"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 35 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./tests/proptest_validation.rs": {
-      "content_hash": [
-        89,
-        63,
-        81,
-        162,
-        34,
-        204,
-        95,
-        70,
-        198,
-        46,
-        75,
-        224,
-        102,
-        126,
-        24,
-        99,
-        0,
-        138,
-        101,
-        99,
-        119,
-        22,
-        21,
-        32,
-        17,
-        134,
-        148,
-        133,
-        110,
-        65,
-        123,
-        236
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 20.0,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 6.5,
-        "total": 96.81818,
-        "grade": "APLus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./tests/proptest_validation.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 3.5,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 7 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./src/config.rs": {
-      "content_hash": [
-        249,
-        107,
-        62,
         42,
-        125,
-        27,
-        153,
-        81,
+        85,
         74,
-        104,
-        53,
-        82,
-        98,
-        248,
-        47,
         134,
-        12,
-        76,
-        175,
-        26,
-        114,
-        116,
-        180,
-        150,
-        110,
-        205,
-        139,
-        139,
-        1,
-        93,
-        142,
-        46
-      ],
-      "score": {
-        "structural_complexity": 21.7,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 16.194895,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 97.8949,
-        "grade": "APLus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./src/config.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 27 duplicate code patterns"
-          },
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 3.3000002,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cognitive complexity: 26"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 3.8051045,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 19.0%"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./src/ml_trainer.rs": {
-      "content_hash": [
-        155,
-        139,
-        137,
-        8,
-        231,
-        45,
-        98,
-        160,
-        164,
-        143,
-        118,
-        42,
-        217,
-        21,
-        215,
-        65,
-        65,
-        242,
-        249,
-        156,
-        146,
-        137,
-        9,
-        170,
-        10,
-        57,
-        79,
-        166,
-        118,
-        122,
-        67,
-        189
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 17.958237,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 93.5984,
-        "grade": "A",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./src/ml_trainer.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 2.0417633,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 10.2%"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 37 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./src/ensemble_predictor.rs": {
-      "content_hash": [
-        95,
-        95,
         121,
-        186,
-        176,
-        118,
-        194,
-        7,
-        77,
-        33,
-        133,
-        132,
-        134,
-        171,
-        14,
-        46,
-        83,
-        111,
-        49,
-        39,
-        243,
-        180,
-        249,
-        60,
-        156,
-        95,
-        29,
-        184,
-        237,
-        139,
-        116,
-        5
-      ],
-      "score": {
-        "structural_complexity": 0.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 17.808695,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 77.80869,
-        "grade": "B",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./src/ensemble_predictor.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 15.0,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cyclomatic complexity: 89"
-          },
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 10.0,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cognitive complexity: 112"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 2.1913044,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 11.0%"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 90 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./src/imbalance.rs": {
-      "content_hash": [
-        200,
-        154,
-        47,
-        208,
-        132,
-        255,
-        188,
-        232,
-        32,
-        99,
-        137,
-        79,
-        164,
-        134,
-        253,
-        6,
-        138,
-        25,
-        122,
-        170,
-        117,
-        88,
-        47,
-        70,
-        27,
-        72,
-        98,
-        234,
-        197,
-        182,
-        127,
-        24
-      ],
-      "score": {
-        "structural_complexity": 21.7,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 17.339449,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 99.03945,
-        "grade": "APLus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./src/imbalance.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 3.3000002,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cognitive complexity: 26"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 49 duplicate code patterns"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 2.6605506,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 13.3%"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./src/observability.rs": {
-      "content_hash": [
-        240,
-        63,
-        228,
-        209,
-        205,
-        6,
-        126,
-        169,
-        2,
-        124,
-        221,
-        107,
-        159,
-        248,
-        30,
-        137,
-        223,
-        44,
-        101,
-        66,
-        38,
-        254,
+        93,
+        75,
+        112,
+        58,
         56,
-        248,
-        83,
-        32,
         197,
-        32,
-        157,
-        185,
-        255,
-        73
+        61,
+        122,
+        64,
+        227,
+        94,
+        150,
+        225,
+        82,
+        94,
+        39,
+        202,
+        234,
+        24,
+        110,
+        239,
+        69,
+        156
       ],
       "score": {
         "structural_complexity": 25.0,
@@ -2236,7 +370,7 @@
         "grade": "APLus",
         "confidence": 1.0,
         "language": "Rust",
-        "file_path": "./src/observability.rs",
+        "file_path": "./src/error.rs",
         "penalties_applied": [
           {
             "source_metric": "Duplication",
@@ -2244,257 +378,7 @@
             "applied_to": [
               "Duplication"
             ],
-            "issue": "Found 25 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./wasm-pkg/pkg/oip_wasm.js": {
-      "content_hash": [
-        151,
-        98,
-        74,
-        191,
-        65,
-        19,
-        132,
-        159,
-        0,
-        61,
-        153,
-        170,
-        135,
-        229,
-        96,
-        90,
-        20,
-        93,
-        38,
-        149,
-        194,
-        71,
-        47,
-        131,
-        39,
-        191,
-        96,
-        214,
-        208,
-        92,
-        113,
-        63
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 15.183947,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 91.07632,
-        "grade": "A",
-        "confidence": 0.9,
-        "language": "JavaScript",
-        "file_path": "./wasm-pkg/pkg/oip_wasm.js",
-        "penalties_applied": [
-          {
-            "source_metric": "Consistency",
-            "amount": 10.0,
-            "applied_to": [
-              "Consistency"
-            ],
-            "issue": "Inconsistent semicolon usage detected"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 61 duplicate code patterns"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 4.8160534,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 24.1%"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./src/perf.rs": {
-      "content_hash": [
-        50,
-        43,
-        146,
-        77,
-        185,
-        232,
-        234,
-        187,
-        80,
-        41,
-        233,
-        36,
-        30,
-        30,
-        21,
-        44,
-        112,
-        167,
-        77,
-        129,
-        24,
-        99,
-        77,
-        39,
-        141,
-        170,
-        134,
-        98,
-        26,
-        123,
-        68,
-        203
-      ],
-      "score": {
-        "structural_complexity": 23.2,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 20.0,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 93.818184,
-        "grade": "A",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./src/perf.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 1.8000001,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cognitive complexity: 21"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 27 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./examples/fault_localization.rs": {
-      "content_hash": [
-        200,
-        50,
-        218,
-        40,
-        76,
-        2,
-        231,
-        240,
-        15,
-        34,
-        250,
-        135,
-        224,
-        169,
-        127,
-        96,
-        19,
-        244,
-        75,
-        190,
-        174,
-        39,
-        90,
-        19,
-        78,
-        81,
-        189,
-        143,
-        70,
-        93,
-        219,
-        60
-      ],
-      "score": {
-        "structural_complexity": 24.1,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 17.113924,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 92.01266,
-        "grade": "A",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./examples/fault_localization.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 2.886076,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 14.4%"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 33 duplicate code patterns"
-          },
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 0.90000004,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cognitive complexity: 18"
+            "issue": "Found 26 duplicate code patterns"
           }
         ],
         "critical_defects_count": 0,
@@ -2595,226 +479,62 @@
       },
       "git_context": null
     },
-    "./src/nlp.rs": {
+    "./src/cli.rs": {
       "content_hash": [
-        116,
-        32,
-        74,
-        148,
-        140,
+        122,
+        180,
+        81,
+        142,
+        70,
+        205,
+        197,
+        178,
+        82,
+        242,
         61,
-        103,
-        231,
-        198,
+        182,
+        211,
+        96,
+        215,
+        110,
+        252,
+        107,
         39,
-        239,
-        39,
-        87,
-        255,
-        21,
-        213,
-        13,
-        203,
-        218,
-        157,
-        171,
+        98,
+        107,
+        80,
+        240,
+        71,
+        138,
+        180,
+        31,
+        37,
+        42,
         32,
-        214,
-        239,
-        131,
-        121,
-        120,
-        208,
-        112,
-        65,
-        206,
-        235
+        255,
+        20
       ],
       "score": {
         "structural_complexity": 25.0,
         "semantic_complexity": 20.0,
-        "duplication_ratio": 16.868687,
+        "duplication_ratio": 14.025974,
         "coupling_score": 15.0,
         "doc_coverage": 10.0,
         "consistency_score": 10.0,
         "entropy_score": 5.0,
-        "total": 92.607895,
-        "grade": "A",
+        "total": 99.02597,
+        "grade": "APLus",
         "confidence": 1.0,
         "language": "Rust",
-        "file_path": "./src/nlp.rs",
+        "file_path": "./src/cli.rs",
         "penalties_applied": [
           {
             "source_metric": "Duplication",
-            "amount": 5.0,
+            "amount": 5.9740257,
             "applied_to": [
               "Duplication"
             ],
-            "issue": "Found 32 duplicate code patterns"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 3.131313,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 15.7%"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./src/export.rs": {
-      "content_hash": [
-        94,
-        231,
-        39,
-        17,
-        224,
-        207,
-        177,
-        209,
-        89,
-        136,
-        103,
-        199,
-        229,
-        99,
-        8,
-        129,
-        168,
-        208,
-        242,
-        105,
-        225,
-        98,
-        38,
-        64,
-        67,
-        167,
-        88,
-        67,
-        15,
-        181,
-        167,
-        27
-      ],
-      "score": {
-        "structural_complexity": 10.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 15.134474,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 85.134476,
-        "grade": "AMinus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./src/export.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 4.8655257,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 24.3%"
-          },
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 15.0,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cyclomatic complexity: 60"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 89 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./src/viz.rs": {
-      "content_hash": [
-        14,
-        81,
-        116,
-        24,
-        32,
-        195,
-        226,
-        116,
-        112,
-        181,
-        99,
-        59,
-        55,
-        53,
-        250,
-        42,
-        154,
-        3,
-        15,
-        255,
-        197,
-        237,
-        50,
-        10,
-        121,
-        137,
-        232,
-        19,
-        41,
-        152,
-        7,
-        207
-      ],
-      "score": {
-        "structural_complexity": 22.6,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 20.0,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 93.27273,
-        "grade": "A",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./src/viz.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 2.4,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cognitive complexity: 23"
+            "issue": "Code duplication: 29.9%"
           },
           {
             "source_metric": "Duplication",
@@ -2837,210 +557,70 @@
       },
       "git_context": null
     },
-    "./examples/full_analysis.rs": {
+    "./tests/unit/report_test.rs": {
       "content_hash": [
-        117,
-        22,
-        43,
-        23,
-        23,
-        2,
-        162,
-        186,
+        218,
+        62,
+        146,
+        4,
+        231,
+        89,
+        204,
         102,
-        83,
-        136,
-        86,
-        79,
-        208,
-        131,
-        8,
-        253,
-        223,
-        193,
-        94,
-        66,
-        223,
-        20,
-        126,
-        253,
-        148,
-        199,
-        38,
-        126,
-        29,
-        176,
-        255
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 20.0,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 6.5,
-        "total": 96.81818,
-        "grade": "APLus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./examples/full_analysis.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 3.5,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 7 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./src/report.rs": {
-      "content_hash": [
-        5,
-        113,
-        17,
-        200,
-        43,
-        121,
-        232,
-        115,
-        214,
-        34,
-        203,
-        104,
-        25,
-        176,
-        38,
-        235,
-        171,
-        91,
-        187,
-        99,
+        87,
+        194,
+        236,
+        201,
+        144,
+        47,
+        229,
+        21,
         168,
-        30,
-        18,
-        233,
-        26,
-        38,
-        6,
-        235,
-        35,
-        55,
-        84,
-        86
+        157,
+        15,
+        64,
+        19,
+        172,
+        179,
+        83,
+        21,
+        27,
+        42,
+        79,
+        231,
+        236,
+        15,
+        240
       ],
       "score": {
         "structural_complexity": 25.0,
         "semantic_complexity": 20.0,
-        "duplication_ratio": 16.6875,
+        "duplication_ratio": 15.841584,
         "coupling_score": 15.0,
         "doc_coverage": 10.0,
         "consistency_score": 10.0,
         "entropy_score": 5.0,
-        "total": 92.44318,
+        "total": 91.674164,
         "grade": "A",
         "confidence": 1.0,
         "language": "Rust",
-        "file_path": "./src/report.rs",
+        "file_path": "./tests/unit/report_test.rs",
         "penalties_applied": [
           {
             "source_metric": "Duplication",
-            "amount": 3.3125,
+            "amount": 5.0,
             "applied_to": [
               "Duplication"
             ],
-            "issue": "Code duplication: 16.6%"
+            "issue": "Found 13 duplicate code patterns"
           },
           {
             "source_metric": "Duplication",
-            "amount": 5.0,
+            "amount": 4.158416,
             "applied_to": [
               "Duplication"
             ],
-            "issue": "Found 29 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./examples/citl_import.rs": {
-      "content_hash": [
-        147,
-        50,
-        108,
-        5,
-        20,
-        132,
-        170,
-        209,
-        125,
-        27,
-        154,
-        224,
-        22,
-        75,
-        86,
-        50,
-        202,
-        50,
-        150,
-        86,
-        28,
-        30,
-        109,
-        158,
-        82,
-        224,
-        250,
-        212,
-        149,
-        45,
-        190,
-        80
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 20.0,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 95.454544,
-        "grade": "APLus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./examples/citl_import.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 15 duplicate code patterns"
+            "issue": "Code duplication: 20.8%"
           }
         ],
         "critical_defects_count": 0,
@@ -3141,94 +721,62 @@
       },
       "git_context": null
     },
-    "./src/cli_handlers/mod.rs": {
+    "./src/gpu_store.rs": {
       "content_hash": [
-        122,
-        255,
-        189,
-        43,
-        143,
-        127,
-        3,
-        108,
-        154,
-        170,
-        184,
-        158,
+        38,
+        193,
+        110,
+        92,
+        134,
+        212,
         253,
-        179,
-        106,
-        55,
-        57,
-        157,
-        232,
-        113,
-        190,
-        231,
-        71,
-        196,
-        231,
+        64,
+        98,
+        185,
+        223,
+        130,
+        2,
+        140,
+        98,
+        33,
+        63,
+        243,
         68,
-        207,
-        184,
+        106,
+        57,
+        208,
         21,
-        158,
-        144,
-        28
+        125,
+        63,
+        128,
+        215,
+        103,
+        153,
+        175,
+        227,
+        13
       ],
       "score": {
-        "structural_complexity": 0.0,
-        "semantic_complexity": 15.0,
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
         "duplication_ratio": 20.0,
-        "coupling_score": 14.4,
+        "coupling_score": 15.0,
         "doc_coverage": 10.0,
         "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 74.4,
-        "grade": "BMinus",
+        "entropy_score": 9.0,
+        "total": 99.09091,
+        "grade": "APLus",
         "confidence": 1.0,
         "language": "Rust",
-        "file_path": "./src/cli_handlers/mod.rs",
+        "file_path": "./src/gpu_store.rs",
         "penalties_applied": [
           {
             "source_metric": "Duplication",
-            "amount": 5.0,
+            "amount": 1.0,
             "applied_to": [
               "Duplication"
             ],
-            "issue": "Found 69 duplicate code patterns"
-          },
-          {
-            "source_metric": "Coupling",
-            "amount": 0.6,
-            "applied_to": [
-              "Coupling"
-            ],
-            "issue": "Too many imports: 23"
-          },
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 15.0,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cyclomatic complexity: 104"
-          },
-          {
-            "source_metric": "SemanticComplexity",
-            "amount": 5.0,
-            "applied_to": [
-              "SemanticComplexity"
-            ],
-            "issue": "Too many parameters: 20"
-          },
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 10.0,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cognitive complexity: 134"
+            "issue": "Found 2 duplicate code patterns"
           }
         ],
         "critical_defects_count": 0,
@@ -3243,62 +791,193 @@
       },
       "git_context": null
     },
-    "./src/sliding_window.rs": {
+    "./src/lib.rs": {
       "content_hash": [
-        48,
-        83,
-        29,
-        206,
-        58,
-        176,
-        188,
-        174,
-        230,
-        237,
-        43,
+        159,
+        179,
+        97,
+        214,
+        66,
+        54,
         34,
-        146,
-        46,
-        153,
-        28,
-        6,
+        37,
+        155,
+        77,
+        174,
+        60,
+        225,
         189,
-        53,
-        22,
-        11,
-        127,
-        76,
-        45,
-        172,
-        183,
-        242,
-        89,
-        177,
-        12,
-        87,
-        178
+        73,
+        15,
+        187,
+        213,
+        117,
+        97,
+        20,
+        88,
+        84,
+        225,
+        17,
+        161,
+        149,
+        236,
+        187,
+        156,
+        94,
+        24
       ],
       "score": {
-        "structural_complexity": 22.0,
+        "structural_complexity": 25.0,
         "semantic_complexity": 20.0,
-        "duplication_ratio": 17.333334,
+        "duplication_ratio": 20.0,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 10.0,
+        "total": 100.0,
+        "grade": "APLus",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/lib.rs",
+        "penalties_applied": [],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./tests/proptest_validation.rs": {
+      "content_hash": [
+        89,
+        63,
+        81,
+        162,
+        34,
+        204,
+        95,
+        70,
+        198,
+        46,
+        75,
+        224,
+        102,
+        126,
+        24,
+        99,
+        0,
+        138,
+        101,
+        99,
+        119,
+        22,
+        21,
+        32,
+        17,
+        134,
+        148,
+        133,
+        110,
+        65,
+        123,
+        236
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 20.0,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 6.5,
+        "total": 96.81818,
+        "grade": "APLus",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./tests/proptest_validation.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 3.5,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 7 duplicate code patterns"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./src/github.rs": {
+      "content_hash": [
+        51,
+        60,
+        15,
+        254,
+        152,
+        208,
+        65,
+        208,
+        62,
+        42,
+        241,
+        236,
+        213,
+        67,
+        183,
+        1,
+        71,
+        175,
+        108,
+        220,
+        29,
+        101,
+        88,
+        43,
+        12,
+        140,
+        8,
+        60,
+        139,
+        19,
+        106,
+        4
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 14.803739,
         "coupling_score": 15.0,
         "doc_coverage": 10.0,
         "consistency_score": 10.0,
         "entropy_score": 5.0,
-        "total": 99.333336,
+        "total": 99.80374,
         "grade": "APLus",
         "confidence": 1.0,
         "language": "Rust",
-        "file_path": "./src/sliding_window.rs",
+        "file_path": "./src/github.rs",
         "penalties_applied": [
           {
-            "source_metric": "StructuralComplexity",
-            "amount": 3.0,
+            "source_metric": "Duplication",
+            "amount": 5.1962614,
             "applied_to": [
-              "StructuralComplexity"
+              "Duplication"
             ],
-            "issue": "High cognitive complexity: 25"
+            "issue": "Code duplication: 26.0%"
           },
           {
             "source_metric": "Duplication",
@@ -3306,15 +985,942 @@
             "applied_to": [
               "Duplication"
             ],
-            "issue": "Found 38 duplicate code patterns"
-          },
+            "issue": "Found 40 duplicate code patterns"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./wasm-pkg/pkg/oip_wasm_bg.wasm.d.ts": {
+      "content_hash": [
+        16,
+        223,
+        132,
+        217,
+        28,
+        161,
+        206,
+        91,
+        162,
+        36,
+        144,
+        200,
+        12,
+        24,
+        221,
+        150,
+        225,
+        46,
+        116,
+        122,
+        53,
+        191,
+        226,
+        31,
+        114,
+        85,
+        222,
+        51,
+        249,
+        53,
+        166,
+        210
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 20.0,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 10.0,
+        "total": 100.0,
+        "grade": "APLus",
+        "confidence": 0.9,
+        "language": "TypeScript",
+        "file_path": "./wasm-pkg/pkg/oip_wasm_bg.wasm.d.ts",
+        "penalties_applied": [],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./src/ml_trainer.rs": {
+      "content_hash": [
+        155,
+        139,
+        137,
+        8,
+        231,
+        45,
+        98,
+        160,
+        164,
+        143,
+        118,
+        42,
+        217,
+        21,
+        215,
+        65,
+        65,
+        242,
+        249,
+        156,
+        146,
+        137,
+        9,
+        170,
+        10,
+        57,
+        79,
+        166,
+        118,
+        122,
+        67,
+        189
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 17.958237,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 93.5984,
+        "grade": "A",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/ml_trainer.rs",
+        "penalties_applied": [
           {
             "source_metric": "Duplication",
-            "amount": 2.6666667,
+            "amount": 5.0,
             "applied_to": [
               "Duplication"
             ],
-            "issue": "Code duplication: 13.3%"
+            "issue": "Found 37 duplicate code patterns"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 2.0417633,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 10.2%"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./src/ml.rs": {
+      "content_hash": [
+        56,
+        67,
+        8,
+        99,
+        32,
+        242,
+        33,
+        62,
+        4,
+        133,
+        128,
+        191,
+        250,
+        63,
+        114,
+        62,
+        91,
+        202,
+        129,
+        214,
+        8,
+        148,
+        193,
+        188,
+        141,
+        214,
+        158,
+        121,
+        174,
+        228,
+        197,
+        84
+      ],
+      "score": {
+        "structural_complexity": 15.4,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 15.434782,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 90.834785,
+        "grade": "A",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/ml.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 79 duplicate code patterns"
+          },
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 9.6,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cognitive complexity: 47"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 4.5652175,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 22.8%"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./tests/unit/github_miner_test.rs": {
+      "content_hash": [
+        106,
+        13,
+        49,
+        94,
+        235,
+        227,
+        0,
+        31,
+        233,
+        38,
+        121,
+        150,
+        243,
+        163,
+        23,
+        196,
+        109,
+        168,
+        62,
+        121,
+        84,
+        55,
+        181,
+        140,
+        216,
+        115,
+        25,
+        187,
+        214,
+        83,
+        2,
+        114
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 20.0,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 8.0,
+        "total": 98.18182,
+        "grade": "APLus",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./tests/unit/github_miner_test.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 2.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 4 duplicate code patterns"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./src/ensemble_predictor.rs": {
+      "content_hash": [
+        95,
+        95,
+        121,
+        186,
+        176,
+        118,
+        194,
+        7,
+        77,
+        33,
+        133,
+        132,
+        134,
+        171,
+        14,
+        46,
+        83,
+        111,
+        49,
+        39,
+        243,
+        180,
+        249,
+        60,
+        156,
+        95,
+        29,
+        184,
+        237,
+        139,
+        116,
+        5
+      ],
+      "score": {
+        "structural_complexity": 0.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 17.808695,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 77.80869,
+        "grade": "B",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/ensemble_predictor.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 90 duplicate code patterns"
+          },
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 10.0,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cognitive complexity: 112"
+          },
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 15.0,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cyclomatic complexity: 89"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 2.1913044,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 11.0%"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./examples/analyze_org.rs": {
+      "content_hash": [
+        14,
+        38,
+        90,
+        106,
+        206,
+        106,
+        143,
+        156,
+        152,
+        114,
+        184,
+        155,
+        255,
+        197,
+        62,
+        93,
+        246,
+        14,
+        170,
+        72,
+        76,
+        112,
+        29,
+        96,
+        205,
+        147,
+        148,
+        232,
+        121,
+        107,
+        226,
+        212
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 20.0,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 8.5,
+        "total": 98.63637,
+        "grade": "APLus",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./examples/analyze_org.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 1.5,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 3 duplicate code patterns"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./src/classifier.rs": {
+      "content_hash": [
+        2,
+        98,
+        209,
+        72,
+        143,
+        19,
+        54,
+        136,
+        68,
+        169,
+        227,
+        202,
+        248,
+        107,
+        13,
+        144,
+        206,
+        83,
+        39,
+        52,
+        237,
+        196,
+        229,
+        95,
+        49,
+        181,
+        160,
+        6,
+        138,
+        22,
+        212,
+        149
+      ],
+      "score": {
+        "structural_complexity": 0.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 16.583565,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 76.583565,
+        "grade": "B",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/classifier.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 15.0,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cyclomatic complexity: 70"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 80 duplicate code patterns"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 3.4164357,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 17.1%"
+          },
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 10.0,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cognitive complexity: 53"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./e2e/tests/01-basic-loading.spec.ts": {
+      "content_hash": [
+        216,
+        19,
+        61,
+        105,
+        92,
+        59,
+        140,
+        220,
+        35,
+        144,
+        168,
+        185,
+        114,
+        20,
+        246,
+        204,
+        91,
+        116,
+        92,
+        155,
+        72,
+        20,
+        224,
+        162,
+        244,
+        161,
+        30,
+        0,
+        28,
+        30,
+        88,
+        115
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 20.0,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 9.0,
+        "total": 99.09091,
+        "grade": "APLus",
+        "confidence": 0.9,
+        "language": "TypeScript",
+        "file_path": "./e2e/tests/01-basic-loading.spec.ts",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 1.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 2 duplicate code patterns"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./tests/cli_integration.rs": {
+      "content_hash": [
+        78,
+        206,
+        60,
+        226,
+        182,
+        147,
+        127,
+        135,
+        255,
+        241,
+        40,
+        150,
+        0,
+        217,
+        49,
+        36,
+        182,
+        53,
+        162,
+        127,
+        155,
+        155,
+        118,
+        97,
+        150,
+        141,
+        201,
+        131,
+        131,
+        36,
+        254,
+        32
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 20.0,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 95.454544,
+        "grade": "APLus",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./tests/cli_integration.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 15 duplicate code patterns"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./tests/ml_trainer_coverage.rs": {
+      "content_hash": [
+        64,
+        83,
+        15,
+        248,
+        243,
+        215,
+        83,
+        249,
+        182,
+        56,
+        210,
+        205,
+        4,
+        97,
+        185,
+        187,
+        26,
+        117,
+        123,
+        49,
+        139,
+        11,
+        240,
+        102,
+        97,
+        222,
+        102,
+        198,
+        50,
+        242,
+        72,
+        80
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 15.219513,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 91.10865,
+        "grade": "A",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./tests/ml_trainer_coverage.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 4.7804875,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 23.9%"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 18 duplicate code patterns"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./wasm-pkg/pkg/oip_wasm.js": {
+      "content_hash": [
+        151,
+        98,
+        74,
+        191,
+        65,
+        19,
+        132,
+        159,
+        0,
+        61,
+        153,
+        170,
+        135,
+        229,
+        96,
+        90,
+        20,
+        93,
+        38,
+        149,
+        194,
+        71,
+        47,
+        131,
+        39,
+        191,
+        96,
+        214,
+        208,
+        92,
+        113,
+        63
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 15.183947,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 91.07632,
+        "grade": "A",
+        "confidence": 0.9,
+        "language": "JavaScript",
+        "file_path": "./wasm-pkg/pkg/oip_wasm.js",
+        "penalties_applied": [
+          {
+            "source_metric": "Consistency",
+            "amount": 10.0,
+            "applied_to": [
+              "Consistency"
+            ],
+            "issue": "Inconsistent semicolon usage detected"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 4.8160534,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 24.1%"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 61 duplicate code patterns"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./src/gpu_correlation.rs": {
+      "content_hash": [
+        192,
+        186,
+        11,
+        138,
+        101,
+        61,
+        232,
+        127,
+        112,
+        23,
+        36,
+        212,
+        212,
+        168,
+        47,
+        124,
+        209,
+        119,
+        168,
+        186,
+        222,
+        214,
+        187,
+        213,
+        32,
+        168,
+        75,
+        166,
+        199,
+        138,
+        247,
+        42
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 15.21978,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 91.10889,
+        "grade": "A",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/gpu_correlation.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 4.78022,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 23.9%"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 43 duplicate code patterns"
           }
         ],
         "critical_defects_count": 0,
@@ -3393,6 +1999,76 @@
               "Duplication"
             ],
             "issue": "Found 46 duplicate code patterns"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./examples/classify_defects.rs": {
+      "content_hash": [
+        244,
+        92,
+        187,
+        76,
+        20,
+        125,
+        126,
+        138,
+        130,
+        208,
+        73,
+        174,
+        161,
+        108,
+        0,
+        150,
+        124,
+        142,
+        139,
+        143,
+        233,
+        47,
+        75,
+        198,
+        194,
+        163,
+        75,
+        224,
+        237,
+        202,
+        69,
+        184
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 20.0,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 8.0,
+        "total": 98.18182,
+        "grade": "APLus",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./examples/classify_defects.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 2.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 4 duplicate code patterns"
           }
         ],
         "critical_defects_count": 0,
@@ -3536,19 +2212,175 @@
         "penalties_applied": [
           {
             "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 59 duplicate code patterns"
-          },
-          {
-            "source_metric": "Duplication",
             "amount": 5.2895756,
             "applied_to": [
               "Duplication"
             ],
             "issue": "Code duplication: 26.4%"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 59 duplicate code patterns"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./tests/cli_tests.rs": {
+      "content_hash": [
+        132,
+        228,
+        162,
+        243,
+        94,
+        217,
+        65,
+        211,
+        174,
+        141,
+        206,
+        61,
+        123,
+        21,
+        180,
+        223,
+        111,
+        211,
+        171,
+        43,
+        122,
+        109,
+        120,
+        217,
+        120,
+        35,
+        33,
+        223,
+        234,
+        18,
+        16,
+        242
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 16.290323,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 92.082115,
+        "grade": "A",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./tests/cli_tests.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 3.7096775,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 18.5%"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 14 duplicate code patterns"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./src/perf.rs": {
+      "content_hash": [
+        50,
+        43,
+        146,
+        77,
+        185,
+        232,
+        234,
+        187,
+        80,
+        41,
+        233,
+        36,
+        30,
+        30,
+        21,
+        44,
+        112,
+        167,
+        77,
+        129,
+        24,
+        99,
+        77,
+        39,
+        141,
+        170,
+        134,
+        98,
+        26,
+        123,
+        68,
+        203
+      ],
+      "score": {
+        "structural_complexity": 23.2,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 20.0,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 93.818184,
+        "grade": "A",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/perf.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 27 duplicate code patterns"
+          },
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 1.8000001,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cognitive complexity: 21"
           }
         ],
         "critical_defects_count": 0,
@@ -3614,97 +2446,19 @@
         "penalties_applied": [
           {
             "source_metric": "Duplication",
-            "amount": 5.6862745,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 28.4%"
-          },
-          {
-            "source_metric": "Duplication",
             "amount": 4.5,
             "applied_to": [
               "Duplication"
             ],
             "issue": "Found 9 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./benches/gpu_benchmarks.rs": {
-      "content_hash": [
-        202,
-        27,
-        65,
-        78,
-        125,
-        24,
-        59,
-        8,
-        128,
-        81,
-        166,
-        15,
-        244,
-        178,
-        202,
-        76,
-        244,
-        52,
-        221,
-        76,
-        249,
-        144,
-        106,
-        152,
-        49,
-        14,
-        203,
-        113,
-        252,
-        167,
-        77,
-        228
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 13.439154,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 98.439156,
-        "grade": "APLus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./benches/gpu_benchmarks.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 43 duplicate code patterns"
           },
           {
             "source_metric": "Duplication",
-            "amount": 6.5608463,
+            "amount": 5.6862745,
             "applied_to": [
               "Duplication"
             ],
-            "issue": "Code duplication: 32.8%"
+            "issue": "Code duplication: 28.4%"
           }
         ],
         "critical_defects_count": 0,
@@ -3719,118 +2473,40 @@
       },
       "git_context": null
     },
-    "./tests/unit/cli_test.rs": {
+    "./src/storage.rs": {
       "content_hash": [
-        208,
-        36,
-        80,
-        39,
-        186,
-        255,
-        141,
         169,
-        171,
-        37,
+        20,
+        170,
+        169,
+        237,
+        228,
         203,
-        127,
-        6,
-        181,
-        69,
-        232,
-        166,
-        148,
-        222,
-        31,
-        106,
-        51,
-        157,
-        147,
-        3,
-        149,
-        159,
-        39,
-        15,
-        197,
-        80,
-        217
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 17.0,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 8.0,
-        "total": 95.454544,
-        "grade": "APLus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./tests/unit/cli_test.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 2.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 4 duplicate code patterns"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 3.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 15.0%"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./e2e/tests/01-basic-loading.spec.ts": {
-      "content_hash": [
-        216,
-        19,
-        61,
-        105,
-        92,
-        59,
-        140,
-        220,
-        35,
-        144,
-        168,
-        185,
-        114,
-        20,
-        246,
-        204,
-        91,
-        116,
-        92,
-        155,
-        72,
-        20,
+        33,
         224,
-        162,
-        244,
-        161,
-        30,
-        0,
-        28,
-        30,
-        88,
-        115
+        12,
+        109,
+        123,
+        50,
+        65,
+        115,
+        67,
+        3,
+        214,
+        211,
+        182,
+        102,
+        212,
+        65,
+        53,
+        138,
+        83,
+        200,
+        128,
+        2,
+        230,
+        114,
+        27
       ],
       "score": {
         "structural_complexity": 25.0,
@@ -3839,20 +2515,20 @@
         "coupling_score": 15.0,
         "doc_coverage": 10.0,
         "consistency_score": 10.0,
-        "entropy_score": 9.0,
-        "total": 99.09091,
+        "entropy_score": 5.0,
+        "total": 95.454544,
         "grade": "APLus",
-        "confidence": 0.9,
-        "language": "TypeScript",
-        "file_path": "./e2e/tests/01-basic-loading.spec.ts",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/storage.rs",
         "penalties_applied": [
           {
             "source_metric": "Duplication",
-            "amount": 1.0,
+            "amount": 5.0,
             "applied_to": [
               "Duplication"
             ],
-            "issue": "Found 2 duplicate code patterns"
+            "issue": "Found 13 duplicate code patterns"
           }
         ],
         "critical_defects_count": 0,
@@ -3867,70 +2543,70 @@
       },
       "git_context": null
     },
-    "./src/correlation.rs": {
+    "./e2e/tests/02-defect-classification.spec.ts": {
       "content_hash": [
-        51,
-        37,
-        254,
-        216,
+        3,
+        181,
+        235,
+        115,
+        222,
+        137,
         2,
-        15,
-        157,
-        103,
-        201,
-        56,
-        103,
-        128,
-        108,
-        132,
-        251,
-        7,
-        70,
-        108,
-        99,
-        75,
-        214,
-        106,
+        166,
+        177,
+        81,
+        136,
+        250,
         51,
-        95,
-        252,
-        8,
-        85,
-        174,
-        149,
-        139,
-        43,
-        100
+        211,
+        92,
+        176,
+        250,
+        64,
+        150,
+        255,
+        169,
+        237,
+        180,
+        130,
+        201,
+        145,
+        210,
+        249,
+        73,
+        227,
+        188,
+        200
       ],
       "score": {
         "structural_complexity": 25.0,
         "semantic_complexity": 20.0,
-        "duplication_ratio": 17.924528,
+        "duplication_ratio": 16.862745,
         "coupling_score": 15.0,
         "doc_coverage": 10.0,
         "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 93.56775,
+        "entropy_score": 7.5,
+        "total": 94.87522,
         "grade": "A",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./src/correlation.rs",
+        "confidence": 0.9,
+        "language": "TypeScript",
+        "file_path": "./e2e/tests/02-defect-classification.spec.ts",
         "penalties_applied": [
           {
             "source_metric": "Duplication",
-            "amount": 5.0,
+            "amount": 3.137255,
             "applied_to": [
               "Duplication"
             ],
-            "issue": "Found 15 duplicate code patterns"
+            "issue": "Code duplication: 15.7%"
           },
           {
             "source_metric": "Duplication",
-            "amount": 2.0754716,
+            "amount": 2.5,
             "applied_to": [
               "Duplication"
             ],
-            "issue": "Code duplication: 10.4%"
+            "issue": "Found 5 duplicate code patterns"
           }
         ],
         "critical_defects_count": 0,
@@ -4047,40 +2723,916 @@
       },
       "git_context": null
     },
-    "./wasm-pkg/pkg/oip_wasm_bg.wasm.d.ts": {
+    "./src/cli_handlers/mod.rs": {
       "content_hash": [
-        16,
-        223,
-        132,
-        217,
-        28,
-        161,
-        206,
-        91,
+        189,
         162,
-        36,
-        144,
-        200,
-        12,
-        24,
-        221,
-        150,
-        225,
-        46,
         116,
-        122,
-        53,
-        191,
-        226,
-        31,
-        114,
-        85,
-        222,
-        51,
-        249,
-        53,
+        253,
+        248,
+        238,
+        75,
+        105,
+        228,
+        12,
+        138,
+        224,
+        240,
+        126,
+        201,
+        149,
+        121,
+        232,
+        58,
+        188,
+        112,
+        146,
+        169,
+        130,
+        66,
+        133,
+        174,
+        136,
+        132,
+        189,
+        232,
+        118
+      ],
+      "score": {
+        "structural_complexity": 0.0,
+        "semantic_complexity": 15.0,
+        "duplication_ratio": 20.0,
+        "coupling_score": 14.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 74.0,
+        "grade": "BMinus",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/cli_handlers/mod.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "SemanticComplexity",
+            "amount": 5.0,
+            "applied_to": [
+              "SemanticComplexity"
+            ],
+            "issue": "Too many parameters: 20"
+          },
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 10.0,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cognitive complexity: 118"
+          },
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 15.0,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cyclomatic complexity: 102"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 68 duplicate code patterns"
+          },
+          {
+            "source_metric": "Coupling",
+            "amount": 1.0,
+            "applied_to": [
+              "Coupling"
+            ],
+            "issue": "Too many imports: 25"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./tests/unit/cli_test.rs": {
+      "content_hash": [
+        208,
+        36,
+        80,
+        39,
+        186,
+        255,
+        141,
+        169,
+        171,
+        37,
+        203,
+        127,
+        6,
+        181,
+        69,
+        232,
         166,
-        210
+        148,
+        222,
+        31,
+        106,
+        51,
+        157,
+        147,
+        3,
+        149,
+        159,
+        39,
+        15,
+        197,
+        80,
+        217
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 17.0,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 8.0,
+        "total": 95.454544,
+        "grade": "APLus",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./tests/unit/cli_test.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 2.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 4 duplicate code patterns"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 3.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 15.0%"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./src/pmat.rs": {
+      "content_hash": [
+        85,
+        79,
+        47,
+        203,
+        76,
+        140,
+        101,
+        4,
+        6,
+        65,
+        164,
+        229,
+        248,
+        146,
+        67,
+        157,
+        128,
+        25,
+        133,
+        45,
+        236,
+        203,
+        173,
+        14,
+        227,
+        81,
+        42,
+        42,
+        96,
+        135,
+        95,
+        182
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 17.288136,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 92.98921,
+        "grade": "A",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/pmat.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 2.7118645,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 13.6%"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 30 duplicate code patterns"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./src/tarantula.rs": {
+      "content_hash": [
+        66,
+        213,
+        2,
+        224,
+        28,
+        9,
+        210,
+        214,
+        115,
+        253,
+        115,
+        213,
+        147,
+        50,
+        124,
+        200,
+        123,
+        119,
+        123,
+        234,
+        242,
+        128,
+        201,
+        35,
+        144,
+        205,
+        34,
+        101,
+        46,
+        28,
+        123,
+        55
+      ],
+      "score": {
+        "structural_complexity": 4.5,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 17.732117,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 82.23212,
+        "grade": "BPlus",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/tarantula.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 2.2678843,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 11.3%"
+          },
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 10.0,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cognitive complexity: 74"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 123 duplicate code patterns"
+          },
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 8.5,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cyclomatic complexity: 47"
+          },
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 2.0,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "Deep nesting: 6 levels"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./wasm-pkg/src/lib.rs": {
+      "content_hash": [
+        60,
+        81,
+        5,
+        50,
+        201,
+        27,
+        9,
+        21,
+        166,
+        16,
+        87,
+        37,
+        19,
+        242,
+        49,
+        83,
+        135,
+        255,
+        43,
+        190,
+        79,
+        222,
+        153,
+        188,
+        193,
+        8,
+        66,
+        129,
+        104,
+        98,
+        186,
+        36
+      ],
+      "score": {
+        "structural_complexity": 17.8,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 20.0,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 97.8,
+        "grade": "APLus",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./wasm-pkg/src/lib.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 45 duplicate code patterns"
+          },
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 7.2000003,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cognitive complexity: 39"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./src/git.rs": {
+      "content_hash": [
+        93,
+        117,
+        69,
+        209,
+        102,
+        48,
+        141,
+        24,
+        47,
+        52,
+        24,
+        251,
+        121,
+        13,
+        243,
+        49,
+        27,
+        94,
+        224,
+        157,
+        59,
+        87,
+        200,
+        19,
+        4,
+        109,
+        236,
+        254,
+        185,
+        14,
+        12,
+        84
+      ],
+      "score": {
+        "structural_complexity": 23.5,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 13.701842,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 97.20184,
+        "grade": "APLus",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/git.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 93 duplicate code patterns"
+          },
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 1.5,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cognitive complexity: 20"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 6.2981577,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 31.5%"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./src/gpu_main.rs": {
+      "content_hash": [
+        52,
+        192,
+        231,
+        181,
+        249,
+        101,
+        152,
+        21,
+        42,
+        54,
+        22,
+        96,
+        142,
+        120,
+        198,
+        203,
+        214,
+        39,
+        204,
+        210,
+        195,
+        43,
+        183,
+        2,
+        83,
+        99,
+        169,
+        40,
+        146,
+        252,
+        204,
+        188
+      ],
+      "score": {
+        "structural_complexity": 0.5,
+        "semantic_complexity": 18.0,
+        "duplication_ratio": 16.4375,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 74.9375,
+        "grade": "BMinus",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/gpu_main.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 10.0,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cognitive complexity: 62"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 3.5625,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 17.8%"
+          },
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 14.5,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cyclomatic complexity: 59"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 78 duplicate code patterns"
+          },
+          {
+            "source_metric": "SemanticComplexity",
+            "amount": 2.0,
+            "applied_to": [
+              "SemanticComplexity"
+            ],
+            "issue": "Too many parameters: 9"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./src/training.rs": {
+      "content_hash": [
+        206,
+        248,
+        142,
+        88,
+        217,
+        229,
+        117,
+        158,
+        191,
+        217,
+        188,
+        172,
+        146,
+        105,
+        18,
+        214,
+        117,
+        161,
+        220,
+        135,
+        175,
+        160,
+        31,
+        32,
+        125,
+        194,
+        171,
+        110,
+        59,
+        78,
+        41,
+        32
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 17.077364,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 92.7976,
+        "grade": "A",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/training.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 2.922636,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 14.6%"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 33 duplicate code patterns"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./src/sliding_window.rs": {
+      "content_hash": [
+        48,
+        83,
+        29,
+        206,
+        58,
+        176,
+        188,
+        174,
+        230,
+        237,
+        43,
+        34,
+        146,
+        46,
+        153,
+        28,
+        6,
+        189,
+        53,
+        22,
+        11,
+        127,
+        76,
+        45,
+        172,
+        183,
+        242,
+        89,
+        177,
+        12,
+        87,
+        178
+      ],
+      "score": {
+        "structural_complexity": 22.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 17.333334,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 99.333336,
+        "grade": "APLus",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/sliding_window.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 38 duplicate code patterns"
+          },
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 3.0,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cognitive complexity: 25"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 2.6666667,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 13.3%"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./src/imbalance.rs": {
+      "content_hash": [
+        200,
+        154,
+        47,
+        208,
+        132,
+        255,
+        188,
+        232,
+        32,
+        99,
+        137,
+        79,
+        164,
+        134,
+        253,
+        6,
+        138,
+        25,
+        122,
+        170,
+        117,
+        88,
+        47,
+        70,
+        27,
+        72,
+        98,
+        234,
+        197,
+        182,
+        127,
+        24
+      ],
+      "score": {
+        "structural_complexity": 21.7,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 17.339449,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 99.03945,
+        "grade": "APLus",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/imbalance.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 2.6605506,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 13.3%"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 49 duplicate code patterns"
+          },
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 3.3000002,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cognitive complexity: 26"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./examples/full_analysis.rs": {
+      "content_hash": [
+        117,
+        22,
+        43,
+        23,
+        23,
+        2,
+        162,
+        186,
+        102,
+        83,
+        136,
+        86,
+        79,
+        208,
+        131,
+        8,
+        253,
+        223,
+        193,
+        94,
+        66,
+        223,
+        20,
+        126,
+        253,
+        148,
+        199,
+        38,
+        126,
+        29,
+        176,
+        255
       ],
       "score": {
         "structural_complexity": 25.0,
@@ -4089,13 +3641,654 @@
         "coupling_score": 15.0,
         "doc_coverage": 10.0,
         "consistency_score": 10.0,
-        "entropy_score": 10.0,
-        "total": 100.0,
+        "entropy_score": 6.5,
+        "total": 96.81818,
         "grade": "APLus",
-        "confidence": 0.9,
-        "language": "TypeScript",
-        "file_path": "./wasm-pkg/pkg/oip_wasm_bg.wasm.d.ts",
-        "penalties_applied": [],
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./examples/full_analysis.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 3.5,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 7 duplicate code patterns"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./examples/explore_data.rs": {
+      "content_hash": [
+        48,
+        19,
+        197,
+        99,
+        82,
+        69,
+        47,
+        28,
+        56,
+        23,
+        200,
+        203,
+        22,
+        198,
+        133,
+        170,
+        66,
+        90,
+        49,
+        17,
+        251,
+        148,
+        238,
+        96,
+        103,
+        40,
+        43,
+        144,
+        226,
+        11,
+        176,
+        163
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 16.28483,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 92.07712,
+        "grade": "A",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./examples/explore_data.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 18 duplicate code patterns"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 3.7151704,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 18.6%"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./benches/gpu_benchmarks.rs": {
+      "content_hash": [
+        202,
+        27,
+        65,
+        78,
+        125,
+        24,
+        59,
+        8,
+        128,
+        81,
+        166,
+        15,
+        244,
+        178,
+        202,
+        76,
+        244,
+        52,
+        221,
+        76,
+        249,
+        144,
+        106,
+        152,
+        49,
+        14,
+        203,
+        113,
+        252,
+        167,
+        77,
+        228
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 13.439154,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 98.439156,
+        "grade": "APLus",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./benches/gpu_benchmarks.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 6.5608463,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 32.8%"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 43 duplicate code patterns"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./examples/citl_import.rs": {
+      "content_hash": [
+        147,
+        50,
+        108,
+        5,
+        20,
+        132,
+        170,
+        209,
+        125,
+        27,
+        154,
+        224,
+        22,
+        75,
+        86,
+        50,
+        202,
+        50,
+        150,
+        86,
+        28,
+        30,
+        109,
+        158,
+        82,
+        224,
+        250,
+        212,
+        149,
+        45,
+        190,
+        80
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 20.0,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 95.454544,
+        "grade": "APLus",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./examples/citl_import.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 15 duplicate code patterns"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./examples/fault_localization.rs": {
+      "content_hash": [
+        200,
+        50,
+        218,
+        40,
+        76,
+        2,
+        231,
+        240,
+        15,
+        34,
+        250,
+        135,
+        224,
+        169,
+        127,
+        96,
+        19,
+        244,
+        75,
+        190,
+        174,
+        39,
+        90,
+        19,
+        78,
+        81,
+        189,
+        143,
+        70,
+        93,
+        219,
+        60
+      ],
+      "score": {
+        "structural_complexity": 24.1,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 17.113924,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 92.01266,
+        "grade": "A",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./examples/fault_localization.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 2.886076,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 14.4%"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 33 duplicate code patterns"
+          },
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 0.90000004,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cognitive complexity: 18"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./tests/validation_test.rs": {
+      "content_hash": [
+        219,
+        220,
+        193,
+        151,
+        92,
+        163,
+        112,
+        145,
+        111,
+        193,
+        39,
+        133,
+        182,
+        148,
+        117,
+        182,
+        145,
+        102,
+        214,
+        135,
+        83,
+        208,
+        77,
+        240,
+        44,
+        62,
+        204,
+        52,
+        208,
+        246,
+        235,
+        5
+      ],
+      "score": {
+        "structural_complexity": 18.3,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 20.0,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 98.3,
+        "grade": "APLus",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./tests/validation_test.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 1.0,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "Deep nesting: 5 levels"
+          },
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 5.7000003,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cognitive complexity: 34"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 16 duplicate code patterns"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./src/viz.rs": {
+      "content_hash": [
+        14,
+        81,
+        116,
+        24,
+        32,
+        195,
+        226,
+        116,
+        112,
+        181,
+        99,
+        59,
+        55,
+        53,
+        250,
+        42,
+        154,
+        3,
+        15,
+        255,
+        197,
+        237,
+        50,
+        10,
+        121,
+        137,
+        232,
+        19,
+        41,
+        152,
+        7,
+        207
+      ],
+      "score": {
+        "structural_complexity": 22.6,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 20.0,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 93.27273,
+        "grade": "A",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/viz.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 23 duplicate code patterns"
+          },
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 2.4,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cognitive complexity: 23"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./src/observability.rs": {
+      "content_hash": [
+        240,
+        63,
+        228,
+        209,
+        205,
+        6,
+        126,
+        169,
+        2,
+        124,
+        221,
+        107,
+        159,
+        248,
+        30,
+        137,
+        223,
+        44,
+        101,
+        66,
+        38,
+        254,
+        56,
+        248,
+        83,
+        32,
+        197,
+        32,
+        157,
+        185,
+        255,
+        73
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 20.0,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 95.454544,
+        "grade": "APLus",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/observability.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 25 duplicate code patterns"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./src/export.rs": {
+      "content_hash": [
+        94,
+        231,
+        39,
+        17,
+        224,
+        207,
+        177,
+        209,
+        89,
+        136,
+        103,
+        199,
+        229,
+        99,
+        8,
+        129,
+        168,
+        208,
+        242,
+        105,
+        225,
+        98,
+        38,
+        64,
+        67,
+        167,
+        88,
+        67,
+        15,
+        181,
+        167,
+        27
+      ],
+      "score": {
+        "structural_complexity": 10.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 15.134474,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 85.134476,
+        "grade": "AMinus",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/export.rs",
+        "penalties_applied": [
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 15.0,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cyclomatic complexity: 60"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 89 duplicate code patterns"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 4.8655257,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 24.3%"
+          }
+        ],
         "critical_defects_count": 0,
         "has_critical_defects": false
       },
@@ -4186,373 +4379,78 @@
       },
       "git_context": null
     },
-    "./tests/validation_test.rs": {
+    "./benches/nlp_benchmarks.rs": {
       "content_hash": [
-        219,
-        220,
-        193,
-        151,
-        92,
-        163,
-        112,
-        145,
-        111,
-        193,
-        39,
-        133,
-        182,
-        148,
-        117,
-        182,
-        145,
-        102,
-        214,
-        135,
-        83,
-        208,
-        77,
-        240,
-        44,
-        62,
-        204,
-        52,
-        208,
-        246,
-        235,
-        5
-      ],
-      "score": {
-        "structural_complexity": 18.3,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 20.0,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 98.3,
-        "grade": "APLus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./tests/validation_test.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 1.0,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "Deep nesting: 5 levels"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 16 duplicate code patterns"
-          },
-          {
-            "source_metric": "StructuralComplexity",
-            "amount": 5.7000003,
-            "applied_to": [
-              "StructuralComplexity"
-            ],
-            "issue": "High cognitive complexity: 34"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./src/lib.rs": {
-      "content_hash": [
-        159,
-        179,
-        97,
-        214,
-        66,
-        54,
+        68,
         34,
-        37,
+        207,
         155,
-        77,
-        174,
-        60,
-        225,
-        189,
-        73,
-        15,
-        187,
-        213,
-        117,
-        97,
-        20,
-        88,
-        84,
-        225,
-        17,
-        161,
-        149,
-        236,
-        187,
-        156,
-        94,
-        24
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 20.0,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 10.0,
-        "total": 100.0,
-        "grade": "APLus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./src/lib.rs",
-        "penalties_applied": [],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./src/gpu_correlation.rs": {
-      "content_hash": [
-        192,
-        186,
-        11,
-        138,
-        101,
-        61,
-        232,
-        127,
-        112,
-        23,
-        36,
+        109,
+        227,
         212,
-        212,
-        168,
-        47,
-        124,
-        209,
-        119,
-        168,
-        186,
-        222,
-        214,
-        187,
-        213,
-        32,
-        168,
-        75,
-        166,
-        199,
-        138,
-        247,
-        42
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 15.21978,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 91.10889,
-        "grade": "A",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./src/gpu_correlation.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 4.78022,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 23.9%"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 43 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./examples/classify_defects.rs": {
-      "content_hash": [
-        244,
-        92,
-        187,
-        76,
-        20,
-        125,
-        126,
-        138,
-        130,
-        208,
-        73,
-        174,
-        161,
-        108,
-        0,
-        150,
-        124,
-        142,
-        139,
-        143,
-        233,
-        47,
-        75,
-        198,
-        194,
-        163,
-        75,
-        224,
-        237,
-        202,
-        69,
-        184
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 20.0,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 8.0,
-        "total": 98.18182,
-        "grade": "APLus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./examples/classify_defects.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 2.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 4 duplicate code patterns"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./src/ml.rs": {
-      "content_hash": [
-        56,
-        67,
-        8,
-        99,
-        32,
-        242,
-        33,
-        62,
-        4,
-        133,
-        128,
-        191,
-        250,
-        63,
-        114,
-        62,
-        91,
-        202,
-        129,
-        214,
-        8,
-        148,
-        193,
         188,
-        141,
-        214,
+        31,
+        48,
+        249,
+        39,
+        47,
+        241,
         158,
-        121,
+        232,
+        30,
+        108,
+        154,
+        240,
+        191,
+        26,
+        34,
+        50,
+        206,
+        203,
+        60,
         174,
-        228,
-        197,
-        84
+        234,
+        38,
+        170,
+        155
       ],
       "score": {
-        "structural_complexity": 15.4,
+        "structural_complexity": 23.5,
         "semantic_complexity": 20.0,
-        "duplication_ratio": 15.434782,
+        "duplication_ratio": 15.555555,
         "coupling_score": 15.0,
         "doc_coverage": 10.0,
         "consistency_score": 10.0,
         "entropy_score": 5.0,
-        "total": 90.834785,
-        "grade": "A",
+        "total": 99.05556,
+        "grade": "APLus",
         "confidence": 1.0,
         "language": "Rust",
-        "file_path": "./src/ml.rs",
+        "file_path": "./benches/nlp_benchmarks.rs",
         "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 4.5652175,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 22.8%"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 79 duplicate code patterns"
-          },
           {
             "source_metric": "StructuralComplexity",
-            "amount": 9.6,
+            "amount": 1.5,
             "applied_to": [
               "StructuralComplexity"
             ],
-            "issue": "High cognitive complexity: 47"
+            "issue": "High cognitive complexity: 20"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 35 duplicate code patterns"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 4.4444447,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 22.2%"
           }
         ],
         "critical_defects_count": 0,
@@ -4567,62 +4465,62 @@
       },
       "git_context": null
     },
-    "./src/github.rs": {
+    "./src/cli_handlers/tests.rs": {
       "content_hash": [
-        51,
-        60,
-        15,
-        254,
-        152,
-        208,
-        65,
-        208,
-        62,
-        42,
-        241,
-        236,
+        77,
+        161,
+        100,
+        21,
+        69,
+        234,
         213,
-        67,
-        183,
-        1,
+        155,
+        182,
+        252,
+        146,
+        160,
+        68,
+        24,
+        143,
+        64,
+        178,
         71,
-        175,
-        108,
-        220,
-        29,
-        101,
-        88,
-        43,
-        12,
-        140,
-        8,
-        60,
+        188,
+        244,
+        193,
+        143,
+        169,
+        204,
+        237,
+        204,
+        87,
         139,
-        19,
-        106,
-        4
+        76,
+        178,
+        239,
+        221
       ],
       "score": {
-        "structural_complexity": 25.0,
+        "structural_complexity": 24.4,
         "semantic_complexity": 20.0,
-        "duplication_ratio": 14.803739,
+        "duplication_ratio": 11.392,
         "coupling_score": 15.0,
         "doc_coverage": 10.0,
         "consistency_score": 10.0,
         "entropy_score": 5.0,
-        "total": 99.80374,
+        "total": 95.792,
         "grade": "APLus",
         "confidence": 1.0,
         "language": "Rust",
-        "file_path": "./src/github.rs",
+        "file_path": "./src/cli_handlers/tests.rs",
         "penalties_applied": [
           {
             "source_metric": "Duplication",
-            "amount": 5.1962614,
+            "amount": 8.608,
             "applied_to": [
               "Duplication"
             ],
-            "issue": "Code duplication: 26.0%"
+            "issue": "Code duplication: 43.0%"
           },
           {
             "source_metric": "Duplication",
@@ -4630,7 +4528,15 @@
             "applied_to": [
               "Duplication"
             ],
-            "issue": "Found 40 duplicate code patterns"
+            "issue": "Found 87 duplicate code patterns"
+          },
+          {
+            "source_metric": "StructuralComplexity",
+            "amount": 0.6,
+            "applied_to": [
+              "StructuralComplexity"
+            ],
+            "issue": "High cognitive complexity: 17"
           }
         ],
         "critical_defects_count": 0,
@@ -4645,118 +4551,40 @@
       },
       "git_context": null
     },
-    "./tests/unit/report_test.rs": {
+    "./e2e/playwright.config.ts": {
       "content_hash": [
-        218,
-        62,
-        146,
-        4,
-        231,
-        89,
-        204,
-        102,
-        87,
-        194,
-        236,
-        201,
-        144,
-        47,
-        229,
-        21,
-        168,
-        157,
-        15,
-        64,
-        19,
-        172,
-        179,
-        83,
-        21,
-        27,
-        42,
-        79,
-        231,
-        236,
-        15,
-        240
-      ],
-      "score": {
-        "structural_complexity": 25.0,
-        "semantic_complexity": 20.0,
-        "duplication_ratio": 15.841584,
-        "coupling_score": 15.0,
-        "doc_coverage": 10.0,
-        "consistency_score": 10.0,
-        "entropy_score": 5.0,
-        "total": 91.674164,
-        "grade": "A",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./tests/unit/report_test.rs",
-        "penalties_applied": [
-          {
-            "source_metric": "Duplication",
-            "amount": 5.0,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Found 13 duplicate code patterns"
-          },
-          {
-            "source_metric": "Duplication",
-            "amount": 4.158416,
-            "applied_to": [
-              "Duplication"
-            ],
-            "issue": "Code duplication: 20.8%"
-          }
-        ],
-        "critical_defects_count": 0,
-        "has_critical_defects": false
-      },
-      "components": {
-        "complexity_breakdown": {},
-        "duplication_sources": [],
-        "coupling_dependencies": [],
-        "doc_missing_items": [],
-        "consistency_violations": []
-      },
-      "git_context": null
-    },
-    "./examples/analyze_org.rs": {
-      "content_hash": [
-        14,
-        38,
-        90,
-        106,
-        206,
-        106,
-        143,
-        156,
-        152,
-        114,
-        184,
-        155,
-        255,
-        197,
-        62,
-        93,
-        246,
-        14,
-        170,
-        72,
-        76,
-        112,
-        29,
-        96,
-        205,
-        147,
-        148,
+        3,
+        202,
+        131,
         232,
-        121,
-        107,
-        226,
-        212
+        27,
+        36,
+        176,
+        211,
+        28,
+        36,
+        246,
+        74,
+        116,
+        2,
+        73,
+        151,
+        246,
+        43,
+        39,
+        241,
+        36,
+        163,
+        186,
+        18,
+        248,
+        142,
+        255,
+        55,
+        128,
+        217,
+        11,
+        184
       ],
       "score": {
         "structural_complexity": 25.0,
@@ -4768,9 +4596,9 @@
         "entropy_score": 8.5,
         "total": 98.63637,
         "grade": "APLus",
-        "confidence": 1.0,
-        "language": "Rust",
-        "file_path": "./examples/analyze_org.rs",
+        "confidence": 0.9,
+        "language": "TypeScript",
+        "file_path": "./e2e/playwright.config.ts",
         "penalties_applied": [
           {
             "source_metric": "Duplication",
@@ -4793,62 +4621,70 @@
       },
       "git_context": null
     },
-    "./src/query.rs": {
+    "./src/report.rs": {
       "content_hash": [
-        59,
-        139,
-        12,
+        5,
+        113,
+        17,
+        200,
+        43,
+        121,
+        232,
+        115,
+        214,
+        34,
         203,
-        197,
-        218,
-        22,
-        65,
-        82,
-        48,
-        242,
-        63,
-        64,
-        159,
-        238,
-        138,
+        104,
+        25,
+        176,
+        38,
         235,
-        47,
-        37,
-        96,
-        161,
-        252,
-        180,
-        204,
-        226,
-        138,
-        195,
-        58,
-        111,
-        130,
-        46,
-        95
+        171,
+        91,
+        187,
+        99,
+        168,
+        30,
+        18,
+        233,
+        26,
+        38,
+        6,
+        235,
+        35,
+        55,
+        84,
+        86
       ],
       "score": {
         "structural_complexity": 25.0,
         "semantic_complexity": 20.0,
-        "duplication_ratio": 20.0,
+        "duplication_ratio": 16.6875,
         "coupling_score": 15.0,
         "doc_coverage": 10.0,
         "consistency_score": 10.0,
-        "entropy_score": 6.5,
-        "total": 96.81818,
-        "grade": "APLus",
+        "entropy_score": 5.0,
+        "total": 92.44318,
+        "grade": "A",
         "confidence": 1.0,
         "language": "Rust",
-        "file_path": "./src/query.rs",
+        "file_path": "./src/report.rs",
         "penalties_applied": [
           {
             "source_metric": "Duplication",
-            "amount": 3.5,
+            "amount": 3.3125,
             "applied_to": [
               "Duplication"
             ],
-            "issue": "Found 7 duplicate code patterns"
+            "issue": "Code duplication: 16.6%"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 29 duplicate code patterns"
           }
         ],
         "critical_defects_count": 0,
@@ -4863,70 +4699,234 @@
       },
       "git_context": null
     },
-    "./src/pmat.rs": {
+    "./src/correlation.rs": {
       "content_hash": [
-        85,
-        79,
-        47,
-        203,
-        76,
-        140,
-        101,
-        4,
-        6,
-        65,
-        164,
-        229,
-        248,
-        146,
-        67,
+        51,
+        37,
+        254,
+        216,
+        2,
+        15,
         157,
+        103,
+        201,
+        56,
+        103,
         128,
-        25,
-        133,
-        45,
-        236,
-        203,
-        173,
-        14,
-        227,
-        81,
-        42,
-        42,
-        96,
-        135,
+        108,
+        132,
+        251,
+        7,
+        70,
+        108,
+        99,
+        75,
+        214,
+        106,
+        51,
         95,
-        182
+        252,
+        8,
+        85,
+        174,
+        149,
+        139,
+        43,
+        100
       ],
       "score": {
         "structural_complexity": 25.0,
         "semantic_complexity": 20.0,
-        "duplication_ratio": 17.288136,
+        "duplication_ratio": 17.924528,
         "coupling_score": 15.0,
         "doc_coverage": 10.0,
         "consistency_score": 10.0,
         "entropy_score": 5.0,
-        "total": 92.98921,
+        "total": 93.56775,
         "grade": "A",
         "confidence": 1.0,
         "language": "Rust",
-        "file_path": "./src/pmat.rs",
+        "file_path": "./src/correlation.rs",
         "penalties_applied": [
+          {
+            "source_metric": "Duplication",
+            "amount": 2.0754716,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 10.4%"
+          },
           {
             "source_metric": "Duplication",
             "amount": 5.0,
             "applied_to": [
               "Duplication"
             ],
-            "issue": "Found 30 duplicate code patterns"
-          },
+            "issue": "Found 15 duplicate code patterns"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./src/nlp.rs": {
+      "content_hash": [
+        116,
+        32,
+        74,
+        148,
+        140,
+        61,
+        103,
+        231,
+        198,
+        39,
+        239,
+        39,
+        87,
+        255,
+        21,
+        213,
+        13,
+        203,
+        218,
+        157,
+        171,
+        32,
+        214,
+        239,
+        131,
+        121,
+        120,
+        208,
+        112,
+        65,
+        206,
+        235
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 16.868687,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 92.607895,
+        "grade": "A",
+        "confidence": 1.0,
+        "language": "Rust",
+        "file_path": "./src/nlp.rs",
+        "penalties_applied": [
           {
             "source_metric": "Duplication",
-            "amount": 2.7118645,
+            "amount": 3.131313,
             "applied_to": [
               "Duplication"
             ],
-            "issue": "Code duplication: 13.6%"
+            "issue": "Code duplication: 15.7%"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 32 duplicate code patterns"
+          }
+        ],
+        "critical_defects_count": 0,
+        "has_critical_defects": false
+      },
+      "components": {
+        "complexity_breakdown": {},
+        "duplication_sources": [],
+        "coupling_dependencies": [],
+        "doc_missing_items": [],
+        "consistency_violations": []
+      },
+      "git_context": null
+    },
+    "./wasm-pkg/pkg/oip_wasm.d.ts": {
+      "content_hash": [
+        224,
+        40,
+        73,
+        196,
+        21,
+        72,
+        212,
+        199,
+        209,
+        244,
+        144,
+        153,
+        210,
+        53,
+        81,
+        225,
+        214,
+        191,
+        245,
+        198,
+        67,
+        103,
+        59,
+        228,
+        165,
+        159,
+        111,
+        47,
+        204,
+        40,
+        79,
+        134
+      ],
+      "score": {
+        "structural_complexity": 25.0,
+        "semantic_complexity": 20.0,
+        "duplication_ratio": 17.872341,
+        "coupling_score": 15.0,
+        "doc_coverage": 10.0,
+        "consistency_score": 10.0,
+        "entropy_score": 5.0,
+        "total": 93.52032,
+        "grade": "A",
+        "confidence": 0.9,
+        "language": "TypeScript",
+        "file_path": "./wasm-pkg/pkg/oip_wasm.d.ts",
+        "penalties_applied": [
+          {
+            "source_metric": "Consistency",
+            "amount": 10.0,
+            "applied_to": [
+              "Consistency"
+            ],
+            "issue": "Inconsistent semicolon usage detected"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 5.0,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Found 13 duplicate code patterns"
+          },
+          {
+            "source_metric": "Duplication",
+            "amount": 2.1276596,
+            "applied_to": [
+              "Duplication"
+            ],
+            "issue": "Code duplication: 10.6%"
           }
         ],
         "critical_defects_count": 0,
@@ -4944,19 +4944,19 @@
   },
   "summary": {
     "total_files": 62,
-    "avg_score": 93.65254,
+    "avg_score": 93.6461,
     "grade_distribution": {
-      "APLus": 32,
-      "BPlus": 1,
-      "A": 23,
+      "AMinus": 1,
       "BMinus": 2,
       "B": 3,
-      "AMinus": 1
+      "BPlus": 1,
+      "APLus": 32,
+      "A": 23
     },
     "languages": {
       "JavaScript": 1,
-      "TypeScript": 6,
-      "Rust": 55
+      "Rust": 55,
+      "TypeScript": 6
     }
   }
 }
