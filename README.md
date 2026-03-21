@@ -1,6 +1,7 @@
 <div align="center">
 [![CI](https://github.com/paiml/organizational-intelligence-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/paiml/organizational-intelligence-plugin/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/v/organizational-intelligence-plugin.svg)](https://crates.io/crates/organizational-intelligence-plugin)
+[![Documentation](https://docs.rs/organizational-intelligence-plugin/badge.svg)](https://docs.rs/organizational-intelligence-plugin)
 
 <img src="logo.png" alt="OIP Logo" width="128" height="128">
 
@@ -433,6 +434,10 @@ cargo install pmat
 ```bash
 oip analyze --org large-org --output report.yaml --max-concurrent 3
 ```
+
+## See Also
+
+- [Cookbook](https://github.com/paiml/sovereign-ai-cookbook)
 
 ## License
 
