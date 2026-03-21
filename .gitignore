@@ -42,3 +42,10 @@ book/book/
 pr-review.json
 test-baseline.yaml
 *.db
+
+# PMAT
+.pmat/backup/
+.pmat-qa/
+.pmat/context.idx/
+.pmat/workspace.idx/
+.pmat/deps-cache.json
