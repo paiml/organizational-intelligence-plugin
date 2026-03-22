@@ -1,6 +1,6 @@
-mod tests {
-    use super::*;
-    use tempfile::NamedTempFile;
+use crate::cli_handlers::*;
+use std::path::PathBuf;
+use tempfile::NamedTempFile;
 
     // Helper to create a minimal valid baseline YAML for testing
     fn create_test_baseline() -> String {
@@ -812,4 +812,3 @@ end_of_record
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Failed to read"));
     }
-}
