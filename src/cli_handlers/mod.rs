@@ -924,9 +924,6 @@ pub async fn handle_localize(
     calibration_model: Option<PathBuf>,
     confidence_threshold: f32,
 ) -> Result<()> {
-    use crate::ensemble_predictor::{
-        CalibratedDefectPredictor, FileFeatures, WeightedEnsembleModel,
-    };
     use crate::rag_localization::{
         BugKnowledgeBase, LocalizationFusion, RagFaultLocalizer, RagLocalizationConfig,
         RagReportGenerator,
